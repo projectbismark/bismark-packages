@@ -1,0 +1,16 @@
+Index: gpsd-2.94/Makefile.am
+===================================================================
+--- gpsd-2.94.orig/Makefile.am	2010-04-20 11:37:21.000000000 +0200
++++ gpsd-2.94/Makefile.am	2011-01-27 15:34:08.125000006 +0100
+@@ -245,9 +245,9 @@
+ # Warning: This overrides autoconf's normal link-line generation process
+ if LIBGPSMM_ENABLE
+ libgps_la_SOURCES += libgpsmm.cpp
+-libgps_la_LINK = /bin/sh ./libtool --tag=CXX --mode=link g++ $(libgps_la_LDFLAGS) -o $@
++libgps_la_LINK = $(LIBTOOL) --tag=CXX --mode=link $(CXX) $(libgps_la_LDFLAGS) -o $@
+ else
+-libgps_la_LINK = /bin/sh ./libtool --tag=CC --mode=link gcc $(libgps_la_LDFLAGS) -o $@
++libgps_la_LINK = $(LIBTOOL) --tag=CC --mode=link $(CC) $(libgps_la_LDFLAGS) -o $@
+ endif
+ 
+ nodist_libgpsd_la_SOURCES = packet_names.h ais_json.i
