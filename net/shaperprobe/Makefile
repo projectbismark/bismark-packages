@@ -11,14 +11,12 @@ PKG_NAME:=shaperprobe
 PKG_VERSION:=1.0
 PKG_RELEASE:=3
 
-PKG_INSTALL:=1
-
 # XXX - what are the depends?
 # PKG_BUILD_DEPENDS:=libncurses
 
 include $(INCLUDE_DIR)/package.mk
 
-#DEPENDS:=+libpthread
+# DEPENDS:=+libpthread
 define Package/shaperprobe
 	SECTION:=net
 	CATEGORY:=Network
@@ -33,7 +31,7 @@ endef
 
 define Package/shaperprobe/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./prober $(1)/usr/bin/prober
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/prober $(1)/usr/bin/prober
 endef
 
 $(eval $(call BuildPackage,shaperprobe))
