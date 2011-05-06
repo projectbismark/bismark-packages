@@ -23,7 +23,8 @@ define Package/bismark-mgmt
 endef
 
 define Package/bismark-mgmt/description
-  XXX Insert description of bismark here XXX
+	The bismark-mgmt package makes it possible to administer a bismark
+	router remotely.
 endef
 
 define Build/Prepare
