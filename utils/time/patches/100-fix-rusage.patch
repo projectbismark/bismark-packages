@@ -1,0 +1,11 @@
+--- time-1.7.orig/resuse.h      2011-05-08 11:00:02.664269004 -0700
++++ time-1.7/resuse.h   2011-05-08 10:56:14.944268985 -0700
+@@ -36,7 +36,7 @@
+ # include <sys/rusage.h>
+ #else
+ # define TV_MSEC tv_usec / 1000
+-# if HAVE_WAIT3
++# if HAVE_SYS_RESOURCE_H
+ #  include <sys/resource.h>
+ # else
+ /* Process resource usage structure.  */
