@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.1
-PKG_RELEASE:=14
+PKG_RELEASE:=15
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -19,7 +19,7 @@ define Package/bismark-mgmt
    TITLE:=Broadband Internet Service benchMARK
    URL:=http://www.gtnoise.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=netcat
+   DEPENDS:=+netcat
 endef
 
 define Package/bismark-mgmt/description
