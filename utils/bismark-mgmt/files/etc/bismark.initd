@@ -5,7 +5,7 @@ STOP=1
 
 start() {
 	if [[ ! -e /etc/bismark/ID ]]; then
-		ifconfig eth0 | awk '/HWaddr / {print $5}' | sed -e 's/://g' > /etc/bismark/ID
+		(echo -n OW; ifconfig eth0 | awk '/HWaddr / {print $5}' | sed -e 's/://g' ) > /etc/bismark/ID
 	fi
 	bismark-bootstrap
 }
