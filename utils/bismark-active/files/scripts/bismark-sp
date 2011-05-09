@@ -1,0 +1,23 @@
+#!/bin/ash
+# Bismark shaperprobe wrapper (output in Kbps)
+#
+# author: walter.dedonato@unina.it
+
+# Load configuration file
+. /etc/bismark/bismark.conf
+. /usr/lib/bismark/functions.inc.sh
+
+exit 0
+# Get measure info 
+get_ip
+dst=$1
+tstamp=$(date +%s)
+
+prober | awk '
+	BEGIN{ RS="[\r\n]" }
+	/^Upstream:/{ print "\t<measurement param=CAPACITY tool=SP srcip='$src' dstip='$dst' timestamp='$tstamp' avg=" $2 " std=0 min=" $2 " max=" $2 " med=" $2 " iqr=0 />" }
+	/^Downstream:/{  print "\t<measurement param=CAPACITY tool=SP srcip='$dst' dstip='$src' timestamp='$tstamp' avg=" $2 " std=0 min=" $2 " max=" $2 " med=" $2 " iqr=0 />" }
+	/^Up:/{ print "\t<measurement param=SHAPERATE tool=SP srcip='$src' dstip='$dst' timestamp='$tstamp' avg=" $2 " std=0 min=" $2 " max=" $2 " med=" $2 " iqr=0 />" }
+	/^Down:/{ print "\t<measurement param=SHAPERATE tool=SP srcip='$dst' dstip='$src' timestamp='$tstamp' avg=" $2 " std=0 min=" $2 " max=" $2 " med=" $2 " iqr=0 />" }
+'
+ 
