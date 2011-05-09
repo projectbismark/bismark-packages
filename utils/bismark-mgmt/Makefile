@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.1
-PKG_RELEASE:=15
+PKG_RELEASE:=16
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -45,7 +45,7 @@ endef
 # directory) to the install directory.
 define Package/bismark-mgmt/install
 	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/root/.ssh $(1)/etc/dropbear
-	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/bismark
+	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark.conf,crontab} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/keys/* $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
 	$(CP) -p $(PKG_BUILD_DIR)/lib/* $(1)/usr/lib/bismark/
