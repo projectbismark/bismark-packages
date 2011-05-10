@@ -24,7 +24,7 @@ for s in "$dds" "8.8.8.8"; do
 
 		IFS=$'\n'
 		for h in $(cat ~/conf/hosts.list); do
-			~/bin/time -f %e --append -o /tmp/host/delays host $h $s >/dev/null || : $((fail++))
+			~/bin/time -f %e --append -o /tmp/host/delays nslookup $h $s >/dev/null || : $((fail++))
 			: $((count++))
 		done
 

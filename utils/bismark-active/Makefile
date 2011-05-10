@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active
-PKG_VERSION:=0.1
-PKG_RELEASE:=1
+PKG_VERSION:=0.2
+PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -17,9 +17,9 @@ define Package/bismark-active
    SECTION:=utils
    CATEGORY:=Utilities
    TITLE:=Broadband Internet Service benchMARK - Active measurement tools
-   URL:=http://www.gtnoise.net//
+   URL:=http://www.networkdashboard.org/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+bismark-mgmt +shaperprobe +ditg +time +bind-host +curl
+   DEPENDS:=+bismark-mgmt +shaperprobe +ditg +time 
 endef
 
 define Package/bismark-active/description
