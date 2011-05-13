@@ -4,13 +4,11 @@ START=99
 STOP=1
 
 start() {
-	if [[ ! -e /etc/bismark/ID ]]; then
-		(echo -n OW; ifconfig eth0 | awk '/HWaddr / {print $5}' | sed -e 's/://g' ) > /etc/bismark/ID
-	fi
-	bismark-bootstrap
+        bismark-bootstrap
 }
 
 stop() {
-	crontab -r
-	grep -v bismark- /etc/crontabs/root | crontab -
+        crontab -r
+        grep -v bismark- /etc/crontabs/root | crontab -
 }
+
