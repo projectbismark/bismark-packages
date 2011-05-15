@@ -23,8 +23,8 @@ for s in "$dds" "8.8.8.8"; do
 		rm /tmp/host/delays
 
 		IFS=$'\n'
-		for h in $(cat ~/conf/hosts.list); do
-			~/bin/time -f %e --append -o /tmp/host/delays nslookup $h $s >/dev/null || : $((fail++))
+		for h in $(cat /etc/bismark/hosts.list); do
+			time -f %e --append -o /tmp/host/delays nslookup $h $s >/dev/null || : $((fail++))
 			: $((count++))
 		done
 
