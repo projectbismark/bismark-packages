@@ -8,8 +8,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 PKG_RELEASE:=16
+#PKG_REV:=262f56eb307f9a0d4bee04d38e0adde7e4257d87
+#PKG_VERSION:=20080922
+#PKG_RELEASE:=1
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:git://github.com/dtaht/$(PKG_NAME).git
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_VERSION:=$(PKG_REV)
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -29,7 +38,7 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
+#	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
 endef
 
 define Build/Compile
@@ -37,8 +46,8 @@ define Build/Compile
 endef
 
 define Package/bismark-chrome/install
-	$(INSTALL_DIR) $(1)/etc/web $(1)/etc/cgi-bin
-	$(CP) -p $(PKG_BUILD_DIR)/etc/{web,cgi-bin} $(1)/etc/
+	$(INSTALL_DIR) $(1)/etc/web 
+	$(CP) -p $(PKG_BUILD_DIR)/etc/web/* $(1)/etc/web/
 endef
 
 $(eval $(call BuildPackage,bismark-chrome))
