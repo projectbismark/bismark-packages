@@ -8,11 +8,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome
-PKG_VERSION:=0.2
-PKG_RELEASE:=16
-PKG_REV:=1a63f7fbd40b3301b1d1959553a93e0c897ab98c
-PKG_VERSION:=20110517
+PKG_VERSION:=1.0.0
 PKG_RELEASE:=1
+PKG_REV:=2693afcf4c08c41067ac11177a1da3a033d6c6c0
+# PKG_VERSION:=20110517
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=git://github.com/dtaht/$(PKG_NAME).git
@@ -36,14 +35,14 @@ define Package/bismark-chrome/description
 	for network resources.
 endef
 
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
+#define Build/Prepare
+#	mkdir -p $(PKG_BUILD_DIR)
 #	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
-endef
+#endef
 
-define Build/Compile
-	
-endef
+#define Build/Compile
+#	
+#endef
 
 define Package/bismark-chrome/install
 	$(INSTALL_DIR) $(1)/etc/web 
