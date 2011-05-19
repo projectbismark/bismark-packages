@@ -35,14 +35,14 @@ define Package/bismark-chrome/description
 	for network resources.
 endef
 
-#define Build/Prepare
-#	mkdir -p $(PKG_BUILD_DIR)
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
 #	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
 #endef
 
-#define Build/Compile
-#	
-#endef
+define Build/Compile
+	
+endef
 
 define Package/bismark-chrome/install
 	$(INSTALL_DIR) $(1)/etc/web 
