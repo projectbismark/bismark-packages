@@ -37,8 +37,8 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-#	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
-#endef
+	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
+endef
 
 define Build/Compile
 	
