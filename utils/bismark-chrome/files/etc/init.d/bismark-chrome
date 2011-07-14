@@ -3,10 +3,10 @@
 START=50
 
 BIN=lighttpd
-DEFAULT=/etc/default/bismark
-LOG_D=/var/log/bismark
+DEFAULT=/etc/default/bismark-chrome
+LOG_D=/var/log/bismark-chrome
 RUN_D=/var/run
-PID_F=$RUN_D/bismark.pid
+PID_F=$RUN_D/bismark-chrome.pid
 OPTIONS="-f /etc/lighttpd/bismark.conf"
 
 start() {
