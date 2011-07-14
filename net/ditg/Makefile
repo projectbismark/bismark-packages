@@ -48,6 +48,7 @@ define Build/Compile
 	$(MAKE) \
 		CXX="$(TARGET_CXX)-uc" \
 		CXXOPT="-DARM $(TARGET_CFLAGS) $(TARGET_CPPFLAGS)" \
+		LDOPT="-luClibc++"
 		-C $(PKG_BUILD_DIR)/src 
 endef
 
