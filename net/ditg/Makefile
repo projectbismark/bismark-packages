@@ -46,7 +46,7 @@ endef
 
 define Build/Compile
 	$(MAKE) \
-		CXX="$(TARGET_CXX)" \
+		CXX="$(TARGET_CXX)-uc" \
 		CXXOPT="-DARM $(TARGET_CFLAGS) $(TARGET_CPPFLAGS)" \
 		-C $(PKG_BUILD_DIR)/src 
 endef
