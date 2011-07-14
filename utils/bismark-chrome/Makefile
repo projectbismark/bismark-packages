@@ -45,8 +45,8 @@ define Build/Compile
 endef
 
 define Package/bismark-chrome/install
-	$(INSTALL_DIR) $(1)/etc/web 
-	$(CP) -p $(PKG_BUILD_DIR)/etc/web/* $(1)/etc/web/
+	$(INSTALL_DIR) $(1)/etc
+	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/
 endef
 
 $(eval $(call BuildPackage,bismark-chrome))
