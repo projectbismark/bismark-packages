@@ -26,7 +26,7 @@ define Package/ditg/Default
   CATEGORY:=Network
   URL:=http://www.grid.unina.it/software/ITG/
   MAINTAINER:=Giovanni Di Stasi <giovanni.distasi@unina.it>
-  DEPENDS:= +libpcap +libstdcpp
+  DEPENDS:= +libpcap 
 endef
 
 define Package/ditg/Default/description
