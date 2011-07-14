@@ -1,0 +1,24 @@
+--- a/src/ITGSend/newran/newran2.cpp
++++ b/src/ITGSend/newran/newran2.cpp
+@@ -90,8 +90,8 @@ Real Extreme_Largest :: Next()
+ 
+   long  double rnd1;
+   rnd1 = U.Next();
+-  long  double op1=log(rnd1);
+-  rnd1=mu-sigma*(log(-op1));
++  long  double op1=log(double(rnd1));
++  rnd1=mu-sigma*(log(double(-op1)));
+   return rnd1;
+ }
+ 
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -60,7 +60,7 @@ export CP = cp
+ export MV = mv
+ export SUFFIX =
+ export CXXFLAGS = $(CXXOPT) $(OS) -Wall -Wno-deprecated -fPIC
+-export LDFLAGS = -lpthread $(LDOPT)
++export LDFLAGS = -lpthread -lm $(LDOPT)
+ export BASEDIR = $(shell pwd)
+ export BIN = $(BASEDIR)/../bin/
+ export COMMON = $(BASEDIR)/common/
