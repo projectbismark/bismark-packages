@@ -5,12 +5,14 @@
 
 # Load configuration file
 . /etc/bismark/bismark.conf
+. /etc/bismark/bismark-active.conf
 . /usr/lib/bismark/functions.inc.sh
 
 # Configuration
 COUNTER="/tmp/bismark/var/counter"
 MEASURE_REPLY="/tmp/bismark/var/mreply"
 XML_FILE="/tmp/bismark/active/${DEVICE_ID}_$(date +%s).xml"
+
 
 # --- Functions ---
 
@@ -140,7 +142,7 @@ if [ ! -e /tmp/bismark/var/mlock ]; then
 		if get_target Bismark NETPERF $ZONE $BR_DURATION ; then
 			sleep $wait
 			( sleep 3 ; bismark-ping $dst | bismark-mstats ULRTTDW PING $src $dst >> $XML_FILE ) &
-			bismark-netperf $BR_DURATION $NTHREADS $dst dw > /tmp/bismark/active/netperf-out
+			bismark-netperf $BR_DURATION $NETPERF_NTHREADS $dst dw > /tmp/bismark/active/netperf-out
 			cat /tmp/bismark/active/netperf-out | bismark-mstats BITRATE NETPERF $dst $src | grep -v nan >> $XML_FILE
 			rm /tmp/bismark/active/netperf-out
 		fi
@@ -149,7 +151,7 @@ if [ ! -e /tmp/bismark/var/mlock ]; then
 		if get_target Bismark NETPERF $ZONE $BR_DURATION ; then
 			sleep $wait
 			( sleep 3 ; bismark-ping $dst | bismark-mstats ULRTTUP PING $src $dst >> $XML_FILE ) &
-			bismark-netperf $BR_DURATION $NTHREADS $dst up > /tmp/bismark/active/netperf-out
+			bismark-netperf $BR_DURATION $NETPERF_NTHREADS $dst up > /tmp/bismark/active/netperf-out
 			cat /tmp/bismark/active/netperf-out | bismark-mstats BITRATE NETPERF $src $dst | grep -v nan >> $XML_FILE
 			rm /tmp/bismark/active/netperf-out
 		fi
@@ -199,5 +201,10 @@ end
 # Move file to data folder
 mv $XML_FILE /tmp/bismark/data
 
-# Upload result 
-scp -i $SSH_KEY /tmp/bismark/data/*.xml $USER@$SERVER:~/var/data && rm /tmp/bismark/data/*.xml
+# Upload result
+[ -e /tmp/bismark/ssh ] || { 
+	echo -e '#!/bin/ash\nexec ssh -y "$@"' > /tmp/bismark/ssh 
+	chmod +x /tmp/bismark/ssh 
+}
+
+scp -S "/tmp/bismark/ssh" -i $SSH_KEY /tmp/bismark/data/*.xml $USER@$SERVER:var/data && rm /tmp/bismark/data/*.xml

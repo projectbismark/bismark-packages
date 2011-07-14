@@ -6,6 +6,7 @@
 
 # Load configuration files
 . /etc/bismark/bismark.conf
+. /etc/bismark/bismark-active.conf
 
 # Help screen
 [ $4 ] || { echo "usage: $(basename $0) <duration> <nthreads> <dst_ip> <up|dw>" ; exit ; }
@@ -13,9 +14,9 @@
 # Settings
 DATA_DIR=/tmp/bismark/active
 cmd=netperf
-out="$DATA_DIR/netperf-out"
+out="$DATA_DIR/netperf-tmp-out"
 err="$DATA_DIR/netperf-err"
-port=443
+port=$NETPERF_PORT
 
 # Ausiliary functions
 clean() {

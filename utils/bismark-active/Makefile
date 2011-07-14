@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active
 PKG_VERSION:=0.4
-PKG_RELEASE:=6
+PKG_RELEASE:=13
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -45,8 +45,10 @@ endef
 define Package/bismark-active/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/lib/bismark
+	$(INSTALL_DIR) $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
 	$(CP) -p $(PKG_BUILD_DIR)/lib/bismark/* $(1)/usr/lib/bismark/
+	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/bismark/
 endef
 
 $(eval $(call BuildPackage,bismark-active))
