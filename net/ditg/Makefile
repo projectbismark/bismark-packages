@@ -48,7 +48,7 @@ TARGET_CXX=g++-uc
 
 define Build/Compile
 	$(MAKE) \
-		CXX="$(TARGET_CXX)-uc" \
+		CXX="$(TARGET_CXX)" \
 		CXXOPT="-DMULTIPORT -DARM $(TARGET_CFLAGS) $(TARGET_CPPFLAGS)" \
 		-C $(PKG_BUILD_DIR)/src 
 endef
