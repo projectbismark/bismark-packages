@@ -14,7 +14,7 @@ PKG_RELEASE:=rc1
 PKG_SOURCE:=D-ITG-${PKG_VERSION}-${PKG_RELEASE}.tgz
 #PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice/
 PKG_SOURCE_URL:=http://143.215.131.215:4096/
-#PKG_MD5SUM:=55f79b1c49d291fe5fad293a785c3451
+PKG_MD5SUM:=a96435720b3cd879007db3532108cc88
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}-${PKG_RELEASE}
 
@@ -25,8 +25,8 @@ define Package/ditg/Default
   SECTION:=net
   CATEGORY:=Network
   URL:=http://www.grid.unina.it/software/ITG/
-  MAINTAINER:=Giovanni Di Stasi <giovanni.distasi@unina.it>
-  DEPENDS:= +libpcap 
+  MAINTAINER:=Walter de Donato <walter.dedonato@unina.it>
+  DEPENDS:= +uclibcxx 
 endef
 
 define Package/ditg/Default/description
