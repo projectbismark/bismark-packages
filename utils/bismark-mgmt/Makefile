@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.2
-PKG_RELEASE:=23
+PKG_RELEASE:=24
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -28,8 +28,16 @@ define Package/bismark-mgmt/description
 endef
 
 define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) -pr ./files/* $(PKG_BUILD_DIR)
+	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib,keys}
+	[ -d files ] && ( cd files ; git pull ) || git clone git://github.com/bismark-devel/bismark.git files
+
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc
+	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
+	$(CP) -L files/device/OpenWrt_common/keys/* $(PKG_BUILD_DIR)/keys
+
+	VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
+	sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
 endef
 
 define Build/Compile
@@ -62,3 +70,4 @@ cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/kno
 endef
 
 $(eval $(call BuildPackage,bismark-mgmt))
+
