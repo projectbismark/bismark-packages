@@ -29,7 +29,7 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib}
 	[ -d files ] && ( cd files ; git pull ) || git clone git://github.com/bismark-devel/bismark.git files
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,tr,rtr,ping,netperf,dns,ditg,sp} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,tr,rtr,ping,netperf,dns,ditg,sp,mstats} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/bismark-active.conf $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/*.list $(PKG_BUILD_DIR)/lib
 endef
