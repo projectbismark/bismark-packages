@@ -9,15 +9,15 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.1
-PKG_RELEASE:=1
-GIT_COMMIT:=1123704e593bddc4a9b4
+PKG_RELEASE:=2
+GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/bismark-lite
    SECTION:=utils
    CATEGORY:=Utilities
-   TITLE:=Broadband Internet Service benchMARK
+   TITLE:=Broadband Internet Service benchMARK - A light management tool
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
    DEPENDS:=+netcat
@@ -34,7 +34,7 @@ define Build/Prepare
 		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ; git checkout $(GIT_COMMIT))
 
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{action-lite,bootstrap-lite,probe} $(PKG_BUILD_DIR)/scripts
-	$(CP) files/device/OpenWrt_common/etc/{bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
+	$(CP) files/device/OpenWrt_common/etc/{bismark.conf,bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
 	$(CP) -L files/device/OpenWrt_common/keys/cert.pem $(PKG_BUILD_DIR)/keys
 
@@ -53,7 +53,7 @@ endef
 # directory if it does not already exist.  Likewise $(INSTALL_BIN) contains the
 # command to copy the binary file from its current location (in our case the build
 # directory) to the install directory.
-define Package/bismark-mgmt/install
+define Package/bismark-lite/install
 	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/etc/dropbear $(1)/etc/ssl/certs
 	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/keys/cert.pem $(1)/etc/bismark
@@ -63,7 +63,7 @@ define Package/bismark-mgmt/install
 	$(CP) $(PKG_BUILD_DIR)/etc/bismark-lite.initd $(1)/etc/init.d/bismark-lite
 endef
 
-define Package/bismark-mgmt/postinst
+define Package/bismark-lite/postinst
 #!/bin/sh
 # Bismark management post-install script
 
@@ -73,5 +73,5 @@ ln -s ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/3811
 
 endef
 
-$(eval $(call BuildPackage,bismark-mgmt))
+$(eval $(call BuildPackage,bismark-lite))
 
