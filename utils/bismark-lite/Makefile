@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.1
-PKG_RELEASE:=3
+PKG_RELEASE:=5
 GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
