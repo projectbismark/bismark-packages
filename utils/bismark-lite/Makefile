@@ -57,7 +57,7 @@ define Package/bismark-mgmt/install
 	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/etc/dropbear $(1)/etc/ssl/certs
 	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/keys/cert.pem $(1)/etc/bismark
-	$(LN) $(1)/etc/bismark/cert.pem $(1)/etc/ssl/certs/381178f4.0
+	###$(LN) $(1)/etc/bismark/cert.pem $(1)/etc/ssl/certs/381178f4.0
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
 	$(CP) -p $(PKG_BUILD_DIR)/lib/* $(1)/usr/lib/bismark/
 	$(CP) $(PKG_BUILD_DIR)/etc/bismark-lite.initd $(1)/etc/init.d/bismark-lite
@@ -67,8 +67,9 @@ define Package/bismark-mgmt/postinst
 #!/bin/sh
 # Bismark management post-install script
 
-#cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys >> $${IPKG_INSTROOT}/etc/dropbear/authorized_keys
-#cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/known_hosts
+###cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys >> $${IPKG_INSTROOT}/etc/dropbear/authorized_keys
+###cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/known_hosts
+ln -s ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/381178f4.0
 
 endef
 
