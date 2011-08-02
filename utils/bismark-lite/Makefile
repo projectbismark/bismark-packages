@@ -69,7 +69,7 @@ define Package/bismark-lite/postinst
 
 ###cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys >> $${IPKG_INSTROOT}/etc/dropbear/authorized_keys
 ###cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/known_hosts
-ln -s ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/381178f4.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/381178f4.0
 
 endef
 
