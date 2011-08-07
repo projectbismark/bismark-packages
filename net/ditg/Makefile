@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010 OpenWrt.org
+# Copyright (C) 2010-2011 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,27 +8,27 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ditg
-PKG_VERSION:=2.8.0
-PKG_RELEASE:=rc1
+PKG_VERSION:=2.8.0-rc1
+PKG_RELEASE:=1
 
-PKG_SOURCE:=D-ITG-${PKG_VERSION}-${PKG_RELEASE}.tgz
-PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice/
-PKG_MD5SUM:=ed8efdda540f467ef4d688ed4184b11d
+PKG_SOURCE:=D-ITG-${PKG_VERSION}.tgz
+PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice
+PKG_MD5SUM:=609736113de729df833ac691d1c44ead
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}-${PKG_RELEASE}
+PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/ditg/Default
+define Package/ditg
   TITLE:=D-ITG (Distributed Internet Traffic Generator)
   SECTION:=net
   CATEGORY:=Network
   URL:=http://www.grid.unina.it/software/ITG/
-  MAINTAINER:=Walter de Donato <walter.dedonato@unina.it>
-  DEPENDS:= +uclibcxx 
+  MAINTAINER:=Giovanni Di Stasi <giovanni.distasi@unina.it>
+  DEPENDS:=+libpthread +uclibcxx 
 endef
 
-define Package/ditg/Default/description
+define Package/ditg/description
   D-ITG (Distributed Internet Traffic Generator) is a platform capable
   to produce traffic at packet level accurately replicating appropriate
   stochastic processes for both IDT (Inter Departure Time) and PS
@@ -39,23 +39,16 @@ define Package/ditg/Default/description
   when compared to other traffic generators.
 endef
 
-define Package/ditg
-  $(call Package/ditg/Default)
-endef
+MAKE_PATH := src
 
-TARGET_CXX=g++-uc
+TARGET_CXX=$(STAGING_DIR)/host/bin/g++-uc
 
-define Build/Compile
-	$(MAKE) \
-		CXX="$(TARGET_CXX)" \
-		CXXOPT="-DMULTIPORT -DARM $(TARGET_CFLAGS) $(TARGET_CPPFLAGS)" \
-		-C $(PKG_BUILD_DIR)/src 
-endef
+MAKE_FLAGS += \
+       CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DMULTIPORT -DARM"
 
 define Package/ditg/install
-	$(INSTALL_DIR) $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/{ITGSend,ITGRecv,ITGLog,ITGDec}  \
-		$(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/ITG{Send,Recv,Log,Dec} $(1)/usr/bin
 endef
 
 $(eval $(call BuildPackage,ditg))
