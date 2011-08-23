@@ -16,12 +16,12 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}-${PKG_RELEASE}
 include $(INCLUDE_DIR)/package.mk
 
 define Package/paris-traceroute/Default
-  TITLE:= paris-traceroute 
+  TITLE:=paris-traceroute 
   SECTION:=net
   CATEGORY:=Network
   URL:=http://www.paris-traceroute.net
   MAINTAINER:=LIP6
-  DEPENDS:= +uclibcxx 
+  DEPENDS:=+uclibcxx 
 endef
 
 define Package/paris-traceroute/Default/description
