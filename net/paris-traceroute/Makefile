@@ -11,12 +11,12 @@ PKG_NAME:=paris-traceroute
 PKG_VERSION:=0.92
 PKG_RELEASE:=dev
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}-${PKG_RELEASE}
+#PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}-${PKG_RELEASE}
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/paris-traceroute/Default
-  TITLE:=paris-traceroute 
+define Package/paris-traceroute
+  TITLE:=Paris Traceroute 
   SECTION:=net
   CATEGORY:=Network
   URL:=http://www.paris-traceroute.net
