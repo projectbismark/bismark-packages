@@ -21,7 +21,7 @@ define Package/bismark-chrome-new
    TITLE:=Web server files for bismark
    URL:=http://www.gtnoise.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+lighttpd
+   DEPENDS:=
 endef
 
 define Package/bismark-chrome-new/description
@@ -39,8 +39,8 @@ define Build/Compile
 endef
 
 define Package/bismark-chrome-new/install
-	$(INSTALL_DIR) $(1)/etc
-	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/
+	$(INSTALL_DIR) $(1)/www
+	$(CP) -p $(PKG_BUILD_DIR)/www/* $(1)/www/
 endef
 
 $(eval $(call BuildPackage,bismark-chrome-new))
