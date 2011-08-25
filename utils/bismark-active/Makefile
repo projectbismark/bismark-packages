@@ -19,7 +19,7 @@ define Package/bismark-active
    TITLE:=Broadband Internet Service benchMARK - Active measurement tools
    URL:=http://www.networkdashboard.org/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+bismark-mgmt +shaperprobe +ditg +time +netperf-latest
+   DEPENDS:=+bismark-mgmt +shaperprobe +ditg +time +netperf
 endef
 
 define Package/bismark-active/description
