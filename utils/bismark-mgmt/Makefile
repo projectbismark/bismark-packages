@@ -11,7 +11,7 @@ PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.2
 PKG_RELEASE:=26
 #GIT_COMMIT:=1123704e593bddc4a9b4
-GIT_COMMIT:=lite
+#GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -31,8 +31,8 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib,keys}
-	[ -d files ] && ( cd files ; git pull ; git checkout $(GIT_COMMIT)) \
-		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ; git checkout $(GIT_COMMIT))
+	[ -d files ] && ( cd files ; git pull ) \#; git checkout $(GIT_COMMIT)) \
+		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) #; git checkout $(GIT_COMMIT))
 
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc

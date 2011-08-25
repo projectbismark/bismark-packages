@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.1
 PKG_RELEASE:=7
-GIT_COMMIT:=lite
+#GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -30,8 +30,8 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib,keys}
-	[ -d files ] && ( cd files ; git pull ; git checkout $(GIT_COMMIT)) \
-		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ; git checkout $(GIT_COMMIT))
+	[ -d files ] && ( cd files ; git pull ) \#; git checkout $(GIT_COMMIT)) \
+		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) \#; git checkout $(GIT_COMMIT))
 
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{action-lite,bootstrap-lite,probe} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark.conf,bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
