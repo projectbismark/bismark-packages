@@ -11,8 +11,15 @@ PKG_NAME:=ditg
 PKG_VERSION:=2.8.0-rc1
 PKG_RELEASE:=1
 
+<<<<<<< HEAD
 PKG_SOURCE:=D-ITG-${PKG_VERSION}.tgz
 PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice
+=======
+PKG_SOURCE:=D-ITG-${PKG_VERSION}-${PKG_RELEASE}.tgz
+PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice/
+#PKG_SOURCE_URL:=http://143.215.131.215:4096/
+#PKG_MD5SUM:=a96435720b3cd879007db3532108cc88
+>>>>>>> lite
 PKG_MD5SUM:=609736113de729df833ac691d1c44ead
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}
