@@ -15,7 +15,7 @@ PKG_REV:=2693afcf4c08c41067ac11177a1da3a033d6c6c0
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/bismark-chrome
+define Package/bismark-chrome-new
    SECTION:=utils
    CATEGORY:=Utilities
    TITLE:=Web server files for bismark
@@ -24,7 +24,7 @@ define Package/bismark-chrome
    DEPENDS:=+lighttpd
 endef
 
-define Package/bismark-chrome/description
+define Package/bismark-chrome-new/description
 	The bismark-chrome package provides a reference local web page
 	for network resources.
 endef
@@ -38,9 +38,9 @@ define Build/Compile
 	
 endef
 
-define Package/bismark-chrome/install
+define Package/bismark-chrome-new/install
 	$(INSTALL_DIR) $(1)/etc
 	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/
 endef
 
-$(eval $(call BuildPackage,bismark-chrome))
+$(eval $(call BuildPackage,bismark-chrome-new))
