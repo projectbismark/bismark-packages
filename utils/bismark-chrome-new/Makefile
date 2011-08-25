@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome-new
 PKG_VERSION:=0.9.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_REV:=2693afcf4c08c41067ac11177a1da3a033d6c6c0
 # PKG_VERSION:=20110517
 
