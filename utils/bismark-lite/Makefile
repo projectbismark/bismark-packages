@@ -60,7 +60,7 @@ endef
 define Package/bismark-lite/install
 	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/etc/dropbear $(1)/etc/ssl/certs
 	# mgmt clash $(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
-	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark.conf,bismark-lite.conf,crontab-lite} $(1)/etc/bismark
+	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/keys/cert.pem $(1)/etc/bismark
 	###$(LN) $(1)/etc/bismark/cert.pem $(1)/etc/ssl/certs/381178f4.0
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
