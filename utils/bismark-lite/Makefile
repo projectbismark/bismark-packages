@@ -42,8 +42,8 @@ define Build/Prepare
 	$(CP) files/device/OpenWrt_common/etc/{bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
 	$(CP) -L files/device/OpenWrt_common/keys/cert.pem $(PKG_BUILD_DIR)/keys
 
-	VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
-	sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
+	#VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
+	#sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
 endef
 
 define Build/Compile
