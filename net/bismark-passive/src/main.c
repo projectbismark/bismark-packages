@@ -2,6 +2,9 @@
 
 #include <pcap.h>
 
+#include "packet_series.h"
+
+static packet_series_t packet_data;
 
 void process_packet (
         u_char *user,
@@ -18,6 +21,8 @@ void process_packet (
         fflush (stdout);
         last_dropped = statistics.ps_drop;
     }
+
+    packet_series_add_packet(&packet_data, &header->ts, header->len, 0);
 }
 
 int main (int argc, char *argv[]) {
@@ -36,6 +41,8 @@ int main (int argc, char *argv[]) {
         fprintf (stderr, "Couldn't open device %s: %s\n", dev, errbuf);
         return 2;
     }
+
+    packet_series_init(&packet_data);
 
     /* By default, pcap uses an internal buffer of 500 KB. Any packets that
      * overflow this buffer will be dropped. pcap_stats tells the number of
