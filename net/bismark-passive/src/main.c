@@ -41,12 +41,12 @@ static void get_flow_entry_for_packet (
       entry->port_destination = udp_header->dest;
     } else {
 #ifdef DEBUG
-      fprintf (stderr, "Unhandled transport protocol: %d\n", ip_header->protocol);
+      fprintf (stderr, "Unhandled transport protocol: %u\n", ip_header->protocol);
 #endif
     }
   } else {
 #ifdef DEBUG
-    fprintf (stderr, "Unhandled network protocol: %hd\n", ntohs (eth_header->ether_type));
+    fprintf (stderr, "Unhandled network protocol: %hu\n", ntohs (eth_header->ether_type));
 #endif
   }
 }
