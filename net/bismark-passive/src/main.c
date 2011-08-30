@@ -1,10 +1,12 @@
 #include <stdio.h>
+/* inet_ntoa */
+#include <arpa/inet.h>
 /* ETHER_HDR_LEN */
-#include <net/ethernet.h>   
+#include <net/ethernet.h>
 /* IPPROTO_... */
 #include <netinet/in.h>
 /* struct ip */
-#include <netinet/ip.h>     
+#include <netinet/ip.h>
 /* struct tcphdr */
 #include <netinet/tcp.h>
 /* struct udphdr */
@@ -69,8 +71,14 @@ void process_packet (
 
     for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
       if (flow_table.entries[idx].occupied == ENTRY_OCCUPIED) {
+        char src_buffer[256];
+        char dest_buffer[256];
         flow_table_entry_t* entry = &flow_table.entries[idx];
-        printf ("Entry: %d %d %hd %hd\n", entry->ip_source, entry->ip_destination, entry->port_source, entry->port_destination);
+        printf ("Entry: %s %s %hu %hu\n",
+                inet_ntop(AF_INET, &entry->ip_source, src_buffer, 256),
+                inet_ntop(AF_INET, &entry->ip_destination, dest_buffer, 256),
+                ntohs(entry->port_source),
+                ntohs(entry->port_destination));
       }
     }
   }
