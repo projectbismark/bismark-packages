@@ -61,10 +61,18 @@ void process_packet (
   struct pcap_stat statistics;
   ++packets_received;
   if (packets_received % 1000 == 0) {
+    int idx;
     pcap_stats (handle, &statistics);
     printf ("%d ", statistics.ps_drop - last_dropped);
     fflush (stdout);
     last_dropped = statistics.ps_drop;
+
+    for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
+      if (flow_table.entries[idx].occupied == ENTRY_OCCUPIED) {
+        flow_table_entry_t* entry = &flow_table.entries[idx];
+        printf ("Entry: %d %d %hd %hd\n", entry->ip_source, entry->ip_destination, entry->port_source, entry->port_destination);
+      }
+    }
   }
   if (packet_data.discarded_by_overflow % 1000 == 1) {
     printf("[%d] ", packet_data.discarded_by_overflow);
