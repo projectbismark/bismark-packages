@@ -46,7 +46,7 @@ static void get_flow_entry_for_packet (
     }
   } else {
 #ifdef DEBUG
-    fprintf (stderr, "Unhandled network protocol: %hd\n", eth_header->ether_type);
+    fprintf (stderr, "Unhandled network protocol: %hd\n", ntohs (eth_header->ether_type));
 #endif
   }
 }
