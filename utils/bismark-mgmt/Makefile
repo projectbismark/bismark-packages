@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.3
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
