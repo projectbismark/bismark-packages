@@ -107,7 +107,7 @@ int main (int argc, char *argv[]) {
   }
 
   dev = argv[1];
-  handle = pcap_open_live (dev, BUFSIZ, 1, 1000, errbuf);
+  handle = pcap_open_live (dev, BUFSIZ, 0, 1000, errbuf);
   if (!handle) {
     fprintf (stderr, "Couldn't open device %s: %s\n", dev, errbuf);
     return 2;
