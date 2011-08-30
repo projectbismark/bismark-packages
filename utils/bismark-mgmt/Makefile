@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.3
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -39,7 +39,7 @@ define Build/Prepare
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
-	$(CP) -L files/device/OpenWrt_common/keys/* $(PKG_BUILD_DIR)/keys
+	$(CP) -L files/device/OpenWrt_common/keys/{authorized_keys,bismark_key*,known_hosts} $(PKG_BUILD_DIR)/keys
 
 	VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
 	sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
