@@ -22,7 +22,7 @@ static void get_flow_entry_for_packet (
     const u_char* bytes,
     flow_table_entry_t* entry) {
   const struct ether_header* eth_header = (const struct ether_header*)bytes;
-  if (eth_header->ether_type == ETHERTYPE_IP) {
+  if (ntohs (eth_header->ether_type) == ETHERTYPE_IP) {
     const struct iphdr* ip_header = (const struct iphdr*)(bytes + ETHER_HDR_LEN);
     entry->ip_source = ip_header->saddr;
     entry->ip_destination = ip_header->daddr;
