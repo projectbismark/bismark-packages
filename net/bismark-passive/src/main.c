@@ -64,14 +64,21 @@ void process_packet (
   ++packets_received;
   if (packets_received % 1000 == 0) {
     int idx;
+    int flow_counter;
     pcap_stats (handle, &statistics);
     printf ("%d ", statistics.ps_drop - last_dropped);
     fflush (stdout);
     last_dropped = statistics.ps_drop;
 
+    flow_counter = 0;
     for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
       if (flow_table.entries[idx].occupied == ENTRY_OCCUPIED) {
-        char src_buffer[256];
+        ++flow_counter;
+      }
+    }
+    printf ("There are %d entries in the flow table\n", flow_counter);
+
+    /*    char src_buffer[256];
         char dest_buffer[256];
         flow_table_entry_t* entry = &flow_table.entries[idx];
         printf ("Entry: %s %s %hu %hu\n",
@@ -80,7 +87,7 @@ void process_packet (
                 ntohs(entry->port_source),
                 ntohs(entry->port_destination));
       }
-    }
+    }*/
   }
   if (packet_data.discarded_by_overflow % 1000 == 1) {
     printf("[%d] ", packet_data.discarded_by_overflow);
