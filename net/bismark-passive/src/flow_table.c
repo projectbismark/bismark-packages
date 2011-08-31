@@ -75,9 +75,8 @@ int flow_table_process_flow (flow_table_t* table,
 
   if (first_available) {
     *first_available = *new_entry;
-    first_available->init_time_seconds
+    first_available->updated_time_seconds
         = table->base_timestamp_seconds + timestamp->tv_sec;
-    first_available->updated_time_seconds = first_available->init_time_seconds;
     if (table->num_elements == 0) {
       table->base_timestamp_seconds = timestamp->tv_sec;
     }
