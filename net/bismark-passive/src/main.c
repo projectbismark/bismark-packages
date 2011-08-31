@@ -77,6 +77,8 @@ void process_packet (
       }
     }
     printf ("There are %d entries in the flow table\n", flow_counter);
+    printf ("Flow table has dropped %d flows\n", flow_table.num_dropped_flows);
+    printf ("Flow table has expired %d flows\n", flow_table.num_expired_flows);
 
     /*    char src_buffer[256];
         char dest_buffer[256];
@@ -96,7 +98,7 @@ void process_packet (
 
   packet_series_add_packet (&packet_data, &header->ts, header->len, 0);
   get_flow_entry_for_packet (bytes, &entry);
-  if (flow_table_process_flow (&flow_table, &entry)) {
+  if (flow_table_process_flow (&flow_table, &entry, &header->ts)) {
 #ifdef DEBUG
     fprintf(stderr, "Error adding to flow table\n");
 #endif

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+struct timeval;
+
 #include "constants.h"
 
 typedef struct {
@@ -17,15 +19,21 @@ typedef struct {
   uint8_t transport_protocol;
   uint16_t port_source;
   uint16_t port_destination;
+
+  uint64_t last_updated;
 } flow_table_entry_t;
 
 typedef struct {
   flow_table_entry_t entries[FLOW_TABLE_ENTRIES];
   uint32_t num_elements;
+  int num_expired_flows;
+  int num_dropped_flows;
 } flow_table_t;
 
 void flow_table_init(flow_table_t* table);
 
-int flow_table_process_flow(flow_table_t* table, flow_table_entry_t* entry);
+int flow_table_process_flow(flow_table_t* table,
+                            flow_table_entry_t* entry,
+                            const struct timeval* timestamp);
 
 #endif
