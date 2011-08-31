@@ -12,6 +12,8 @@ typedef struct {
 #define ENTRY_OCCUPIED  1
 #define ENTRY_DELETED   2
   uint8_t occupied;
+  uint32_t init_time_seconds;
+  uint32_t updated_time_seconds;
 
   uint32_t ip_source;
   uint32_t ip_destination;
@@ -19,12 +21,11 @@ typedef struct {
   uint8_t transport_protocol;
   uint16_t port_source;
   uint16_t port_destination;
-
-  uint64_t last_updated;
 } flow_table_entry_t;
 
 typedef struct {
   flow_table_entry_t entries[FLOW_TABLE_ENTRIES];
+  uint32_t base_timestamp_seconds;
   uint32_t num_elements;
   int num_expired_flows;
   int num_dropped_flows;

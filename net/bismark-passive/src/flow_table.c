@@ -33,6 +33,7 @@ static int flow_entry_compare (flow_table_entry_t* first,
 void flow_table_init (flow_table_t* table) {
   memset(table->entries, '\0', sizeof(table->entries));
   table->num_elements = 0;
+  table->base_timestamp_seconds = 0;
   table->num_expired_flows = 0;
   table->num_dropped_flows = 0;
 }
@@ -44,7 +45,6 @@ int flow_table_process_flow (flow_table_t* table,
   int probe;
   flow_table_entry_t* first_available = NULL;
 
-  /* TODO(sburnett): Set initial flow statistics here */
   new_entry->occupied = ENTRY_OCCUPIED;
   hash = fnv_hash_32((char *)new_entry, sizeof(*new_entry));
 
@@ -52,12 +52,15 @@ int flow_table_process_flow (flow_table_t* table,
     uint32_t final_hash
       = (uint32_t)(hash + C1*probe + C2*probe*probe) % FLOW_TABLE_ENTRIES;
     flow_table_entry_t* entry = &table->entries[final_hash];
-    if (flow_entry_compare (entry, new_entry)) {
-      entry->last_updated = timestamp->tv_sec;
+    if (flow_entry_compare (new_entry, entry)) {
+      entry->updated_time_seconds = table->base_timestamp_seconds + timestamp->tv_sec;
       return 0;
     } else if (entry->occupied == ENTRY_OCCUPIED
-        && entry->last_updated + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
+        && table->base_timestamp_seconds
+            + entry->updated_time_seconds
+            + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
       entry->occupied = ENTRY_DELETED;
+      --table->num_elements;
       ++table->num_expired_flows;
     }
     if (entry->occupied != ENTRY_OCCUPIED) {
@@ -72,7 +75,13 @@ int flow_table_process_flow (flow_table_t* table,
 
   if (first_available) {
     *first_available = *new_entry;
-    first_available->last_updated = timestamp->tv_sec;
+    first_available->init_time_seconds
+        = table->base_timestamp_seconds + timestamp->tv_sec;
+    first_available->updated_time_seconds = first_available->init_time_seconds;
+    if (table->num_elements == 0) {
+      table->base_timestamp_seconds = timestamp->tv_sec;
+    }
+    ++table->num_elements;
     return 0;
   }
 
