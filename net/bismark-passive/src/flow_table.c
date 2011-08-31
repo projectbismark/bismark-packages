@@ -55,7 +55,8 @@ int flow_table_process_flow (flow_table_t* table,
     if (flow_entry_compare (entry, new_entry)) {
       entry->last_updated = timestamp->tv_sec;
       return 0;
-    } else if (entry->last_updated + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
+    } else if (entry->occupied == ENTRY_OCCUPIED
+        && entry->last_updated + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
       entry->occupied = ENTRY_DELETED;
       ++table->num_expired_flows;
     }
