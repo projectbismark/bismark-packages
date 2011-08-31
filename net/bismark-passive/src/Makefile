@@ -5,6 +5,10 @@ SRCS=main.c packet_series.c flow_table.c
 OBJS=$(SRCS:.c=.o)
 EXE=bismark-passive
 
+TEST_LDFLAGS=-lcheck
+TEST_OBJS=tests.o packet_series.o
+TEST_EXE=tests
+
 all: $(EXE)
 
 $(EXE): $(OBJS) 
@@ -13,9 +17,9 @@ $(EXE): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 
-tests: packet_series.o tests.o
-	$(CC) -lcheck packet_series.o tests.o -o tests
-	./tests
+$(TEST_EXE): $(TEST_OBJS)
+	$(CC) $(TEST_LDFLAGS) $(TEST_OBJS) -o $(TEST_EXE)
+	./$(TEST_EXE)
 
 clean:
-	rm -rf $(OBJS) $(EXE)
+	rm -rf $(OBJS) $(EXE) $(TEST_OBJS) $(TEST_EXE)
