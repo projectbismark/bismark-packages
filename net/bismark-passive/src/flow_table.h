@@ -12,7 +12,7 @@ typedef struct {
 #define ENTRY_OCCUPIED  1
 #define ENTRY_DELETED   2
   uint8_t occupied;
-  uint32_t updated_time_seconds;
+  uint32_t last_update_time_seconds;
 
   uint32_t ip_source;
   uint32_t ip_destination;

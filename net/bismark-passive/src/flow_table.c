@@ -53,11 +53,12 @@ int flow_table_process_flow (flow_table_t* table,
       = (uint32_t)(hash + C1*probe + C2*probe*probe) % FLOW_TABLE_ENTRIES;
     flow_table_entry_t* entry = &table->entries[final_hash];
     if (flow_entry_compare (new_entry, entry)) {
-      entry->updated_time_seconds = table->base_timestamp_seconds + timestamp->tv_sec;
+      entry->last_update_time_seconds
+          = table->base_timestamp_seconds + timestamp->tv_sec;
       return 0;
     } else if (entry->occupied == ENTRY_OCCUPIED
         && table->base_timestamp_seconds
-            + entry->updated_time_seconds
+            + entry->last_update_time_seconds
             + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
       entry->occupied = ENTRY_DELETED;
       --table->num_elements;
@@ -75,7 +76,7 @@ int flow_table_process_flow (flow_table_t* table,
 
   if (first_available) {
     *first_available = *new_entry;
-    first_available->updated_time_seconds
+    first_available->last_update_time_seconds
         = table->base_timestamp_seconds + timestamp->tv_sec;
     if (table->num_elements == 0) {
       table->base_timestamp_seconds = timestamp->tv_sec;
