@@ -13,5 +13,9 @@ $(EXE): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 
+tests: packet_series.o tests.o
+	$(CC) -lcheck packet_series.o tests.o -o tests
+	./tests
+
 clean:
 	rm -rf $(OBJS) $(EXE)
