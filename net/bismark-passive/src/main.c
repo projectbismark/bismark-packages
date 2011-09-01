@@ -55,9 +55,8 @@ void process_packet (
         u_char* user,
         const struct pcap_pkthdr* header,
         const u_char* bytes) {
-  pcap_t* handle = (pcap_t*)user;
-  flow_table_entry_t entry;
 #ifdef DEBUG
+  pcap_t* handle = (pcap_t*)user;
   static int packets_received = 0;
   static int last_dropped = 0;
   struct pcap_stat statistics;
@@ -96,11 +95,18 @@ void process_packet (
   }
 #endif
 
-  packet_series_add_packet (&packet_data, &header->ts, header->len, 0);
-  get_flow_entry_for_packet (bytes, &entry);
-  if (flow_table_process_flow (&flow_table, &entry, &header->ts)) {
+  flow_table_entry_t entry;
+  get_flow_entry_for_packet(bytes, &entry);
+  int table_idx = flow_table_process_flow(&flow_table, &entry, &header->ts);
 #ifdef DEBUG
+  if (table_idx < 0) {
     fprintf(stderr, "Error adding to flow table\n");
+  }
+#endif
+  if (packet_series_add_packet(
+        &packet_data, &header->ts, header->len, table_idx)) {
+#ifdef DEBUG
+    fprintf(stderr, "Error adding to packet series\n");
 #endif
   }
 }

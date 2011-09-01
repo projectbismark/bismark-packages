@@ -101,9 +101,9 @@ START_TEST(test_flows_detect_dupes) {
   tv.tv_sec = kMySec;
   tv.tv_usec = kMyUSec;
 
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == 1);
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == 1);
 }
 END_TEST
@@ -119,30 +119,30 @@ START_TEST(test_flows_can_probe) {
   entry.transport_protocol = 3;
   entry.port_source = 4;
   entry.port_destination = 5;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &tv) == 0);
   fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
   fail_unless(table.num_elements == 1);
 
   entry.ip_source = 10;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &tv) == 1);
   fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED);
   fail_unless(table.num_elements == 2);
 
   entry.ip_source = 20;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &tv) == 3);
   fail_unless(table.entries[3].occupied == ENTRY_OCCUPIED);
   fail_unless(table.num_elements == 3);
 
   int num_adds = table.num_elements;
   while (num_adds < HT_NUM_PROBES) {
     entry.ip_source = num_adds * 10;
-    fail_if(flow_table_process_flow(&table, &entry, &tv));
+    fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
     fail_unless(table.num_elements == num_adds);
     ++num_adds;
   }
 
   entry.ip_source = 11;
-  fail_unless(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == HT_NUM_PROBES);
   fail_unless(table.num_dropped_flows == 1);
   fail_unless(table.num_expired_flows == 0);
@@ -159,19 +159,19 @@ START_TEST(test_flows_can_set_base_timestamp) {
   entry.transport_protocol = 3;
   entry.port_source = 4;
   entry.port_destination = 5;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.base_timestamp_seconds == tv.tv_sec);
 
   struct timeval next_tv;
   next_tv.tv_sec = tv.tv_sec + 1;
   next_tv.tv_usec = kMyUSec;
   entry.ip_source = 10;
-  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv) < 0);
   fail_unless(table.base_timestamp_seconds == tv.tv_sec);
 
   next_tv.tv_sec = next_tv.tv_sec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
   next_tv.tv_usec = kMyUSec;
-  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv) < 0);
   fail_unless(table.base_timestamp_seconds == next_tv.tv_sec);
 
   fail_unless(table.num_expired_flows == 2);
@@ -194,11 +194,11 @@ START_TEST(test_flows_can_set_last_update_time) {
   entry.transport_protocol = 3;
   entry.port_source = 4;
   entry.port_destination = 5;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &tv) == 0);
   fail_unless(table.entries[0].last_update_time_seconds == 0);
   fail_unless(table.num_elements == 1);
 
-  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &next_tv) == 0);
   fail_unless(table.entries[0].last_update_time_seconds == (next_tv.tv_sec - tv.tv_sec));
   fail_unless(table.num_elements == 1);
 
@@ -217,18 +217,18 @@ START_TEST(test_flows_can_expire) {
   entry.transport_protocol = 3;
   entry.port_source = 4;
   entry.port_destination = 5;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == 1);
 
   entry.ip_source = 2;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == 2);
 
   struct timeval next_tv;
   next_tv.tv_sec = kMySec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
   next_tv.tv_usec = kMyUSec;
   entry.ip_source = 3;
-  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &next_tv) == 0);
   fail_unless(table.num_elements == 1);
   fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
   fail_unless(table.entries[1].occupied == ENTRY_DELETED);
@@ -247,18 +247,18 @@ START_TEST(test_flows_can_detect_later_dupes) {
   entry.transport_protocol = 3;
   entry.port_source = 4;
   entry.port_destination = 5;
-  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == 1);
 
   struct timeval next_tv;
   next_tv.tv_sec = tv.tv_sec + 1;
   next_tv.tv_usec = tv.tv_usec;
   entry.ip_source = 2;
-  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv) < 0);
   fail_unless(table.num_elements == 2);
 
   next_tv.tv_sec = tv.tv_sec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
-  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(flow_table_process_flow(&table, &entry, &next_tv) == 1);
   fail_unless(table.num_elements == 1);
   fail_unless(table.entries[0].occupied == ENTRY_DELETED);
   fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED);

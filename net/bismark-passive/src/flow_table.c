@@ -4,11 +4,13 @@
 #include <string.h>
 #include <sys/time.h>
 
-#define FNV_OFFSET_BASIS 0x811c9dc5
-
+#ifdef TESTING
+/* This is for testing only */
 static uint32_t (*alternate_hash_function) (const char* data, int len) = NULL;
+#endif
 
 /* Implementation from http://isthe.com/chongo/src/fnv/hash_32.c */
+#define FNV_OFFSET_BASIS 0x811c9dc5
 static uint32_t fnv_hash_32 (const char* data, int len) {
   const unsigned char *bp = (const unsigned char *)data;
   const unsigned char *be = bp + len;
@@ -44,18 +46,20 @@ int flow_table_process_flow (flow_table_t* table,
                              const struct timeval* timestamp) {
   uint32_t hash;
   int probe;
-  flow_table_entry_t* first_available = NULL;
+  int first_available = -1;
 
   new_entry->occupied = ENTRY_OCCUPIED;
   hash = fnv_hash_32((char *)new_entry, sizeof(*new_entry));
+#ifdef TESTING
   if (alternate_hash_function) {
     hash = alternate_hash_function((char *)new_entry, sizeof(*new_entry));
   }
+#endif
 
   for (probe = 0; probe < HT_NUM_PROBES; ++probe) {
-    uint32_t final_hash
+    uint32_t table_idx
       = (uint32_t)(hash + HT_C1*probe + HT_C2*probe*probe) % FLOW_TABLE_ENTRIES;
-    flow_table_entry_t* entry = &table->entries[final_hash];
+    flow_table_entry_t* entry = &table->entries[table_idx];
     if (entry->occupied == ENTRY_OCCUPIED
         && table->base_timestamp_seconds
             + entry->last_update_time_seconds
@@ -67,11 +71,11 @@ int flow_table_process_flow (flow_table_t* table,
     if (flow_entry_compare (new_entry, entry)) {
       entry->last_update_time_seconds
           = timestamp->tv_sec - table->base_timestamp_seconds;
-      return 0;
+      return table_idx;
     }
     if (entry->occupied != ENTRY_OCCUPIED) {
-      if (!first_available) {
-        first_available = entry;
+      if (first_available < 0) {
+        first_available = table_idx;
       }
       if (entry->occupied == ENTRY_EMPTY) {
         break;
@@ -79,21 +83,23 @@ int flow_table_process_flow (flow_table_t* table,
     }
   }
 
-  if (first_available) {
+  if (first_available >= 0) {
     if (table->num_elements == 0) {
       table->base_timestamp_seconds = timestamp->tv_sec;
     }
-    *first_available = *new_entry;
-    first_available->last_update_time_seconds
+    new_entry->last_update_time_seconds
         = timestamp->tv_sec - table->base_timestamp_seconds;
+    table->entries[first_available] = *new_entry;
     ++table->num_elements;
-    return 0;
+    return first_available;
   }
 
   ++table->num_dropped_flows;
   return -1;
 }
 
+#ifdef TESTING
 void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len)) {
   alternate_hash_function = hasher;
 }
+#endif
