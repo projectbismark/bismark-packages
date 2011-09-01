@@ -1,9 +1,14 @@
 #include "flow_table.h"
 #include "packet_series.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <check.h>
+
+/********************************************************
+ * Packet series tests
+ ********************************************************/
 
 static packet_series_t series;
 static const int kMySize = 12;
@@ -13,9 +18,6 @@ static const uint32_t kMyUSec = 20000;
 
 void series_setup () {
   packet_series_init (&series);
-}
-
-void series_teardown () {
 }
 
 START_TEST (test_series_add) {
@@ -72,15 +74,11 @@ START_TEST (test_series_overflow) {
 }
 END_TEST
 
-static flow_table_t table;
+/********************************************************
+ * Flow table tests
+ ********************************************************/
 
-/* Things to test:
- * - Probing
- * - Counters
- * - Base timestamp
- * - Last update time
- * - Expiration and DELETED
- */
+static flow_table_t table;
 
 static uint32_t dummy_hash(const char* data, int len) {
   return 0;
@@ -89,9 +87,6 @@ static uint32_t dummy_hash(const char* data, int len) {
 void flows_setup() {
   flow_table_init(&table);
   testing_set_hash_function(&dummy_hash);
-}
-
-void flows_teardown() {
 }
 
 START_TEST(test_flows_detect_dupes) {
@@ -124,16 +119,121 @@ START_TEST(test_flows_can_probe) {
   entry.transport_protocol = 3;
   entry.port_source = 4;
   entry.port_destination = 5;
-
   fail_if(flow_table_process_flow(&table, &entry, &tv));
   fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
   fail_unless(table.num_elements == 1);
 
   entry.ip_source = 10;
-
   fail_if(flow_table_process_flow(&table, &entry, &tv));
   fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED);
   fail_unless(table.num_elements == 2);
+
+  entry.ip_source = 20;
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.entries[3].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.num_elements == 3);
+
+  int num_adds = table.num_elements;
+  while (num_adds < HT_NUM_PROBES) {
+    entry.ip_source = num_adds * 10;
+    fail_if(flow_table_process_flow(&table, &entry, &tv));
+    fail_unless(table.num_elements == num_adds);
+    ++num_adds;
+  }
+
+  entry.ip_source = 11;
+  fail_unless(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.num_elements == HT_NUM_PROBES);
+  fail_unless(table.num_dropped_flows == 1);
+  fail_unless(table.num_expired_flows == 0);
+}
+END_TEST
+
+START_TEST(test_flows_can_set_base_timestamp) {
+  struct timeval tv;
+  tv.tv_sec = kMySec;
+  tv.tv_usec = kMyUSec;
+  flow_table_entry_t entry;
+  entry.ip_source = 1;
+  entry.ip_destination = 2;
+  entry.transport_protocol = 3;
+  entry.port_source = 4;
+  entry.port_destination = 5;
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.base_timestamp_seconds == tv.tv_sec);
+
+  struct timeval next_tv;
+  next_tv.tv_sec = tv.tv_sec + 1;
+  next_tv.tv_usec = kMyUSec;
+  entry.ip_source = 10;
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(table.base_timestamp_seconds == tv.tv_sec);
+
+  next_tv.tv_sec = next_tv.tv_sec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
+  next_tv.tv_usec = kMyUSec;
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(table.base_timestamp_seconds == next_tv.tv_sec);
+
+  fail_unless(table.num_expired_flows == 2);
+  fail_unless(table.num_dropped_flows == 0);
+}
+END_TEST
+
+START_TEST(test_flows_can_set_last_update_time) {
+  struct timeval tv;
+  tv.tv_sec = kMySec;
+  tv.tv_usec = kMyUSec;
+
+  struct timeval next_tv;
+  next_tv.tv_sec = kMySec * 2;
+  next_tv.tv_usec = kMyUSec * 2;
+
+  flow_table_entry_t entry;
+  entry.ip_source = 1;
+  entry.ip_destination = 2;
+  entry.transport_protocol = 3;
+  entry.port_source = 4;
+  entry.port_destination = 5;
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.entries[0].last_update_time_seconds == 0);
+  fail_unless(table.num_elements == 1);
+
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(table.entries[0].last_update_time_seconds == (next_tv.tv_sec - tv.tv_sec));
+  fail_unless(table.num_elements == 1);
+
+  fail_unless(table.num_expired_flows == 0);
+  fail_unless(table.num_dropped_flows == 0);
+}
+END_TEST
+
+START_TEST(test_flows_can_expire) {
+  struct timeval tv;
+  tv.tv_sec = kMySec;
+  tv.tv_usec = kMyUSec;
+  flow_table_entry_t entry;
+  entry.ip_source = 1;
+  entry.ip_destination = 2;
+  entry.transport_protocol = 3;
+  entry.port_source = 4;
+  entry.port_destination = 5;
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.num_elements == 1);
+
+  entry.ip_source = 2;
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.num_elements == 2);
+
+  struct timeval next_tv;
+  next_tv.tv_sec = kMySec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
+  next_tv.tv_usec = kMyUSec;
+  entry.ip_source = 3;
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(table.num_elements == 1);
+  fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.entries[1].occupied == ENTRY_DELETED);
+  fail_unless(table.num_expired_flows == 2);
+  fail_unless(table.num_dropped_flows == 0);
 }
 END_TEST
 
@@ -141,15 +241,18 @@ Suite* build_suite () {
   Suite *s = suite_create("Bismark passive");
 
   TCase *tc_series = tcase_create("Packet series");
-  tcase_add_checked_fixture(tc_series, series_setup, series_teardown);
+  tcase_add_checked_fixture(tc_series, series_setup, NULL);
   tcase_add_test(tc_series, test_series_add);
   tcase_add_test(tc_series, test_series_overflow);
   suite_add_tcase(s, tc_series);
 
   TCase *tc_flows = tcase_create("Flow table");
-  tcase_add_checked_fixture(tc_flows, flows_setup, flows_teardown);
-  tcase_add_test(tc_series, test_flows_detect_dupes);
-  tcase_add_test(tc_series, test_flows_can_probe);
+  tcase_add_checked_fixture(tc_flows, flows_setup, NULL);
+  tcase_add_test(tc_flows, test_flows_detect_dupes);
+  tcase_add_test(tc_flows, test_flows_can_probe);
+  tcase_add_test(tc_flows, test_flows_can_set_base_timestamp);
+  tcase_add_test(tc_flows, test_flows_can_set_last_update_time);
+  tcase_add_test(tc_flows, test_flows_can_expire);
   suite_add_tcase(s, tc_flows);
 
   return s;

@@ -4,9 +4,6 @@
 #include <string.h>
 #include <sys/time.h>
 
-#define NUM_PROBES 3
-#define C1 0.5
-#define C2 0.5
 #define FNV_OFFSET_BASIS 0x811c9dc5
 
 static uint32_t (*alternate_hash_function) (const char* data, int len) = NULL;
@@ -53,26 +50,24 @@ int flow_table_process_flow (flow_table_t* table,
   hash = fnv_hash_32((char *)new_entry, sizeof(*new_entry));
   if (alternate_hash_function) {
     hash = alternate_hash_function((char *)new_entry, sizeof(*new_entry));
-    fprintf(stderr, "Hello: %d", hash);
-  } else {
-    fprintf(stderr, "Hello: %d", hash);
   }
 
-  for (probe = 0; probe < NUM_PROBES; ++probe) {
+  for (probe = 0; probe < HT_NUM_PROBES; ++probe) {
     uint32_t final_hash
-      = (uint32_t)(hash + C1*probe + C2*probe*probe) % FLOW_TABLE_ENTRIES;
+      = (uint32_t)(hash + HT_C1*probe + HT_C2*probe*probe) % FLOW_TABLE_ENTRIES;
     flow_table_entry_t* entry = &table->entries[final_hash];
-    if (flow_entry_compare (new_entry, entry)) {
-      entry->last_update_time_seconds
-          = table->base_timestamp_seconds + timestamp->tv_sec;
-      return 0;
-    } else if (entry->occupied == ENTRY_OCCUPIED
+    if (entry->occupied == ENTRY_OCCUPIED
         && table->base_timestamp_seconds
             + entry->last_update_time_seconds
             + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
       entry->occupied = ENTRY_DELETED;
       --table->num_elements;
       ++table->num_expired_flows;
+    }
+    if (flow_entry_compare (new_entry, entry)) {
+      entry->last_update_time_seconds
+          = timestamp->tv_sec - table->base_timestamp_seconds;
+      return 0;
     }
     if (entry->occupied != ENTRY_OCCUPIED) {
       if (!first_available) {
@@ -85,12 +80,12 @@ int flow_table_process_flow (flow_table_t* table,
   }
 
   if (first_available) {
-    *first_available = *new_entry;
-    first_available->last_update_time_seconds
-        = table->base_timestamp_seconds + timestamp->tv_sec;
     if (table->num_elements == 0) {
       table->base_timestamp_seconds = timestamp->tv_sec;
     }
+    *first_available = *new_entry;
+    first_available->last_update_time_seconds
+        = timestamp->tv_sec - table->base_timestamp_seconds;
     ++table->num_elements;
     return 0;
   }

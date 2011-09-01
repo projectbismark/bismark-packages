@@ -6,6 +6,10 @@
 #define FLOW_TABLE_ENTRIES 65536
 #define FLOW_TABLE_EXPIRATION_SECONDS (30*60)
 
+#define HT_NUM_PROBES 3
+#define HT_C1 0.5
+#define HT_C2 0.5
+
 #define NUM_MICROS_PER_SECOND 1e6
 
 #endif
