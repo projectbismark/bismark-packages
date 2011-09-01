@@ -71,7 +71,7 @@ START_TEST (test_series_overflow) {
 }
 END_TEST
 
-Suite* packet_series_suite () {
+Suite* build_suite () {
   Suite *s = suite_create ("Bismark passive");
 
   TCase *tc_core = tcase_create ("Packet series");
@@ -85,7 +85,7 @@ Suite* packet_series_suite () {
 
 int main (int argc, char* argv[]) {
   int number_failed;
-  Suite *s = packet_series_suite ();
+  Suite *s = build_suite ();
   SRunner *sr = srunner_create (s);
   srunner_run_all (sr, CK_NORMAL);
   number_failed = srunner_ntests_failed (sr);
