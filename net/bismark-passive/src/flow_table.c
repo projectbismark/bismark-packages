@@ -7,17 +7,21 @@
 #define NUM_PROBES 3
 #define C1 0.5
 #define C2 0.5
-#define FNV_PRIME 16777619
-#define FNV_OFFSET_BASIS 2166136261
+#define FNV_OFFSET_BASIS 0x811c9dc5
 
+static uint32_t (*alternate_hash_function) (const char* data, int len) = NULL;
+
+/* Implementation from http://isthe.com/chongo/src/fnv/hash_32.c */
 static uint32_t fnv_hash_32 (const char* data, int len) {
-  int idx;
-  uint32_t hash = FNV_OFFSET_BASIS;
-  for (idx = 0; idx < len; ++idx) {
-    hash *= FNV_PRIME;
-    hash ^= (uint32_t)data[idx];
+  const unsigned char *bp = (const unsigned char *)data;
+  const unsigned char *be = bp + len;
+  uint32_t hval = FNV_OFFSET_BASIS;
+
+  while (bp < be) {
+    hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24);
+    hval ^= *bp++;
   }
-  return hash;
+  return hval;
 }
 
 static int flow_entry_compare (flow_table_entry_t* first,
@@ -47,6 +51,12 @@ int flow_table_process_flow (flow_table_t* table,
 
   new_entry->occupied = ENTRY_OCCUPIED;
   hash = fnv_hash_32((char *)new_entry, sizeof(*new_entry));
+  if (alternate_hash_function) {
+    hash = alternate_hash_function((char *)new_entry, sizeof(*new_entry));
+    fprintf(stderr, "Hello: %d", hash);
+  } else {
+    fprintf(stderr, "Hello: %d", hash);
+  }
 
   for (probe = 0; probe < NUM_PROBES; ++probe) {
     uint32_t final_hash
@@ -87,4 +97,8 @@ int flow_table_process_flow (flow_table_t* table,
 
   ++table->num_dropped_flows;
   return -1;
+}
+
+void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len)) {
+  alternate_hash_function = hasher;
 }

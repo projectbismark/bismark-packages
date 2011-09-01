@@ -1,12 +1,12 @@
 CC=gcc
-CFLAGS+=-c -Wall -O3 -fno-strict-aliasing
+CFLAGS+=-c -Wall -O3 -fno-strict-aliasing -g
 LDFLAGS+=-lpcap
 SRCS=main.c packet_series.c flow_table.c
 OBJS=$(SRCS:.c=.o)
 EXE=bismark-passive
 
 TEST_LDFLAGS=-lcheck
-TEST_OBJS=tests.o packet_series.o
+TEST_OBJS=tests.o packet_series.o flow_table.o
 TEST_EXE=tests
 
 all: $(EXE)

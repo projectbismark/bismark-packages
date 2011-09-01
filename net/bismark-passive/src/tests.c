@@ -1,3 +1,4 @@
+#include "flow_table.h"
 #include "packet_series.h"
 
 #include <stdlib.h>
@@ -71,14 +72,85 @@ START_TEST (test_series_overflow) {
 }
 END_TEST
 
-Suite* build_suite () {
-  Suite *s = suite_create ("Bismark passive");
+static flow_table_t table;
 
-  TCase *tc_core = tcase_create ("Packet series");
-  tcase_add_checked_fixture (tc_core, series_setup, series_teardown);
-  tcase_add_test (tc_core, test_series_add);
-  tcase_add_test (tc_core, test_series_overflow);
-  suite_add_tcase (s, tc_core);
+/* Things to test:
+ * - Probing
+ * - Counters
+ * - Base timestamp
+ * - Last update time
+ * - Expiration and DELETED
+ */
+
+static uint32_t dummy_hash(const char* data, int len) {
+  return 0;
+}
+
+void flows_setup() {
+  flow_table_init(&table);
+  testing_set_hash_function(&dummy_hash);
+}
+
+void flows_teardown() {
+}
+
+START_TEST(test_flows_detect_dupes) {
+  flow_table_entry_t entry;
+  entry.ip_source = 1;
+  entry.ip_destination = 2;
+  entry.transport_protocol = 3;
+  entry.port_source = 4;
+  entry.port_destination = 5;
+
+  struct timeval tv;
+  tv.tv_sec = kMySec;
+  tv.tv_usec = kMyUSec;
+
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.num_elements == 1);
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.num_elements == 1);
+}
+END_TEST
+
+START_TEST(test_flows_can_probe) {
+  struct timeval tv;
+  tv.tv_sec = kMySec;
+  tv.tv_usec = kMyUSec;
+
+  flow_table_entry_t entry;
+  entry.ip_source = 1;
+  entry.ip_destination = 2;
+  entry.transport_protocol = 3;
+  entry.port_source = 4;
+  entry.port_destination = 5;
+
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.num_elements == 1);
+
+  entry.ip_source = 10;
+
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.num_elements == 2);
+}
+END_TEST
+
+Suite* build_suite () {
+  Suite *s = suite_create("Bismark passive");
+
+  TCase *tc_series = tcase_create("Packet series");
+  tcase_add_checked_fixture(tc_series, series_setup, series_teardown);
+  tcase_add_test(tc_series, test_series_add);
+  tcase_add_test(tc_series, test_series_overflow);
+  suite_add_tcase(s, tc_series);
+
+  TCase *tc_flows = tcase_create("Flow table");
+  tcase_add_checked_fixture(tc_flows, flows_setup, flows_teardown);
+  tcase_add_test(tc_series, test_flows_detect_dupes);
+  tcase_add_test(tc_series, test_flows_can_probe);
+  suite_add_tcase(s, tc_flows);
 
   return s;
 }
