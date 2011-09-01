@@ -237,6 +237,35 @@ START_TEST(test_flows_can_expire) {
 }
 END_TEST
 
+START_TEST(test_flows_can_detect_later_dupes) {
+  struct timeval tv;
+  tv.tv_sec = kMySec;
+  tv.tv_usec = kMyUSec;
+  flow_table_entry_t entry;
+  entry.ip_source = 1;
+  entry.ip_destination = 2;
+  entry.transport_protocol = 3;
+  entry.port_source = 4;
+  entry.port_destination = 5;
+  fail_if(flow_table_process_flow(&table, &entry, &tv));
+  fail_unless(table.num_elements == 1);
+
+  struct timeval next_tv;
+  next_tv.tv_sec = tv.tv_sec + 1;
+  next_tv.tv_usec = tv.tv_usec;
+  entry.ip_source = 2;
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(table.num_elements == 2);
+
+  next_tv.tv_sec = tv.tv_sec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
+  fail_if(flow_table_process_flow(&table, &entry, &next_tv));
+  fail_unless(table.num_elements == 1);
+  fail_unless(table.entries[0].occupied == ENTRY_DELETED);
+  fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.num_expired_flows == 1);
+}
+END_TEST
+
 Suite* build_suite () {
   Suite *s = suite_create("Bismark passive");
 
@@ -253,6 +282,7 @@ Suite* build_suite () {
   tcase_add_test(tc_flows, test_flows_can_set_base_timestamp);
   tcase_add_test(tc_flows, test_flows_can_set_last_update_time);
   tcase_add_test(tc_flows, test_flows_can_expire);
+  tcase_add_test(tc_flows, test_flows_can_detect_later_dupes);
   suite_add_tcase(s, tc_flows);
 
   return s;
