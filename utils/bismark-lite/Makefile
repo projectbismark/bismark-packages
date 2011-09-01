@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.2
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 #GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
@@ -20,7 +20,7 @@ define Package/bismark-lite
    TITLE:=Broadband Internet Service benchMARK - A light management tool
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+netcat
+   DEPENDS:=+wget +bismark-mgmt
 endef
 
 define Package/bismark-lite/description
