@@ -6,12 +6,12 @@
 
 #ifdef TESTING
 /* This is for testing only */
-static uint32_t (*alternate_hash_function) (const char* data, int len) = NULL;
+static uint32_t (*alternate_hash_function)(const char* data, int len) = NULL;
 #endif
 
 /* Implementation from http://isthe.com/chongo/src/fnv/hash_32.c */
 #define FNV_OFFSET_BASIS 0x811c9dc5
-static uint32_t fnv_hash_32 (const char* data, int len) {
+static uint32_t fnv_hash_32(const char* data, int len) {
   const unsigned char *bp = (const unsigned char *)data;
   const unsigned char *be = bp + len;
   uint32_t hval = FNV_OFFSET_BASIS;
@@ -23,7 +23,7 @@ static uint32_t fnv_hash_32 (const char* data, int len) {
   return hval;
 }
 
-static int flow_entry_compare (flow_table_entry_t* first,
+static int flow_entry_compare(flow_table_entry_t* first,
                                    flow_table_entry_t* second) {
     return first->occupied == second->occupied
         && first->ip_source == second->ip_source
@@ -33,7 +33,7 @@ static int flow_entry_compare (flow_table_entry_t* first,
         && first->port_destination == second->port_destination;
 }
 
-void flow_table_init (flow_table_t* table) {
+void flow_table_init(flow_table_t* table) {
   memset(table->entries, '\0', sizeof(table->entries));
   table->num_elements = 0;
   table->base_timestamp_seconds = 0;
@@ -41,9 +41,9 @@ void flow_table_init (flow_table_t* table) {
   table->num_dropped_flows = 0;
 }
 
-int flow_table_process_flow (flow_table_t* table,
-                             flow_table_entry_t* new_entry,
-                             const struct timeval* timestamp) {
+int flow_table_process_flow(flow_table_t* table,
+                            flow_table_entry_t* new_entry,
+                            const struct timeval* timestamp) {
   uint32_t hash;
   int probe;
   int first_available = -1;
@@ -68,7 +68,7 @@ int flow_table_process_flow (flow_table_t* table,
       --table->num_elements;
       ++table->num_expired_flows;
     }
-    if (flow_entry_compare (new_entry, entry)) {
+    if (flow_entry_compare(new_entry, entry)) {
       entry->last_update_time_seconds
           = timestamp->tv_sec - table->base_timestamp_seconds;
       return table_idx;

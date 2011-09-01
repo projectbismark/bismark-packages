@@ -36,6 +36,6 @@ int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* entry,
                             const struct timeval* timestamp);
 
-void testing_set_hash_function(uint32_t (*hasher) (const char* data, int len));
+void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len));
 
 #endif
