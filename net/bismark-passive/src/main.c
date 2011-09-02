@@ -76,14 +76,34 @@ static int add_dns_entries_for_packet(const u_char* bytes,
       entry.domain_name = strdup(ns_rr_name(rr));
       entry.ip_address = *(uint32_t*)ns_rr_rdata(rr);
       dns_table_add_a(&dns_table, &entry);
+#ifdef DEBUG
+      char ip_buffer[256];
+      inet_ntop(AF_INET, &entry.ip_address, ip_buffer, sizeof(ip_buffer));
+      fprintf(stderr,
+              "Added DNS A entry %d: %s %s\n",
+              A_TABLE_LEN(&dns_table),
+              entry.domain_name,
+              ip_buffer);
+#endif
     } else if (ns_rr_type(rr) == ns_t_cname) {
       dns_cname_entry_t entry;
       entry.mac_id = mac_id;
       entry.domain_name = strdup(ns_rr_name(rr));
       char domain_name[MAXDNAME];
-      dn_expand(ns_msg_base(handle), ns_msg_end(handle), ns_rr_rdata(rr), domain_name, sizeof(domain_name));
+      dn_expand(ns_msg_base(handle),
+                ns_msg_end(handle),
+                ns_rr_rdata(rr),
+                domain_name,
+                sizeof(domain_name));
       entry.cname = strdup(domain_name);
       dns_table_add_cname(&dns_table, &entry);
+#ifdef DEBUG
+      fprintf(stderr,
+              "Added DNS CNAME entry %d: %s %s\n",
+              CNAME_TABLE_LEN(&dns_table),
+              entry.domain_name,
+              entry.cname);
+#endif
     }
   }
   return 0;

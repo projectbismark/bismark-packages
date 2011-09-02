@@ -7,7 +7,7 @@ EXE=bismark-passive
 
 TEST_CFLAGS=-DTESTING
 TEST_LDFLAGS=-lcheck
-TEST_SRCS=tests.c packet_series.c flow_table.c
+TEST_SRCS=tests.c packet_series.c flow_table.c dns_table.c
 TEST_EXE=tests
 
 all: $(EXE)

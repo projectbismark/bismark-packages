@@ -1,3 +1,4 @@
+#include "dns_table.h"
 #include "flow_table.h"
 #include "packet_series.h"
 
@@ -266,6 +267,44 @@ START_TEST(test_flows_can_detect_later_dupes) {
 }
 END_TEST
 
+/********************************************************
+ * DNS table tests
+ ********************************************************/
+static dns_table_t dns_table;
+
+void dns_setup() {
+  dns_table_init(&dns_table);
+}
+
+START_TEST(test_dns_mac_table) {
+  fail_unless(lookup_mac_id(0) == -1);
+
+  int first_mac_id = lookup_mac_id(512);
+  fail_unless(first_mac_id >= 0);
+  int second_mac_id = lookup_mac_id(123);
+  fail_unless(second_mac_id >= 0);
+  fail_unless(lookup_mac_id(512) == first_mac_id);
+  fail_unless(lookup_mac_id(123) == second_mac_id);
+}
+END_TEST
+
+START_TEST(test_dns_enforces_size) {
+  dns_a_entry_t a_entry;
+  int a_idx;
+  for (a_idx = 0; a_idx < DNS_TABLE_A_ENTRIES - 1; ++a_idx) {
+    fail_if(dns_table_add_a(&dns_table, &a_entry));
+  }
+  fail_unless(dns_table_add_a(&dns_table, &a_entry));
+
+  dns_cname_entry_t cname_entry;
+  int cname_idx;
+  for (cname_idx = 0; cname_idx < DNS_TABLE_CNAME_ENTRIES - 1; ++cname_idx) {
+    fail_if(dns_table_add_cname(&dns_table, &cname_entry));
+  }
+  fail_unless(dns_table_add_cname(&dns_table, &cname_entry));
+}
+END_TEST
+
 Suite* build_suite() {
   Suite *s = suite_create("Bismark passive");
 
@@ -284,6 +323,12 @@ Suite* build_suite() {
   tcase_add_test(tc_flows, test_flows_can_expire);
   tcase_add_test(tc_flows, test_flows_can_detect_later_dupes);
   suite_add_tcase(s, tc_flows);
+
+  TCase *tc_dns = tcase_create("DNS table");
+  tcase_add_checked_fixture(tc_dns, dns_setup, NULL);
+  tcase_add_test(tc_dns, test_dns_mac_table);
+  tcase_add_test(tc_dns, test_dns_enforces_size);
+  suite_add_tcase(s, tc_dns);
 
   return s;
 }
