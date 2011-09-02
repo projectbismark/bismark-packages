@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS+=-c -Wall -O3 -fno-strict-aliasing
 LDFLAGS+=-lpcap -lresolv
-SRCS=main.c packet_series.c flow_table.c dns_table.c
+SRCS=main.c packet_series.c flow_table.c dns_table.c dns_parser.c
 OBJS=$(SRCS:.c=.o)
 EXE=bismark-passive
 

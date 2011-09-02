@@ -136,7 +136,7 @@ static void get_flow_entry_for_packet(
         uint64_t mac_address = 0;
         memcpy(&mac_address, eth_header->ether_dhost, ETH_ALEN);
         int mac_id = lookup_mac_id(mac_address);
-        add_dns_entries_for_packet(dns_bytes, dns_len, mac_id);
+        process_dns_packet(dns_bytes, dns_len, &dns_table, mac_id);
       }
     } else {
 #ifdef DEBUG
