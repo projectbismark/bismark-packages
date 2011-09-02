@@ -1,6 +1,11 @@
+#include <resolv.h>
 #include <stdio.h>
+/* strdup */
+#include <string.h>
 /* inet_ntoa */
 #include <arpa/inet.h>
+/* DNS message header */
+#include <arpa/nameser.h>
 /* ETHER_HDR_LEN */
 #include <net/ethernet.h>
 /* IPPROTO_... */
@@ -14,14 +19,79 @@
 
 #include <pcap.h>
 
+#include "dns_table.h"
 #include "flow_table.h"
 #include "packet_series.h"
 
 static packet_series_t packet_data;
 static flow_table_t flow_table;
+static dns_table_t dns_table;
+
+static int add_dns_entries_for_packet(const u_char* bytes,
+                                      int len,
+                                      int mac_id) {
+  ns_msg handle;
+  if (ns_initparse(bytes, len, &handle) < 0) {
+#ifdef DEBUG
+    fprintf(stderr, "Error parsing DNS response\n");
+#endif
+    return -1;
+  }
+
+  int num_answers = ns_msg_count(handle, ns_s_an);
+  int num_additional = ns_msg_count(handle, ns_s_ar);
+  if (ns_msg_getflag(handle, ns_f_qr) != ns_s_an
+      || ns_msg_getflag(handle, ns_f_opcode) != ns_o_query
+      || ns_msg_getflag(handle, ns_f_rcode) != ns_r_noerror
+      || (num_answers <= 0 && num_additional <= 0)) {
+#ifdef DEBUG
+    fprintf(stderr, "Irrelevant DNS response\n");
+#endif
+    return -1;
+  }
+
+  int idx;
+  for (idx = 0; idx < num_answers + num_additional; idx++) {
+    ns_rr rr;
+    if (ns_parserr(&handle,
+          idx < num_answers ? ns_s_an : ns_s_ar,
+          idx < num_answers ? idx : idx - num_answers,
+          &rr)) {
+#ifdef DEBUG
+      fprintf(stderr, "Error parsing DNS record\n");
+#endif
+      continue;
+    }
+
+    if (ns_rr_class(rr) != ns_c_in) {
+#ifdef DEBUG
+      fprintf(stderr, "Non-IN DNS record\n");
+#endif
+      continue;
+    }
+
+    if (ns_rr_type(rr) == ns_t_a) {
+      dns_a_entry_t entry;
+      entry.mac_id = mac_id;
+      entry.domain_name = strdup(ns_rr_name(rr));
+      entry.ip_address = *(uint32_t*)ns_rr_rdata(rr);
+      dns_table_add_a(&dns_table, &entry);
+    } else if (ns_rr_type(rr) == ns_t_cname) {
+      dns_cname_entry_t entry;
+      entry.mac_id = mac_id;
+      entry.domain_name = strdup(ns_rr_name(rr));
+      char domain_name[MAXDNAME];
+      dn_expand(ns_msg_base(handle), ns_msg_end(handle), ns_rr_rdata(rr), domain_name, sizeof(domain_name));
+      entry.cname = strdup(domain_name);
+      dns_table_add_cname(&dns_table, &entry);
+    }
+  }
+  return 0;
+}
 
 static void get_flow_entry_for_packet(
     const u_char* bytes,
+    int len,
     flow_table_entry_t* entry) {
   const struct ether_header* eth_header = (const struct ether_header*)bytes;
   if (ntohs(eth_header->ether_type) == ETHERTYPE_IP) {
@@ -39,6 +109,15 @@ static void get_flow_entry_for_packet(
           (void *)ip_header + ip_header->ihl * sizeof(uint32_t));
       entry->port_source = udp_header->source;
       entry->port_destination = udp_header->dest;
+
+      if (ntohs(entry->port_source) == NS_DEFAULTPORT) {
+        u_char* dns_bytes = (u_char*)udp_header + sizeof(struct udphdr);
+        int dns_len = len - (dns_bytes - bytes);
+        uint64_t mac_address = 0;
+        memcpy(&mac_address, eth_header->ether_dhost, ETH_ALEN);
+        int mac_id = lookup_mac_id(mac_address);
+        add_dns_entries_for_packet(dns_bytes, dns_len, mac_id);
+      }
     } else {
 #ifdef DEBUG
       fprintf(stderr, "Unhandled transport protocol: %u\n", ip_header->protocol);
@@ -95,14 +174,15 @@ void process_packet(
   }
 #endif
 
-  flow_table_entry_t entry;
-  get_flow_entry_for_packet(bytes, &entry);
-  int table_idx = flow_table_process_flow(&flow_table, &entry, &header->ts);
+  flow_table_entry_t flow_entry;
+  get_flow_entry_for_packet(bytes, header->caplen, &flow_entry);
+  int table_idx = flow_table_process_flow(&flow_table, &flow_entry, &header->ts);
 #ifdef DEBUG
   if (table_idx < 0) {
     fprintf(stderr, "Error adding to flow table\n");
   }
 #endif
+
   if (packet_series_add_packet(
         &packet_data, &header->ts, header->len, table_idx)) {
 #ifdef DEBUG
@@ -135,6 +215,7 @@ int main(int argc, char *argv[]) {
 
   packet_series_init(&packet_data);
   flow_table_init(&flow_table);
+  dns_table_init(&dns_table);
 
   /* By default, pcap uses an internal buffer of 500 KB. Any packets that
    * overflow this buffer will be dropped. pcap_stats tells the number of

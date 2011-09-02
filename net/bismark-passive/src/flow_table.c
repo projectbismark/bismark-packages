@@ -4,24 +4,12 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "hashing.h"
+
 #ifdef TESTING
 /* This is for testing only */
 static uint32_t (*alternate_hash_function)(const char* data, int len) = NULL;
 #endif
-
-/* Implementation from http://isthe.com/chongo/src/fnv/hash_32.c */
-#define FNV_OFFSET_BASIS 0x811c9dc5
-static uint32_t fnv_hash_32(const char* data, int len) {
-  const unsigned char *bp = (const unsigned char *)data;
-  const unsigned char *be = bp + len;
-  uint32_t hval = FNV_OFFSET_BASIS;
-
-  while (bp < be) {
-    hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24);
-    hval ^= *bp++;
-  }
-  return hval;
-}
 
 static int flow_entry_compare(flow_table_entry_t* first,
                                    flow_table_entry_t* second) {

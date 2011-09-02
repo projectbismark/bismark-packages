@@ -8,9 +8,6 @@ struct timeval;
 #include "constants.h"
 
 typedef struct {
-#define ENTRY_EMPTY     0
-#define ENTRY_OCCUPIED  1
-#define ENTRY_DELETED   2
   uint8_t occupied;
   uint32_t last_update_time_seconds;
 
