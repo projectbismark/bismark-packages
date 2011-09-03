@@ -1,5 +1,7 @@
+#include <pthread.h>
 #include <resolv.h>
 #include <stdio.h>
+#include <stdlib.h>
 /* strdup */
 #include <string.h>
 /* inet_ntoa */
@@ -27,6 +29,8 @@
 static packet_series_t packet_data;
 static flow_table_t flow_table;
 static dns_table_t dns_table;
+
+static pthread_mutex_t update_lock;
 
 static void get_flow_entry_for_packet(
     const u_char* bytes,
@@ -73,6 +77,11 @@ void process_packet(
         u_char* user,
         const struct pcap_pkthdr* header,
         const u_char* bytes) {
+  if (pthread_mutex_lock(&update_lock)) {
+    perror("Error locking global mutex");
+    exit(1);
+  }
+
 #ifndef NDEBUG
   pcap_t* handle = (pcap_t*)user;
   static int packets_received = 0;
@@ -128,6 +137,11 @@ void process_packet(
     fprintf(stderr, "Error adding to packet series\n");
 #endif
   }
+
+  if (pthread_mutex_unlock(&update_lock)) {
+    perror("Error unlocking global mutex");
+    exit(1);
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -150,6 +164,11 @@ int main(int argc, char *argv[]) {
   if (pcap_datalink(handle) != DLT_EN10MB) {
     fprintf(stderr, "Must capture on an Ethernet link\n");
     return 3;
+  }
+
+  if (pthread_mutex_init(&update_lock, NULL)) {
+    perror("Error initializing mutex");
+    return 4;
   }
 
   packet_series_init(&packet_data);
