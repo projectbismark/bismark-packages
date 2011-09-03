@@ -86,6 +86,37 @@ int flow_table_process_flow(flow_table_t* table,
   return -1;
 }
 
+int flow_table_write_update(flow_table_t* table, FILE* handle) {
+  if (fprintf(handle,
+              "%ld %u %d %d",
+              table->base_timestamp_seconds,
+              table->num_elements,
+              table->num_expired_flows,
+              table->num_dropped_flows) < 0) {
+    perror("Error sending update");
+    return -1;
+  }
+
+  int idx;
+  for (idx = 0; idx < table->num_elements; ++idx) {
+    if (table->entries[idx].occupied == ENTRY_OCCUPIED) {
+      if (fprintf(handle,
+            "%u %u %hhu %hu %hu\n",
+            table->entries[idx].ip_source,
+            table->entries[idx].ip_destination,
+            table->entries[idx].transport_protocol,
+            table->entries[idx].port_source,
+            table->entries[idx].port_destination) < 0) {
+        perror("Error sending update");
+        return -1;
+      }
+    }
+  }
+  fprintf(handle, "\n");
+
+  return 0;
+}
+
 #ifdef TESTING
 void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len)) {
   alternate_hash_function = hasher;

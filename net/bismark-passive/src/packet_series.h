@@ -2,6 +2,7 @@
 #define _BISMARK_PASSIVE_PACKET_SERIES_H_
 
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/time.h>
 
 #include "constants.h"
@@ -23,7 +24,7 @@ typedef struct {
  * 2^31 microseconds (~36 minutes). */
 typedef struct {
   /* The timestamp of the first packet in the series. */
-  struct timeval start_time;
+  int64_t start_time_seconds;
   /* The number of packets received so far. */
   int32_t length;
 
@@ -42,5 +43,7 @@ int packet_series_add_packet(
     const struct timeval* timestamp,
     uint32_t size,
     uint16_t flow);
+
+int packet_series_write_update(packet_series_t* series, FILE* handle);
 
 #endif

@@ -2,6 +2,7 @@
 #define _BISMARK_PASSIVE_FLOW_TABLE_H_
 
 #include <stdint.h>
+#include <stdio.h>
 
 struct timeval;
 
@@ -21,7 +22,7 @@ typedef struct {
 
 typedef struct {
   flow_table_entry_t entries[FLOW_TABLE_ENTRIES];
-  uint32_t base_timestamp_seconds;
+  uint64_t base_timestamp_seconds;
   uint32_t num_elements;
   int num_expired_flows;
   int num_dropped_flows;
@@ -33,6 +34,10 @@ int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* entry,
                             const struct timeval* timestamp);
 
+int flow_table_write_update(flow_table_t* table, FILE* handle);
+
+#ifndef NDEBUG
 void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len));
+#endif
 
 #endif

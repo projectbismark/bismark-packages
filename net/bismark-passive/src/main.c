@@ -1,9 +1,11 @@
 #include <pthread.h>
-#include <resolv.h>
 #include <stdio.h>
+/* exit */
 #include <stdlib.h>
 /* strdup */
 #include <string.h>
+/* sleep */
+#include <unistd.h>
 /* inet_ntoa */
 #include <arpa/inet.h>
 /* DNS message header */
@@ -30,6 +32,7 @@ static packet_series_t packet_data;
 static flow_table_t flow_table;
 static dns_table_t dns_table;
 
+static pthread_t update_thread;
 static pthread_mutex_t update_lock;
 
 static void get_flow_entry_for_packet(
@@ -144,6 +147,40 @@ void process_packet(
   }
 }
 
+void send_update() {
+#ifndef NDEBUG
+  printf("Sending update\n");
+#endif
+
+  FILE* handle = fopen(UPDATE_FILENAME, "wb");
+  if (!handle) {
+    perror("Could not open update file for writing");
+    exit(1);
+  }
+  if (packet_series_write_update(&packet_data, handle)) {
+    exit(1);
+  }
+  fclose(handle);
+
+  packet_series_init(&packet_data);
+}
+
+void* updater(void* arg) {
+  while (1) {
+    sleep (UPDATE_PERIOD_SECONDS);
+
+    if (pthread_mutex_lock(&update_lock)) {
+      perror("Error acquiring mutex for update");
+      exit(1);
+    }
+    send_update();
+    if (pthread_mutex_unlock(&update_lock)) {
+      perror("Error unlocking update mutex");
+      exit(1);
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   char *dev;
   char errbuf[PCAP_ERRBUF_SIZE];
@@ -174,6 +211,8 @@ int main(int argc, char *argv[]) {
   packet_series_init(&packet_data);
   flow_table_init(&flow_table);
   dns_table_init(&dns_table);
+
+  pthread_create(&update_thread, NULL, updater, NULL);
 
   /* By default, pcap uses an internal buffer of 500 KB. Any packets that
    * overflow this buffer will be dropped. pcap_stats tells the number of
