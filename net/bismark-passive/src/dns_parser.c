@@ -38,7 +38,9 @@ static const uint8_t* parse_resource_record(const uint8_t* bytes,
     = compressed_len + sizeof(record->type) + sizeof(record->class)
     + sizeof(record->ttl) + sizeof(record->rdlength);
   if (offset + rr_header_len > bytes + len) {
+#ifndef NDEBUG
     fprintf(stderr, "Malformed DNS packet: premature end of packet\n");
+#endif
     return NULL;
   }
 #ifndef NDEBUG
@@ -58,7 +60,9 @@ static const uint8_t* parse_resource_record(const uint8_t* bytes,
   assert(beginning + rr_header_len == offset);  /* Sanity check */
   offset += record->rdlength;
   if (offset > bytes + len) {
+#ifndef NDEBUG
     fprintf(stderr, "Malformed DNS packet: premature end of packet\n");
+#endif
     return NULL;
   }
   return offset;

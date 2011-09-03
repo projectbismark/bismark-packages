@@ -351,7 +351,8 @@ START_TEST(test_dns_parser_fails_on_invalid_responses) {
     "test_traces/gatech.edu.missing_additional",
     "test_traces/gatech.edu.missing_additional_record",
     "test_traces/gatech.edu.missing_answer_address",
-    "test_traces/gatech.edu.missing_partial_rr_header"
+    "test_traces/gatech.edu.missing_partial_rr_header",
+    "test_traces/gatech.edu.malformed_size"
   };
 
   int idx;
