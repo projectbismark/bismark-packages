@@ -1,12 +1,13 @@
+#include "constants.h"
 #include "dns_parser.h"
+#include "dns_table.h"
 
+#include <assert.h>
 #include <resolv.h>
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
-
-#include "dns_table.h"
 
 typedef struct {
   char name[MAXDNAME];
@@ -27,16 +28,22 @@ static const uint8_t* parse_resource_record(const uint8_t* bytes,
       record->name,
       sizeof(record->name));
   if (compressed_len < 0) {
-#ifdef DEBUG
+#ifndef NDEBUG
     fprintf(stderr, "Couldn't expand rr_name\n");
 #endif
     return NULL;
   }
-  if (offset + compressed_len + sizeof(record->type) + sizeof(record->class)
-      + sizeof(record->ttl) + sizeof(record->rdlength) > bytes + len) {
+
+  const int rr_header_len
+    = compressed_len + sizeof(record->type) + sizeof(record->class)
+    + sizeof(record->ttl) + sizeof(record->rdlength);
+  if (offset + rr_header_len > bytes + len) {
     fprintf(stderr, "Malformed DNS packet: premature end of packet\n");
     return NULL;
   }
+#ifndef NDEBUG
+  const uint8_t* beginning = offset;
+#endif
 
   offset += compressed_len;
   record->type = ntohs(*(uint16_t*)offset);
@@ -48,6 +55,7 @@ static const uint8_t* parse_resource_record(const uint8_t* bytes,
   record->rdlength = ntohs(*(uint16_t*)offset);
   offset += sizeof(record->rdlength);
   record->rdata = offset;
+  assert(beginning + rr_header_len == offset);  /* Sanity check */
   offset += record->rdlength;
   if (offset > bytes + len) {
     fprintf(stderr, "Malformed DNS packet: premature end of packet\n");
@@ -64,7 +72,7 @@ static void add_a_record(dns_table_t* dns_table,
   entry.domain_name = strdup(record->name);
   entry.ip_address = *(uint32_t*)record->rdata;
   dns_table_add_a(dns_table, &entry);
-#ifdef DEBUG
+#ifndef NDEBUG
   char ip_buffer[16];
   inet_ntop(AF_INET, &entry.ip_address, ip_buffer, sizeof(ip_buffer));
   fprintf(stderr,
@@ -85,14 +93,14 @@ static void add_cname_record(dns_table_t* dns_table,
   entry.domain_name = strdup(record->name);
   char cname[MAXDNAME];
   if (dn_expand(bytes, bytes + len, record->rdata, cname, sizeof(cname)) < 0) {
-#ifdef DEBUG
+#ifndef NDEBUG
     fprintf(stderr, "Couldn't expand cname\n");
 #endif
     return;
   }
   entry.cname = strdup(cname);
   dns_table_add_cname(dns_table, &entry);
-#ifdef DEBUG
+#ifndef NDEBUG
   fprintf(stderr,
           "Added DNS CNAME entry %d: %s %s\n",
           CNAME_TABLE_LEN(dns_table),
@@ -107,6 +115,9 @@ int process_dns_packet(const uint8_t* bytes,
                        uint8_t mac_id)
 {
   if (len < sizeof(HEADER)) {
+#ifndef NDEBUG
+    fprintf(stderr, "DNS packet too short\n");
+#endif
     return -1;
   }
 
@@ -114,7 +125,7 @@ int process_dns_packet(const uint8_t* bytes,
   if (dns_header->qr != 1 ||
       dns_header->opcode != QUERY ||
       dns_header->rcode != NOERROR) {
-#ifdef DEBUG
+#ifndef NDEBUG
     fprintf(stderr, "Irrelevant DNS response\n");
 #endif
     return -1;
@@ -131,14 +142,13 @@ int process_dns_packet(const uint8_t* bytes,
                                    qname,
                                    sizeof(qname));
     if (compressed_len < 0) {
-#ifdef DEBUG
+#ifndef NDEBUG
       fprintf(stderr, "Couldn't expand qname\n");
 #endif
       return -1;
     }
     offset += compressed_len;
-    offset += sizeof(uint16_t);  /* Skip QTYPE */
-    offset += sizeof(uint16_t);  /* Skip QCLASS */
+    offset += sizeof(uint16_t) + sizeof(uint16_t);  /* Skip QTYPE and QCLASS */
   }
 
   uint16_t num_answers = ntohs(dns_header->ancount);
@@ -150,7 +160,7 @@ int process_dns_packet(const uint8_t* bytes,
     }
 
     if (record.class != C_IN) {
-#ifdef DEBUG
+#ifndef NDEBUG
       fprintf(stderr, "Non-IN DNS record\n");
 #endif
       continue;
@@ -181,7 +191,7 @@ int process_dns_packet(const uint8_t* bytes,
     }
 
     if (record.class != C_IN) {
-#ifdef DEBUG
+#ifndef NDEBUG
       fprintf(stderr, "Non-IN DNS record\n");
 #endif
       continue;

@@ -305,6 +305,66 @@ START_TEST(test_dns_enforces_size) {
 }
 END_TEST
 
+/********************************************************
+ * DNS parser tests
+ ********************************************************/
+int read_trace(const char* filename, uint8_t** contents, int* len) {
+  FILE* handle = fopen(filename, "rb");
+  if (!handle) {
+    perror("Error opening trace file");
+    return -1;
+  }
+
+  fseek(handle, 0, SEEK_END);
+  *len = ftell(handle);
+  rewind(handle);
+
+  *contents = (uint8_t *)malloc(sizeof(uint8_t) * (*len));
+  if(!*contents) {
+    perror("Error allocating buffer for trace");
+    return -1;
+  }
+
+  fread(*contents, sizeof(uint8_t), *len, handle);
+  fclose(handle);
+  return 0;
+}
+
+START_TEST(test_dns_parser_can_parse_valid_responses) {
+  static char* traces[] = { "test_traces/gatech.edu.success" };
+
+  int idx;
+  for (idx = 0; idx < sizeof(traces) / sizeof(traces[0]); ++idx) {
+    uint8_t *contents;
+    int len;
+    fail_if(read_trace(traces[idx], &contents, &len));
+    fail_if(process_dns_packet(contents, len, &dns_table, 0));
+    free(contents);
+  }
+}
+END_TEST
+
+START_TEST(test_dns_parser_fails_on_invalid_responses) {
+  static char* traces[] = {
+    "test_traces/gatech.edu.missing_body",
+    "test_traces/gatech.edu.missing_answer",
+    "test_traces/gatech.edu.missing_additional",
+    "test_traces/gatech.edu.missing_additional_record",
+    "test_traces/gatech.edu.missing_answer_address",
+    "test_traces/gatech.edu.missing_partial_rr_header"
+  };
+
+  int idx;
+  for (idx = 0; idx < sizeof(traces) / sizeof(traces[0]); ++idx) {
+    uint8_t *contents;
+    int len;
+    fail_if(read_trace(traces[idx], &contents, &len));
+    fail_unless(process_dns_packet(contents, len, &dns_table, 0));
+    free(contents);
+  }
+}
+END_TEST
+
 Suite* build_suite() {
   Suite *s = suite_create("Bismark passive");
 
@@ -329,6 +389,12 @@ Suite* build_suite() {
   tcase_add_test(tc_dns, test_dns_mac_table);
   tcase_add_test(tc_dns, test_dns_enforces_size);
   suite_add_tcase(s, tc_dns);
+
+  TCase *tc_dns_parser = tcase_create("DNS parser");
+  tcase_add_checked_fixture(tc_dns_parser, dns_setup, NULL);
+  tcase_add_test(tc_dns_parser, test_dns_parser_can_parse_valid_responses);
+  tcase_add_test(tc_dns_parser, test_dns_parser_fails_on_invalid_responses);
+  suite_add_tcase(s, tc_dns_parser);
 
   return s;
 }

@@ -19,6 +19,7 @@
 
 #include <pcap.h>
 
+#include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
 #include "packet_series.h"
@@ -26,88 +27,6 @@
 static packet_series_t packet_data;
 static flow_table_t flow_table;
 static dns_table_t dns_table;
-
-static int add_dns_entries_for_packet(const u_char* bytes,
-                                      int len,
-                                      int mac_id) {
-  ns_msg handle;
-  if (ns_initparse(bytes, len, &handle) < 0) {
-#ifdef DEBUG
-    fprintf(stderr, "Error parsing DNS response\n");
-#endif
-    return -1;
-  }
-
-  int num_answers = ns_msg_count(handle, ns_s_an);
-  int num_additional = ns_msg_count(handle, ns_s_ar);
-  if (ns_msg_getflag(handle, ns_f_qr) != ns_s_an
-      || ns_msg_getflag(handle, ns_f_opcode) != ns_o_query
-      || ns_msg_getflag(handle, ns_f_rcode) != ns_r_noerror
-      || (num_answers <= 0 && num_additional <= 0)) {
-#ifdef DEBUG
-    fprintf(stderr, "Irrelevant DNS response\n");
-#endif
-    return -1;
-  }
-
-  int idx;
-  for (idx = 0; idx < num_answers + num_additional; idx++) {
-    ns_rr rr;
-    if (ns_parserr(&handle,
-          idx < num_answers ? ns_s_an : ns_s_ar,
-          idx < num_answers ? idx : idx - num_answers,
-          &rr)) {
-#ifdef DEBUG
-      fprintf(stderr, "Error parsing DNS record\n");
-#endif
-      continue;
-    }
-
-    if (ns_rr_class(rr) != ns_c_in) {
-#ifdef DEBUG
-      fprintf(stderr, "Non-IN DNS record\n");
-#endif
-      continue;
-    }
-
-    if (ns_rr_type(rr) == ns_t_a) {
-      dns_a_entry_t entry;
-      entry.mac_id = mac_id;
-      entry.domain_name = strdup(ns_rr_name(rr));
-      entry.ip_address = *(uint32_t*)ns_rr_rdata(rr);
-      dns_table_add_a(&dns_table, &entry);
-#ifdef DEBUG
-      char ip_buffer[256];
-      inet_ntop(AF_INET, &entry.ip_address, ip_buffer, sizeof(ip_buffer));
-      fprintf(stderr,
-              "Added DNS A entry %d: %s %s\n",
-              A_TABLE_LEN(&dns_table),
-              entry.domain_name,
-              ip_buffer);
-#endif
-    } else if (ns_rr_type(rr) == ns_t_cname) {
-      dns_cname_entry_t entry;
-      entry.mac_id = mac_id;
-      entry.domain_name = strdup(ns_rr_name(rr));
-      char domain_name[MAXDNAME];
-      dn_expand(ns_msg_base(handle),
-                ns_msg_end(handle),
-                ns_rr_rdata(rr),
-                domain_name,
-                sizeof(domain_name));
-      entry.cname = strdup(domain_name);
-      dns_table_add_cname(&dns_table, &entry);
-#ifdef DEBUG
-      fprintf(stderr,
-              "Added DNS CNAME entry %d: %s %s\n",
-              CNAME_TABLE_LEN(&dns_table),
-              entry.domain_name,
-              entry.cname);
-#endif
-    }
-  }
-  return 0;
-}
 
 static void get_flow_entry_for_packet(
     const u_char* bytes,
@@ -139,12 +58,12 @@ static void get_flow_entry_for_packet(
         process_dns_packet(dns_bytes, dns_len, &dns_table, mac_id);
       }
     } else {
-#ifdef DEBUG
+#ifndef NDEBUG
       fprintf(stderr, "Unhandled transport protocol: %u\n", ip_header->protocol);
 #endif
     }
   } else {
-#ifdef DEBUG
+#ifndef NDEBUG
     fprintf(stderr, "Unhandled network protocol: %hu\n", ntohs(eth_header->ether_type));
 #endif
   }
@@ -154,7 +73,7 @@ void process_packet(
         u_char* user,
         const struct pcap_pkthdr* header,
         const u_char* bytes) {
-#ifdef DEBUG
+#ifndef NDEBUG
   pcap_t* handle = (pcap_t*)user;
   static int packets_received = 0;
   static int last_dropped = 0;
@@ -197,7 +116,7 @@ void process_packet(
   flow_table_entry_t flow_entry;
   get_flow_entry_for_packet(bytes, header->caplen, &flow_entry);
   int table_idx = flow_table_process_flow(&flow_table, &flow_entry, &header->ts);
-#ifdef DEBUG
+#ifndef NDEBUG
   if (table_idx < 0) {
     fprintf(stderr, "Error adding to flow table\n");
   }
@@ -205,7 +124,7 @@ void process_packet(
 
   if (packet_series_add_packet(
         &packet_data, &header->ts, header->len, table_idx)) {
-#ifdef DEBUG
+#ifndef NDEBUG
     fprintf(stderr, "Error adding to packet series\n");
 #endif
   }
