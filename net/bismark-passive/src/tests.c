@@ -1,5 +1,6 @@
 #include "dns_table.h"
 #include "flow_table.h"
+#include "mac_table.h"
 #include "packet_series.h"
 
 #include <stdio.h>
@@ -290,15 +291,52 @@ void dns_setup() {
   dns_table_init(&dns_table);
 }
 
-START_TEST(test_dns_mac_table) {
-  fail_unless(lookup_mac_id(0) == -1);
+START_TEST(test_dns_adds_a_entries) {
+  dns_a_entry_t a_entry;
+  a_entry.mac_id = 1;
+  a_entry.domain_name = "foo.com";
+  a_entry.ip_address = 1234;
+  fail_if(dns_table_add_a(&dns_table, &a_entry));
+  a_entry.mac_id = 2;
+  a_entry.domain_name = "bar.com";
+  a_entry.ip_address = 4321;
+  fail_if(dns_table_add_a(&dns_table, &a_entry));
 
-  int first_mac_id = lookup_mac_id(512);
-  fail_unless(first_mac_id >= 0);
-  int second_mac_id = lookup_mac_id(123);
-  fail_unless(second_mac_id >= 0);
-  fail_unless(lookup_mac_id(512) == first_mac_id);
-  fail_unless(lookup_mac_id(123) == second_mac_id);
+  fail_unless(dns_table.a_entries[dns_table.a_first].mac_id == 1);
+  fail_if(strcmp(
+        dns_table.a_entries[dns_table.a_first].domain_name, "foo.com"));
+  fail_unless(dns_table.a_entries[dns_table.a_first].ip_address == 1234);
+  fail_unless(dns_table.a_entries[(dns_table.a_first + 1)
+      % DNS_TABLE_A_ENTRIES].mac_id == 2);
+  fail_if(strcmp(dns_table.a_entries[(dns_table.a_first + 1)
+        % DNS_TABLE_A_ENTRIES].domain_name, "bar.com"));
+  fail_unless(dns_table.a_entries[(dns_table.a_first + 1)
+      % DNS_TABLE_A_ENTRIES].ip_address == 4321);
+}
+END_TEST
+
+START_TEST(test_dns_adds_cname_entries) {
+  dns_cname_entry_t cname_entry;
+  cname_entry.mac_id = 1;
+  cname_entry.domain_name = "foo.com";
+  cname_entry.cname = "gorp.org";
+  fail_if(dns_table_add_cname(&dns_table, &cname_entry));
+  cname_entry.mac_id = 2;
+  cname_entry.domain_name = "bar.com";
+  cname_entry.cname = "baz.net";
+  fail_if(dns_table_add_cname(&dns_table, &cname_entry));
+
+  fail_unless(dns_table.cname_entries[dns_table.cname_first].mac_id == 1);
+  fail_if(strcmp(
+        dns_table.cname_entries[dns_table.cname_first].domain_name, "foo.com"));
+  fail_if(strcmp(
+        dns_table.cname_entries[dns_table.cname_first].cname, "gorp.org"));
+  fail_unless(dns_table.cname_entries[(dns_table.cname_first + 1)
+      % DNS_TABLE_CNAME_ENTRIES].mac_id == 2);
+  fail_if(strcmp(dns_table.cname_entries[(dns_table.cname_first + 1)
+        % DNS_TABLE_CNAME_ENTRIES].domain_name, "bar.com"));
+  fail_if(strcmp(dns_table.cname_entries[(dns_table.cname_first + 1)
+        % DNS_TABLE_CNAME_ENTRIES].cname, "baz.net"));
 }
 END_TEST
 
@@ -316,6 +354,22 @@ START_TEST(test_dns_enforces_size) {
     fail_if(dns_table_add_cname(&dns_table, &cname_entry));
   }
   fail_unless(dns_table_add_cname(&dns_table, &cname_entry));
+}
+END_TEST
+
+/********************************************************
+ * MAC table tests
+ ********************************************************/
+START_TEST(test_mac_table) {
+  mac_table_t mac_table;
+  fail_unless(mac_table_lookup(&mac_table, 0) == -1);
+
+  int first_mac_id = mac_table_lookup(&mac_table, 512);
+  fail_unless(first_mac_id >= 0);
+  int second_mac_id = mac_table_lookup(&mac_table, 123);
+  fail_unless(second_mac_id >= 0);
+  fail_unless(mac_table_lookup(&mac_table, 512) == first_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, 123) == second_mac_id);
 }
 END_TEST
 
@@ -401,9 +455,14 @@ Suite* build_suite() {
 
   TCase *tc_dns = tcase_create("DNS table");
   tcase_add_checked_fixture(tc_dns, dns_setup, NULL);
-  tcase_add_test(tc_dns, test_dns_mac_table);
+  tcase_add_test(tc_dns, test_dns_adds_a_entries);
+  tcase_add_test(tc_dns, test_dns_adds_cname_entries);
   tcase_add_test(tc_dns, test_dns_enforces_size);
   suite_add_tcase(s, tc_dns);
+
+  TCase *tc_mac = tcase_create("MAC table");
+  tcase_add_test(tc_mac, test_mac_table);
+  suite_add_tcase(s, tc_mac);
 
   TCase *tc_dns_parser = tcase_create("DNS parser");
   tcase_add_checked_fixture(tc_dns_parser, dns_setup, NULL);

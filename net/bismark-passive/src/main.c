@@ -1,3 +1,4 @@
+#include <pcap.h>
 #include <pthread.h>
 #include <stdio.h>
 /* exit */
@@ -20,8 +21,6 @@
 #include <netinet/tcp.h>
 /* struct udphdr */
 #include <netinet/udp.h>
-
-#include <pcap.h>
 
 #include "dns_parser.h"
 #include "dns_table.h"
