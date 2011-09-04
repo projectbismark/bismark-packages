@@ -26,11 +26,13 @@
 #include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
+#include "mac_table.h"
 #include "packet_series.h"
 
 static packet_series_t packet_data;
 static flow_table_t flow_table;
 static dns_table_t dns_table;
+static mac_table_t mac_table;
 
 static pthread_t update_thread;
 static pthread_mutex_t update_lock;
@@ -63,7 +65,7 @@ static void get_flow_entry_for_packet(
         int dns_len = len - (dns_bytes - bytes);
         uint64_t mac_address = 0;
         memcpy(&mac_address, eth_header->ether_dhost, ETH_ALEN);
-        int mac_id = lookup_mac_id(mac_address);
+        int mac_id = mac_table_lookup(&mac_table, mac_address);
         process_dns_packet(dns_bytes, dns_len, &dns_table, mac_id);
       }
     } else {
@@ -155,10 +157,6 @@ void process_packet(
 }
 
 void send_update() {
-#ifndef NDEBUG
-  printf("Sending update\n");
-#endif
-
   FILE* handle = fopen(UPDATE_FILENAME, "wb");
   if (!handle) {
     perror("Could not open update file for writing");
@@ -174,11 +172,16 @@ void send_update() {
   if (dns_table_write_update(&dns_table, handle)) {
     exit(1);
   }
+  if (mac_table_write_update(&mac_table, handle)) {
+    exit(1);
+  }
   fclose(handle);
 
   exit(0);
 
   packet_series_init(&packet_data);
+  dns_table_destroy(&dns_table);
+  dns_table_init(&dns_table);
 }
 
 void* updater(void* arg) {
@@ -189,6 +192,9 @@ void* updater(void* arg) {
       perror("Error acquiring mutex for update");
       exit(1);
     }
+#ifndef NDEBUG
+    printf("Sending update\n");
+#endif
     send_update();
     if (pthread_mutex_unlock(&update_lock)) {
       perror("Error unlocking update mutex");
@@ -227,6 +233,7 @@ int main(int argc, char *argv[]) {
   packet_series_init(&packet_data);
   flow_table_init(&flow_table);
   dns_table_init(&dns_table);
+  mac_table_init(&mac_table);
 
   pthread_create(&update_thread, NULL, updater, NULL);
 

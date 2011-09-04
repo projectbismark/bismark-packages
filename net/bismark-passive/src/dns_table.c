@@ -17,30 +17,21 @@
 
 #include "dns_table.h"
 
+#include <stdlib.h>
 #include <string.h>
-
-#define MAC_TABLE_SIZE 256
-static uint64_t mac_table[MAC_TABLE_SIZE];  /* Initialized to zeros. */
-
-int lookup_mac_id(uint64_t mac) {
-  if (mac == 0) {
-    return -1;
-  }
-
-  int mac_id;
-  for (mac_id = 0; mac_id < MAC_TABLE_SIZE; ++mac_id) {
-    if (mac_table[mac_id] == 0) {
-      mac_table[mac_id] = mac;
-    }
-    if (mac_table[mac_id] == mac) {
-      return mac_id;
-    }
-  }
-  return -1;
-}
 
 void dns_table_init(dns_table_t* table) {
   memset(table, '\0', sizeof(*table));
+}
+
+void dns_table_destroy(dns_table_t* table) {
+  int idx;
+  for (idx = table->a_first; idx != table->a_last; ++idx) {
+    free(table->a_entries[idx].domain_name);
+  }
+  for (idx = table->cname_first; idx != table->cname_last; ++idx) {
+    free(table->cname_entries[idx].domain_name);
+  }
 }
 
 int dns_table_add_a(dns_table_t* table, dns_a_entry_t* new_entry) {
@@ -84,7 +75,11 @@ int dns_table_write_update(dns_table_t* table, FILE* handle) {
       return -1;
     }
   }
-  fprintf(handle, "\n");
+  if (fprintf(handle, "\n") < 0) {
+    perror("Error writing update");
+    return -1;
+  }
+
   for (idx = table->cname_first;
        idx != table->cname_last;
        idx = (idx + 1) % DNS_TABLE_CNAME_ENTRIES) {
@@ -96,6 +91,10 @@ int dns_table_write_update(dns_table_t* table, FILE* handle) {
       perror("Error writing update");
       return -1;
     }
+  }
+  if (fprintf(handle, "\n") < 0) {
+    perror("Error writing update");
+    return -1;
   }
   return 0;
 }

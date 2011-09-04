@@ -122,7 +122,10 @@ int flow_table_write_update(flow_table_t* table, FILE* handle) {
       table->entries[idx].occupied = ENTRY_OCCUPIED;
     }
   }
-  fprintf(handle, "\n");
+  if (fprintf(handle, "\n") < 0) {
+    perror("Error sending update");
+    return -1;
+  }
 
   return 0;
 }

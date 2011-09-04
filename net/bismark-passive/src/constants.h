@@ -12,6 +12,8 @@
 #define DNS_TABLE_A_ENTRIES 1024
 #define DNS_TABLE_CNAME_ENTRIES 1024
 
+#define MAC_TABLE_ENTRIES 256
+
 #define HT_NUM_PROBES 3
 #define HT_C1 0.5
 #define HT_C2 0.5

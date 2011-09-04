@@ -26,9 +26,8 @@ typedef struct {
   int num_dropped_a_entries, num_dropped_cname_entries;
 } dns_table_t;
 
-int lookup_mac_id(uint64_t mac);
-
 void dns_table_init(dns_table_t* table);
+void dns_table_destroy(dns_table_t* table);
 
 int dns_table_add_a(dns_table_t* table, dns_a_entry_t* entry);
 int dns_table_add_cname(dns_table_t* table, dns_cname_entry_t* entry);

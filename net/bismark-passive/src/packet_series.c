@@ -53,6 +53,9 @@ int packet_series_write_update(packet_series_t* series, FILE* handle) {
       return -1;
     }
   }
-  fprintf(handle, "\n");
+  if (fprintf(handle, "\n") < 0) {
+    perror("Error writing update");
+    return -1;
+  }
   return 0;
 }
