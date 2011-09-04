@@ -7,13 +7,15 @@
 #include "hashing.h"
 
 #ifdef TESTING
-/* This is for testing only */
 static uint32_t (*alternate_hash_function)(const char* data, int len) = NULL;
 #endif
 
 static int flow_entry_compare(flow_table_entry_t* first,
                                    flow_table_entry_t* second) {
-    return first->occupied == second->occupied
+    return (first->occupied == ENTRY_OCCUPIED_BUT_UNSENT
+            || first->occupied == ENTRY_OCCUPIED)
+        && (second->occupied == ENTRY_OCCUPIED_BUT_UNSENT
+            || second->occupied == ENTRY_OCCUPIED)
         && first->ip_source == second->ip_source
         && first->ip_destination == second->ip_destination
         && first->transport_protocol == second->transport_protocol
@@ -36,8 +38,12 @@ int flow_table_process_flow(flow_table_t* table,
   int probe;
   int first_available = -1;
 
-  new_entry->occupied = ENTRY_OCCUPIED;
-  hash = fnv_hash_32((char *)new_entry, sizeof(*new_entry));
+  const int hash_size = sizeof(new_entry->ip_source)
+                      + sizeof(new_entry->ip_destination)
+                      + sizeof(new_entry->port_source)
+                      + sizeof(new_entry->port_destination)
+                      + sizeof(new_entry->transport_protocol);
+  hash = fnv_hash_32((char *)new_entry, hash_size);
 #ifdef TESTING
   if (alternate_hash_function) {
     hash = alternate_hash_function((char *)new_entry, sizeof(*new_entry));
@@ -61,7 +67,8 @@ int flow_table_process_flow(flow_table_t* table,
           = timestamp->tv_sec - table->base_timestamp_seconds;
       return table_idx;
     }
-    if (entry->occupied != ENTRY_OCCUPIED) {
+    if (entry->occupied != ENTRY_OCCUPIED
+        && entry->occupied != ENTRY_OCCUPIED_BUT_UNSENT) {
       if (first_available < 0) {
         first_available = table_idx;
       }
@@ -71,24 +78,25 @@ int flow_table_process_flow(flow_table_t* table,
     }
   }
 
-  if (first_available >= 0) {
-    if (table->num_elements == 0) {
-      table->base_timestamp_seconds = timestamp->tv_sec;
-    }
-    new_entry->last_update_time_seconds
-        = timestamp->tv_sec - table->base_timestamp_seconds;
-    table->entries[first_available] = *new_entry;
-    ++table->num_elements;
-    return first_available;
+  if (first_available < 0) {
+    ++table->num_dropped_flows;
+    return -1;
   }
 
-  ++table->num_dropped_flows;
-  return -1;
+  if (table->num_elements == 0) {
+    table->base_timestamp_seconds = timestamp->tv_sec;
+  }
+  new_entry->occupied = ENTRY_OCCUPIED_BUT_UNSENT;
+  new_entry->last_update_time_seconds
+      = timestamp->tv_sec - table->base_timestamp_seconds;
+  table->entries[first_available] = *new_entry;
+  ++table->num_elements;
+  return first_available;
 }
 
 int flow_table_write_update(flow_table_t* table, FILE* handle) {
   if (fprintf(handle,
-              "%ld %u %d %d",
+              "%ld %u %d %d\n",
               table->base_timestamp_seconds,
               table->num_elements,
               table->num_expired_flows,
@@ -98,10 +106,11 @@ int flow_table_write_update(flow_table_t* table, FILE* handle) {
   }
 
   int idx;
-  for (idx = 0; idx < table->num_elements; ++idx) {
-    if (table->entries[idx].occupied == ENTRY_OCCUPIED) {
+  for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
+    if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
       if (fprintf(handle,
-            "%u %u %hhu %hu %hu\n",
+            "%u %u %u %hhu %hu %hu\n",
+            idx,
             table->entries[idx].ip_source,
             table->entries[idx].ip_destination,
             table->entries[idx].transport_protocol,
@@ -110,6 +119,7 @@ int flow_table_write_update(flow_table_t* table, FILE* handle) {
         perror("Error sending update");
         return -1;
       }
+      table->entries[idx].occupied = ENTRY_OCCUPIED;
     }
   }
   fprintf(handle, "\n");

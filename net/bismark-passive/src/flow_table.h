@@ -9,15 +9,20 @@ struct timeval;
 #include "constants.h"
 
 typedef struct {
-  uint8_t occupied;
-  uint32_t last_update_time_seconds;
-
+  /* These fields will be taken into account for hashing */
   uint32_t ip_source;
   uint32_t ip_destination;
-
-  uint8_t transport_protocol;
   uint16_t port_source;
   uint16_t port_destination;
+  uint8_t transport_protocol;
+
+  /* These fields will not be taken into account for hashing */
+#define ENTRY_EMPTY                  0
+#define ENTRY_OCCUPIED_BUT_UNSENT    1
+#define ENTRY_OCCUPIED               2
+#define ENTRY_DELETED                3
+  uint8_t occupied;
+  uint32_t last_update_time_seconds;
 } flow_table_entry_t;
 
 typedef struct {

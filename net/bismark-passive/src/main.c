@@ -35,6 +35,8 @@ static dns_table_t dns_table;
 static pthread_t update_thread;
 static pthread_mutex_t update_lock;
 
+static int64_t first_packet_timestamp_microseconds = -1;
+
 static void get_flow_entry_for_packet(
     const u_char* bytes,
     int len,
@@ -125,6 +127,11 @@ void process_packet(
   }
 #endif
 
+  if (first_packet_timestamp_microseconds < 0) {
+    first_packet_timestamp_microseconds
+        = header->ts.tv_sec * NUM_MICROS_PER_SECOND + header->ts.tv_usec;
+  }
+
   flow_table_entry_t flow_entry;
   get_flow_entry_for_packet(bytes, header->caplen, &flow_entry);
   int table_idx = flow_table_process_flow(&flow_table, &flow_entry, &header->ts);
@@ -157,10 +164,19 @@ void send_update() {
     perror("Could not open update file for writing");
     exit(1);
   }
+  fprintf(handle, "%ld\n", first_packet_timestamp_microseconds);
   if (packet_series_write_update(&packet_data, handle)) {
     exit(1);
   }
+  if (flow_table_write_update(&flow_table, handle)) {
+    exit(1);
+  }
+  if (dns_table_write_update(&dns_table, handle)) {
+    exit(1);
+  }
   fclose(handle);
+
+  exit(0);
 
   packet_series_init(&packet_data);
 }

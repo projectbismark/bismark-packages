@@ -9,9 +9,9 @@
 
 /* Information about a single packet. */
 typedef struct {
-  /* The packet's timestamp, expressed as microseconds offset from
-   * packet_series_t.start_time. Expressing timestamps this way conserves space
-   * (4 bytes vs 8 bytes per timestamp). */
+  /* The packet's timestamp, expressed as microseconds offset from the previous
+   * packet in the series. Expressing timestamps this way conserves space (4
+   * bytes vs 8 bytes per timestamp) and makes time more compressable. */
   int32_t timestamp;
   /* Number of bytes in the packet. */
   uint16_t size;
@@ -24,7 +24,9 @@ typedef struct {
  * 2^31 microseconds (~36 minutes). */
 typedef struct {
   /* The timestamp of the first packet in the series. */
-  int64_t start_time_seconds;
+  int64_t start_time_microseconds;
+  /* The timestamp of the last packet added to the series. */
+  int64_t last_time_microseconds;
   /* The number of packets received so far. */
   int32_t length;
 

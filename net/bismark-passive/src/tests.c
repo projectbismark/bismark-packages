@@ -28,8 +28,8 @@ START_TEST(test_series_add) {
   first_tv.tv_usec = kMyUSec;
   fail_if(packet_series_add_packet(&series, &first_tv, kMySize, kMyFlowId));
   fail_unless(series.length == 1);
-  fail_unless(series.start_time.tv_sec == kMySec);
-  fail_unless(series.start_time.tv_usec == kMyUSec);
+  fail_unless(series.start_time_microseconds == kMySec * NUM_MICROS_PER_SECOND + kMyUSec);
+  fail_unless(series.last_time_microseconds == series.start_time_microseconds);
   fail_if(series.discarded_by_overflow);
   fail_unless(series.packet_data[0].timestamp == 0);
   fail_unless(series.packet_data[0].size == kMySize);
@@ -39,12 +39,11 @@ START_TEST(test_series_add) {
   second_tv.tv_usec = kMyUSec * 2;
   fail_if(packet_series_add_packet(&series, &second_tv, kMySize * 2, kMyFlowId));
   fail_unless(series.length == 2);
-  fail_unless(series.start_time.tv_sec == first_tv.tv_sec);
-  fail_unless(series.start_time.tv_usec == first_tv.tv_usec);
+  fail_unless(series.start_time_microseconds == TIMEVAL_TO_MICROS(&first_tv));
+  fail_unless(series.last_time_microseconds == TIMEVAL_TO_MICROS(&second_tv));
   fail_if(series.discarded_by_overflow);
   fail_unless(series.packet_data[1].timestamp
-      == ((second_tv.tv_sec * NUM_MICROS_PER_SECOND + second_tv.tv_usec)
-          - (kMySec * NUM_MICROS_PER_SECOND + kMyUSec)));
+    == TIMEVAL_TO_MICROS(&second_tv) - TIMEVAL_TO_MICROS(&first_tv));
   fail_unless(series.packet_data[1].size == kMySize * 2);
   fail_unless(series.packet_data[1].flow == kMyFlowId);
 }
@@ -60,16 +59,16 @@ START_TEST(test_series_overflow) {
   for (idx = 0; idx < PACKET_DATA_BUFFER_ENTRIES; ++idx) {
     fail_if(packet_series_add_packet(&series, &tv, kMySize, kMyFlowId));
     fail_unless(series.length == idx + 1);
-    fail_unless(series.start_time.tv_sec == kMySec);
-    fail_unless(series.start_time.tv_usec == kMyUSec);
+    fail_unless(series.start_time_microseconds
+        == kMySec * NUM_MICROS_PER_SECOND + kMyUSec);
     fail_if(series.discarded_by_overflow);
   }
 
   for (idx = 0; idx < 10; ++idx) {
     fail_unless(packet_series_add_packet(&series, &tv, kMySize, kMyFlowId));
     fail_unless(series.length == PACKET_DATA_BUFFER_ENTRIES);
-    fail_unless(series.start_time.tv_sec == kMySec);
-    fail_unless(series.start_time.tv_usec == kMyUSec);
+    fail_unless(series.start_time_microseconds
+        == kMySec * NUM_MICROS_PER_SECOND + kMyUSec);
     fail_unless(series.discarded_by_overflow == idx + 1);
   }
 }
@@ -88,6 +87,15 @@ static uint32_t dummy_hash(const char* data, int len) {
 void flows_setup() {
   flow_table_init(&table);
   testing_set_hash_function(&dummy_hash);
+}
+
+void flows_simulate_update() {
+  int idx;
+  for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
+    if (table.entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
+      table.entries[idx].occupied = ENTRY_OCCUPIED;
+    }
+  }
 }
 
 START_TEST(test_flows_detect_dupes) {
@@ -121,17 +129,17 @@ START_TEST(test_flows_can_probe) {
   entry.port_source = 4;
   entry.port_destination = 5;
   fail_unless(flow_table_process_flow(&table, &entry, &tv) == 0);
-  fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED_BUT_UNSENT);
   fail_unless(table.num_elements == 1);
 
   entry.ip_source = 10;
   fail_unless(flow_table_process_flow(&table, &entry, &tv) == 1);
-  fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.entries[1].occupied == ENTRY_OCCUPIED_BUT_UNSENT);
   fail_unless(table.num_elements == 2);
 
   entry.ip_source = 20;
   fail_unless(flow_table_process_flow(&table, &entry, &tv) == 3);
-  fail_unless(table.entries[3].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.entries[3].occupied == ENTRY_OCCUPIED_BUT_UNSENT);
   fail_unless(table.num_elements == 3);
 
   int num_adds = table.num_elements;
@@ -169,6 +177,8 @@ START_TEST(test_flows_can_set_base_timestamp) {
   entry.ip_source = 10;
   fail_if(flow_table_process_flow(&table, &entry, &next_tv) < 0);
   fail_unless(table.base_timestamp_seconds == tv.tv_sec);
+
+  flows_simulate_update();
 
   next_tv.tv_sec = next_tv.tv_sec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
   next_tv.tv_usec = kMyUSec;
@@ -225,13 +235,15 @@ START_TEST(test_flows_can_expire) {
   fail_if(flow_table_process_flow(&table, &entry, &tv) < 0);
   fail_unless(table.num_elements == 2);
 
+  flows_simulate_update();
+
   struct timeval next_tv;
   next_tv.tv_sec = kMySec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
   next_tv.tv_usec = kMyUSec;
   entry.ip_source = 3;
   fail_unless(flow_table_process_flow(&table, &entry, &next_tv) == 0);
   fail_unless(table.num_elements == 1);
-  fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED);
+  fail_unless(table.entries[0].occupied == ENTRY_OCCUPIED_BUT_UNSENT);
   fail_unless(table.entries[1].occupied == ENTRY_DELETED);
   fail_unless(table.num_expired_flows == 2);
   fail_unless(table.num_dropped_flows == 0);
@@ -257,6 +269,8 @@ START_TEST(test_flows_can_detect_later_dupes) {
   entry.ip_source = 2;
   fail_if(flow_table_process_flow(&table, &entry, &next_tv) < 0);
   fail_unless(table.num_elements == 2);
+
+  flows_simulate_update();
 
   next_tv.tv_sec = tv.tv_sec + FLOW_TABLE_EXPIRATION_SECONDS + 1;
   fail_unless(flow_table_process_flow(&table, &entry, &next_tv) == 1);

@@ -17,16 +17,18 @@ int packet_series_add_packet(
     return -1;
   }
 
+  int64_t current_timestamp_microseconds
+        = timestamp->tv_sec * NUM_MICROS_PER_SECOND + timestamp->tv_usec;
   if (series->length == 0) {
-    series->start_time_seconds = timestamp->tv_sec;
-    series->packet_data[series->length].timestamp = timestamp->tv_usec;
+    series->start_time_microseconds = current_timestamp_microseconds;
+    series->packet_data[series->length].timestamp = 0;
   } else {
     series->packet_data[series->length].timestamp
-      = (timestamp->tv_sec - series->packet_data[series->length - 1].timestamp) * NUM_MICROS_PER_SECOND
-      + timestamp->tv_usec;
+      = current_timestamp_microseconds - series->last_time_microseconds;
   }
   series->packet_data[series->length].size = size;
   series->packet_data[series->length].flow = flow;
+  series->last_time_microseconds = current_timestamp_microseconds;
   ++series->length;
 
   return 0;
@@ -35,7 +37,7 @@ int packet_series_add_packet(
 int packet_series_write_update(packet_series_t* series, FILE* handle) {
   if (fprintf(handle,
               "%ld %d\n",
-              series->start_time_seconds,
+              series->start_time_microseconds,
               series->discarded_by_overflow) < 0) {
     perror("Error writing update");
     return -1;

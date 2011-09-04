@@ -62,3 +62,40 @@ int dns_table_add_cname(dns_table_t* table, dns_cname_entry_t* new_entry) {
   table->cname_last = (table->cname_last + 1) % DNS_TABLE_CNAME_ENTRIES;
   return 0;
 }
+
+int dns_table_write_update(dns_table_t* table, FILE* handle) {
+  if (fprintf(handle,
+              "%d %d\n",
+              table->num_dropped_a_entries,
+              table->num_dropped_cname_entries) < 0) {
+    perror("Error writing update");
+    return -1;
+  }
+  int idx;
+  for (idx = table->a_first;
+       idx != table->a_last;
+       idx = (idx + 1) % DNS_TABLE_A_ENTRIES) {
+    if (fprintf(handle,
+                "%hhu %s %u\n",
+                table->a_entries[idx].mac_id,
+                table->a_entries[idx].domain_name,
+                table->a_entries[idx].ip_address) < 0) {
+      perror("Error writing update");
+      return -1;
+    }
+  }
+  fprintf(handle, "\n");
+  for (idx = table->cname_first;
+       idx != table->cname_last;
+       idx = (idx + 1) % DNS_TABLE_CNAME_ENTRIES) {
+    if (fprintf(handle,
+                "%hhu %s %s\n",
+                table->cname_entries[idx].mac_id,
+                table->cname_entries[idx].domain_name,
+                table->cname_entries[idx].cname) < 0) {
+      perror("Error writing update");
+      return -1;
+    }
+  }
+  return 0;
+}

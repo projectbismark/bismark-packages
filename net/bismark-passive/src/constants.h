@@ -16,10 +16,8 @@
 #define HT_C1 0.5
 #define HT_C2 0.5
 
-#define ENTRY_EMPTY     0
-#define ENTRY_OCCUPIED  1
-#define ENTRY_DELETED   2
-
 #define NUM_MICROS_PER_SECOND 1e6
+
+#define TIMEVAL_TO_MICROS(tv) ((tv)->tv_sec * NUM_MICROS_PER_SECOND + (tv)->tv_usec)
 
 #endif
