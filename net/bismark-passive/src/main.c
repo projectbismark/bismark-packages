@@ -7,6 +7,8 @@
 #include <string.h>
 /* sleep */
 #include <unistd.h>
+/* update compression */
+#include <zlib.h>
 /* inet_ntoa */
 #include <arpa/inet.h>
 /* DNS message header */
@@ -156,12 +158,15 @@ void process_packet(
 }
 
 void send_update() {
-  FILE* handle = fopen(UPDATE_FILENAME, "wb");
+  gzFile handle = gzopen (UPDATE_FILENAME, "wb9");
   if (!handle) {
     perror("Could not open update file for writing");
     exit(1);
   }
-  fprintf(handle, "%ld\n", first_packet_timestamp_microseconds);
+  if (!gzprintf(handle, "%ld\n", first_packet_timestamp_microseconds)) {
+    perror("Error writing update");
+    exit(1);
+  }
   if (packet_series_write_update(&packet_data, handle)) {
     exit(1);
   }
@@ -174,9 +179,7 @@ void send_update() {
   if (mac_table_write_update(&mac_table, handle)) {
     exit(1);
   }
-  fclose(handle);
-
-  exit(0);
+  gzclose(handle);
 
   packet_series_init(&packet_data);
   dns_table_destroy(&dns_table);

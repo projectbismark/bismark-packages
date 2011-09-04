@@ -34,26 +34,26 @@ int packet_series_add_packet(
   return 0;
 }
 
-int packet_series_write_update(packet_series_t* series, FILE* handle) {
-  if (fprintf(handle,
-              "%ld %d\n",
-              series->start_time_microseconds,
-              series->discarded_by_overflow) < 0) {
+int packet_series_write_update(packet_series_t* series, gzFile handle) {
+  if (!gzprintf(handle,
+                "%ld %d\n",
+                series->start_time_microseconds,
+                series->discarded_by_overflow)) {
     perror("Error writing update");
     return -1;
   }
   int idx;
   for (idx = 0; idx < series->length; ++idx) {
-    if (fprintf(handle,
-                "%d %hu %hu\n",
-                series->packet_data[idx].timestamp,
-                series->packet_data[idx].size,
-                series->packet_data[idx].flow) < 0) {
+    if (!gzprintf(handle,
+                  "%d %hu %hu\n",
+                  series->packet_data[idx].timestamp,
+                  series->packet_data[idx].size,
+                  series->packet_data[idx].flow)) {
       perror("Error writing update");
       return -1;
     }
   }
-  if (fprintf(handle, "\n") < 0) {
+  if (!gzprintf(handle, "\n")) {
     perror("Error writing update");
     return -1;
   }

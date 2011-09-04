@@ -23,17 +23,17 @@ int mac_table_lookup(mac_table_t* table, uint64_t mac) {
   return -1;
 }
 
-int mac_table_write_update(mac_table_t* table, FILE* handle) {
+int mac_table_write_update(mac_table_t* table, gzFile handle) {
   int mac_id;
   for (mac_id = 0;
        mac_id < MAC_TABLE_ENTRIES && (*table)[mac_id] != 0;
        ++mac_id) {
-    if (fprintf(handle, "%d %ld\n", mac_id, (*table)[mac_id]) < 0) {
+    if (!gzprintf(handle, "%d %ld\n", mac_id, (*table)[mac_id])) {
       perror("Error writing update");
       return -1;
     }
   }
-  if (fprintf(handle, "\n") < 0) {
+  if (!gzprintf(handle, "\n")) {
     perror("Error writing update");
     return -1;
   }

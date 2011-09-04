@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <zlib.h>
 
 #include "constants.h"
 
@@ -46,6 +47,6 @@ int packet_series_add_packet(
     uint32_t size,
     uint16_t flow);
 
-int packet_series_write_update(packet_series_t* series, FILE* handle);
+int packet_series_write_update(packet_series_t* series, gzFile handle);
 
 #endif

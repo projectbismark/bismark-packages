@@ -94,13 +94,13 @@ int flow_table_process_flow(flow_table_t* table,
   return first_available;
 }
 
-int flow_table_write_update(flow_table_t* table, FILE* handle) {
-  if (fprintf(handle,
-              "%ld %u %d %d\n",
-              table->base_timestamp_seconds,
-              table->num_elements,
-              table->num_expired_flows,
-              table->num_dropped_flows) < 0) {
+int flow_table_write_update(flow_table_t* table, gzFile handle) {
+  if (!gzprintf(handle,
+                "%ld %u %d %d\n",
+                table->base_timestamp_seconds,
+                table->num_elements,
+                table->num_expired_flows,
+                table->num_dropped_flows)) {
     perror("Error sending update");
     return -1;
   }
@@ -108,21 +108,21 @@ int flow_table_write_update(flow_table_t* table, FILE* handle) {
   int idx;
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
-      if (fprintf(handle,
+      if (!gzprintf(handle,
             "%u %u %u %hhu %hu %hu\n",
             idx,
             table->entries[idx].ip_source,
             table->entries[idx].ip_destination,
             table->entries[idx].transport_protocol,
             table->entries[idx].port_source,
-            table->entries[idx].port_destination) < 0) {
+            table->entries[idx].port_destination)) {
         perror("Error sending update");
         return -1;
       }
       table->entries[idx].occupied = ENTRY_OCCUPIED;
     }
   }
-  if (fprintf(handle, "\n") < 0) {
+  if (!gzprintf(handle, "\n")) {
     perror("Error sending update");
     return -1;
   }

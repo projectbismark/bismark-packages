@@ -7,7 +7,7 @@
 #define FLOW_TABLE_EXPIRATION_SECONDS (30*60)
 
 #define UPDATE_PERIOD_SECONDS 60
-#define UPDATE_FILENAME "/tmp/bismark-passive-update"
+#define UPDATE_FILENAME "/tmp/bismark-passive-update.gz"
 
 #define DNS_TABLE_A_ENTRIES 1024
 #define DNS_TABLE_CNAME_ENTRIES 1024
