@@ -28,7 +28,7 @@ int mac_table_write_update(mac_table_t* table, gzFile handle) {
   for (mac_id = 0;
        mac_id < MAC_TABLE_ENTRIES && (*table)[mac_id] != 0;
        ++mac_id) {
-    if (!gzprintf(handle, "%d %ld\n", mac_id, (*table)[mac_id])) {
+    if (!gzprintf(handle, "%d %lu\n", mac_id, (*table)[mac_id])) {
       perror("Error writing update");
       return -1;
     }
