@@ -5,6 +5,9 @@
 
 #include "dns_table.h"
 
+/* Parse a DNS response packet and add relevent entries to the provided DNS
+ * table. Assumes the packet is destined for the MAC address denoted by the
+ * provided MAC ID. */
 int process_dns_packet(const uint8_t* bytes,
                        int len,
                        dns_table_t* dns_table,

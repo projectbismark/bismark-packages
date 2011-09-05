@@ -1,3 +1,5 @@
+/* RFC 1305 will be very helpful for understanding this parser. */
+
 #include "constants.h"
 #include "dns_parser.h"
 #include "dns_table.h"

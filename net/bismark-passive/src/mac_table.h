@@ -22,6 +22,8 @@ typedef struct {
 
 void mac_table_init(mac_table_t* table);
 
+/* Add a new address to the MAC table. If the table if full, then the oldest
+ * address will be discarded to make room. */
 int mac_table_lookup(mac_table_t* table, uint64_t mac);
 
 /* Serialize all MAC addresses in the table to a file. */
