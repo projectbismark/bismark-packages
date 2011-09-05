@@ -115,17 +115,6 @@ void process_packet(
     printf("There are %d entries in the flow table\n", flow_counter);
     printf("Flow table has dropped %d flows\n", flow_table.num_dropped_flows);
     printf("Flow table has expired %d flows\n", flow_table.num_expired_flows);
-
-    /*    char src_buffer[256];
-        char dest_buffer[256];
-        flow_table_entry_t* entry = &flow_table.entries[idx];
-        printf("Entry: %s %s %hu %hu\n",
-                inet_ntop(AF_INET, &entry->ip_source, src_buffer, 256),
-                inet_ntop(AF_INET, &entry->ip_destination, dest_buffer, 256),
-                ntohs(entry->port_source),
-                ntohs(entry->port_destination));
-      }
-    }*/
   }
   if (packet_data.discarded_by_overflow % 1000 == 1) {
     printf("[%d] ", packet_data.discarded_by_overflow);
