@@ -148,7 +148,7 @@ void process_packet(
   }
 }
 
-void send_update() {
+void write_update() {
   gzFile handle = gzopen (UPDATE_FILENAME, "wb9");
   if (!handle) {
     perror("Could not open update file for writing");
@@ -189,7 +189,7 @@ void* updater(void* arg) {
 #ifndef NDEBUG
     printf("Sending update\n");
 #endif
-    send_update();
+    write_update();
     if (pthread_mutex_unlock(&update_lock)) {
       perror("Error unlocking update mutex");
       exit(1);
