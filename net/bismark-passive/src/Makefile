@@ -7,7 +7,7 @@ OBJS=$(SRCS:.c=.o)
 EXE=bismark-passive
 
 TEST_CFLAGS=-DTESTING
-TEST_LDFLAGS=-lcheck -lresolv
+TEST_LDFLAGS=-lcheck -lresolv -lz
 TEST_SRCS=tests.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c
 TEST_EXE=tests
 

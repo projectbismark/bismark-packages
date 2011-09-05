@@ -1,20 +1,3 @@
-/* Check that QR == 1, OPCODE == 0, RCODE == 0.
- * Check ANCOUNT > 0 || ARCOUNT > 0; if so:
- * For each RR in Anwer and Additional Records sections:
- *   Check CLASS is IN
- *   Check TYPE is A:
- *   If TYPE is CNAME:
- *      Add CNAME to set of domains
- *      Add Domain to set of domains
- *   If TYPE is A:
- *      Add ADDRESS to set of addresses
- *      Add Domain to set of domains
- *
- * MAC table: [(MAC, MAC_ID)]
- * Data representation: [(MAC_ID, IP address) -> [domain]]
- *
- */
-
 #include "dns_table.h"
 
 #include <stdlib.h>
@@ -26,31 +9,31 @@ void dns_table_init(dns_table_t* table) {
 
 void dns_table_destroy(dns_table_t* table) {
   int idx;
-  for (idx = table->a_first; idx != table->a_last; ++idx) {
+  for (idx = 0; idx < table->a_length; ++idx) {
     free(table->a_entries[idx].domain_name);
   }
-  for (idx = table->cname_first; idx != table->cname_last; ++idx) {
+  for (idx = 0; idx < table->cname_length; ++idx) {
     free(table->cname_entries[idx].domain_name);
   }
 }
 
 int dns_table_add_a(dns_table_t* table, dns_a_entry_t* new_entry) {
-  if (A_TABLE_LEN(table) >= DNS_TABLE_A_ENTRIES - 1) {
+  if (table->a_length >= DNS_TABLE_A_ENTRIES) {
     ++table->num_dropped_a_entries;
     return -1;
   }
-  table->a_entries[table->a_last] = *new_entry;
-  table->a_last = (table->a_last + 1) % DNS_TABLE_A_ENTRIES;
+  table->a_entries[table->a_length] = *new_entry;
+  ++table->a_length;
   return 0;
 }
 
 int dns_table_add_cname(dns_table_t* table, dns_cname_entry_t* new_entry) {
-  if (CNAME_TABLE_LEN(table) >= DNS_TABLE_CNAME_ENTRIES - 1) {
+  if (table->cname_length >= DNS_TABLE_CNAME_ENTRIES) {
     ++table->num_dropped_cname_entries;
     return -1;
   }
-  table->cname_entries[table->cname_last] = *new_entry;
-  table->cname_last = (table->cname_last + 1) % DNS_TABLE_CNAME_ENTRIES;
+  table->cname_entries[table->cname_length] = *new_entry;
+  ++table->cname_length;
   return 0;
 }
 
@@ -63,9 +46,7 @@ int dns_table_write_update(dns_table_t* table, gzFile handle) {
     return -1;
   }
   int idx;
-  for (idx = table->a_first;
-       idx != table->a_last;
-       idx = (idx + 1) % DNS_TABLE_A_ENTRIES) {
+  for (idx = 0; idx < table->a_length; ++idx) {
     if (!gzprintf(handle,
                   "%hhu %s %u\n",
                   table->a_entries[idx].mac_id,
@@ -80,9 +61,7 @@ int dns_table_write_update(dns_table_t* table, gzFile handle) {
     return -1;
   }
 
-  for (idx = table->cname_first;
-       idx != table->cname_last;
-       idx = (idx + 1) % DNS_TABLE_CNAME_ENTRIES) {
+  for (idx = 0; idx < table->cname_length; ++idx) {
     if (!gzprintf(handle,
                   "%hhu %s %s\n",
                   table->cname_entries[idx].mac_id,

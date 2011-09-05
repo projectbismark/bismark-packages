@@ -81,7 +81,7 @@ static void add_a_record(dns_table_t* dns_table,
   inet_ntop(AF_INET, &entry.ip_address, ip_buffer, sizeof(ip_buffer));
   fprintf(stderr,
           "Added DNS A entry %d: %s %s\n",
-          A_TABLE_LEN(dns_table),
+          dns_table->a_length,
           entry.domain_name,
           ip_buffer);
 #endif
@@ -107,7 +107,7 @@ static void add_cname_record(dns_table_t* dns_table,
 #ifndef NDEBUG
   fprintf(stderr,
           "Added DNS CNAME entry %d: %s %s\n",
-          CNAME_TABLE_LEN(dns_table),
+          dns_table->cname_length,
           entry.domain_name,
           entry.cname);
 #endif

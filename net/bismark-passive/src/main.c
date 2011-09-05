@@ -1,15 +1,17 @@
 #include <pcap.h>
 #include <pthread.h>
 #include <stdio.h>
-/* exit */
+/* exit() */
 #include <stdlib.h>
-/* strdup */
+/* strdup() */
 #include <string.h>
-/* sleep */
+/* time() */
+#include <time.h>
+/* sleep() */
 #include <unistd.h>
 /* update compression */
 #include <zlib.h>
-/* inet_ntoa */
+/* inet_ntoa() */
 #include <arpa/inet.h>
 /* DNS message header */
 #include <arpa/nameser.h>
@@ -182,6 +184,7 @@ void send_update() {
   gzclose(handle);
 
   packet_series_init(&packet_data);
+  flow_table_advance_base_timestamp(&flow_table, time(NULL));
   dns_table_destroy(&dns_table);
   dns_table_init(&dns_table);
 }

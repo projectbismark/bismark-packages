@@ -302,16 +302,12 @@ START_TEST(test_dns_adds_a_entries) {
   a_entry.ip_address = 4321;
   fail_if(dns_table_add_a(&dns_table, &a_entry));
 
-  fail_unless(dns_table.a_entries[dns_table.a_first].mac_id == 1);
-  fail_if(strcmp(
-        dns_table.a_entries[dns_table.a_first].domain_name, "foo.com"));
-  fail_unless(dns_table.a_entries[dns_table.a_first].ip_address == 1234);
-  fail_unless(dns_table.a_entries[(dns_table.a_first + 1)
-      % DNS_TABLE_A_ENTRIES].mac_id == 2);
-  fail_if(strcmp(dns_table.a_entries[(dns_table.a_first + 1)
-        % DNS_TABLE_A_ENTRIES].domain_name, "bar.com"));
-  fail_unless(dns_table.a_entries[(dns_table.a_first + 1)
-      % DNS_TABLE_A_ENTRIES].ip_address == 4321);
+  fail_unless(dns_table.a_entries[0].mac_id == 1);
+  fail_if(strcmp(dns_table.a_entries[0].domain_name, "foo.com"));
+  fail_unless(dns_table.a_entries[0].ip_address == 1234);
+  fail_unless(dns_table.a_entries[1].mac_id == 2);
+  fail_if(strcmp(dns_table.a_entries[1].domain_name, "bar.com"));
+  fail_unless(dns_table.a_entries[1].ip_address == 4321);
 }
 END_TEST
 
@@ -326,31 +322,28 @@ START_TEST(test_dns_adds_cname_entries) {
   cname_entry.cname = "baz.net";
   fail_if(dns_table_add_cname(&dns_table, &cname_entry));
 
-  fail_unless(dns_table.cname_entries[dns_table.cname_first].mac_id == 1);
+  fail_unless(dns_table.cname_entries[0].mac_id == 1);
   fail_if(strcmp(
-        dns_table.cname_entries[dns_table.cname_first].domain_name, "foo.com"));
+        dns_table.cname_entries[0].domain_name, "foo.com"));
   fail_if(strcmp(
-        dns_table.cname_entries[dns_table.cname_first].cname, "gorp.org"));
-  fail_unless(dns_table.cname_entries[(dns_table.cname_first + 1)
-      % DNS_TABLE_CNAME_ENTRIES].mac_id == 2);
-  fail_if(strcmp(dns_table.cname_entries[(dns_table.cname_first + 1)
-        % DNS_TABLE_CNAME_ENTRIES].domain_name, "bar.com"));
-  fail_if(strcmp(dns_table.cname_entries[(dns_table.cname_first + 1)
-        % DNS_TABLE_CNAME_ENTRIES].cname, "baz.net"));
+        dns_table.cname_entries[0].cname, "gorp.org"));
+  fail_unless(dns_table.cname_entries[1].mac_id == 2);
+  fail_if(strcmp(dns_table.cname_entries[1].domain_name, "bar.com"));
+  fail_if(strcmp(dns_table.cname_entries[1].cname, "baz.net"));
 }
 END_TEST
 
 START_TEST(test_dns_enforces_size) {
   dns_a_entry_t a_entry;
   int a_idx;
-  for (a_idx = 0; a_idx < DNS_TABLE_A_ENTRIES - 1; ++a_idx) {
+  for (a_idx = 0; a_idx < DNS_TABLE_A_ENTRIES; ++a_idx) {
     fail_if(dns_table_add_a(&dns_table, &a_entry));
   }
   fail_unless(dns_table_add_a(&dns_table, &a_entry));
 
   dns_cname_entry_t cname_entry;
   int cname_idx;
-  for (cname_idx = 0; cname_idx < DNS_TABLE_CNAME_ENTRIES - 1; ++cname_idx) {
+  for (cname_idx = 0; cname_idx < DNS_TABLE_CNAME_ENTRIES; ++cname_idx) {
     fail_if(dns_table_add_cname(&dns_table, &cname_entry));
   }
   fail_unless(dns_table_add_cname(&dns_table, &cname_entry));
@@ -360,16 +353,31 @@ END_TEST
 /********************************************************
  * MAC table tests
  ********************************************************/
-START_TEST(test_mac_table) {
-  mac_table_t mac_table;
-  fail_unless(mac_table_lookup(&mac_table, 0) == -1);
+static mac_table_t mac_table;
 
+void mac_setup() {
+  mac_table_init(&mac_table);
+}
+
+START_TEST(test_mac_can_add_to_table) {
   int first_mac_id = mac_table_lookup(&mac_table, 512);
   fail_unless(first_mac_id >= 0);
   int second_mac_id = mac_table_lookup(&mac_table, 123);
   fail_unless(second_mac_id >= 0);
   fail_unless(mac_table_lookup(&mac_table, 512) == first_mac_id);
   fail_unless(mac_table_lookup(&mac_table, 123) == second_mac_id);
+}
+END_TEST
+
+START_TEST(test_mac_can_discard_old_entries) {
+  int idx;
+  int first_id = mac_table_lookup(&mac_table, 0);
+  fail_if(mac_table_lookup(&mac_table, 0) != first_id);
+  for (idx = 1; idx < MAC_TABLE_ENTRIES; ++idx) {
+    mac_table_lookup(&mac_table, idx);
+  }
+  fail_unless(mac_table_lookup(&mac_table, MAC_TABLE_ENTRIES + 1) == first_id);
+  fail_unless(mac_table_lookup(&mac_table, 0) != first_id);
 }
 END_TEST
 
@@ -461,7 +469,9 @@ Suite* build_suite() {
   suite_add_tcase(s, tc_dns);
 
   TCase *tc_mac = tcase_create("MAC table");
-  tcase_add_test(tc_mac, test_mac_table);
+  tcase_add_checked_fixture(tc_mac, mac_setup, NULL);
+  tcase_add_test(tc_mac, test_mac_can_add_to_table);
+  tcase_add_test(tc_mac, test_mac_can_discard_old_entries);
   suite_add_tcase(s, tc_mac);
 
   TCase *tc_dns_parser = tcase_create("DNS parser");

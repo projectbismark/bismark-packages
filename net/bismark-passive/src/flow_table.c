@@ -1,5 +1,6 @@
 #include "flow_table.h"
 
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
@@ -34,22 +35,28 @@ void flow_table_init(flow_table_t* table) {
 int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* new_entry,
                             const struct timeval* timestamp) {
-  uint32_t hash;
-  int probe;
-  int first_available = -1;
 
   const int hash_size = sizeof(new_entry->ip_source)
                       + sizeof(new_entry->ip_destination)
                       + sizeof(new_entry->port_source)
                       + sizeof(new_entry->port_destination)
                       + sizeof(new_entry->transport_protocol);
-  hash = fnv_hash_32((char *)new_entry, hash_size);
+  uint32_t hash = fnv_hash_32((char *)new_entry, hash_size);
 #ifdef TESTING
   if (alternate_hash_function) {
     hash = alternate_hash_function((char *)new_entry, sizeof(*new_entry));
   }
 #endif
 
+  /* Don't let the last_update of a flow exceed its datatype bounds. */
+  if (timestamp->tv_sec - table->base_timestamp_seconds > INT16_MAX
+      || timestamp->tv_sec - table->base_timestamp_seconds < INT16_MIN) {
+    ++table->num_dropped_flows;
+    return -1;
+  }
+
+  int first_available = -1;
+  int probe;
   for (probe = 0; probe < HT_NUM_PROBES; ++probe) {
     uint32_t table_idx
       = (uint32_t)(hash + HT_C1*probe + HT_C2*probe*probe) % FLOW_TABLE_ENTRIES;
@@ -92,6 +99,24 @@ int flow_table_process_flow(flow_table_t* table,
   table->entries[first_available] = *new_entry;
   ++table->num_elements;
   return first_available;
+}
+
+void flow_table_advance_base_timestamp(flow_table_t* table,
+                                       int64_t new_timestamp) {
+  const int64_t offset = new_timestamp - table->base_timestamp_seconds;
+  int idx;
+  for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
+    if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT ||
+        table->entries[idx].occupied == ENTRY_OCCUPIED) {
+      if ((int32_t)table->entries[idx].last_update_time_seconds - offset
+          < INT16_MIN) {
+        table->entries[idx].occupied = ENTRY_DELETED;
+      } else {
+        table->entries[idx].last_update_time_seconds -= offset;
+      }
+    }
+  }
+  table->base_timestamp_seconds = new_timestamp;
 }
 
 int flow_table_write_update(flow_table_t* table, gzFile handle) {
