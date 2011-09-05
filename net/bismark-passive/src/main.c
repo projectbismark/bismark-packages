@@ -40,8 +40,12 @@ static mac_table_t mac_table;
 static pthread_t update_thread;
 static pthread_mutex_t update_lock;
 
+/* Will be filled in with the timestamp of the first packet pcap gives us. This
+ * value serves as a unique identifier across instances of bismark-passive that
+ * have run on the same machine. */
 static int64_t first_packet_timestamp_microseconds = -1;
 
+/* This extracts flow information from raw packet contents. */
 static void get_flow_entry_for_packet(
     const u_char* bytes,
     int len,
@@ -83,6 +87,7 @@ static void get_flow_entry_for_packet(
   }
 }
 
+/* libpcap calls this function for every packet it receives. */
 void process_packet(
         u_char* user,
         const struct pcap_pkthdr* header,
@@ -148,6 +153,8 @@ void process_packet(
   }
 }
 
+/* Write an update to UPDATE_FILENAME. This is the file that will be sent to the
+ * server. The data is compressed on-the-fly using gzip. */
 void write_update() {
   gzFile handle = gzopen (UPDATE_FILENAME, "wb9");
   if (!handle) {
