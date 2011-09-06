@@ -132,6 +132,7 @@ static void process_packet(
   }
 
   flow_table_entry_t flow_entry;
+  flow_table_entry_init(&flow_entry);
   get_flow_entry_for_packet(bytes, header->caplen, &flow_entry);
   int table_idx = flow_table_process_flow(
       &flow_table, &flow_entry, header->ts.tv_sec);

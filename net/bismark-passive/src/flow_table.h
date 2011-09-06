@@ -45,6 +45,8 @@ typedef struct {
 
 void flow_table_init(flow_table_t* const table);
 
+void flow_table_entry_init(flow_table_entry_t* const entry);
+
 /* Add a flow to the hash table if it doesn't already exist. Does not claim
  * ownership of entry or timestamp. If expired entries are encountered in the
  * process, then delete them. */

@@ -13,11 +13,7 @@ static uint32_t (*alternate_hash_function)(const char* data, int len) = NULL;
 
 static int flow_entry_compare(const flow_table_entry_t* const first,
                               const flow_table_entry_t* const second) {
-  return (first->occupied == ENTRY_OCCUPIED_BUT_UNSENT
-          || first->occupied == ENTRY_OCCUPIED)
-      && (second->occupied == ENTRY_OCCUPIED_BUT_UNSENT
-          || second->occupied == ENTRY_OCCUPIED)
-      && first->ip_source == second->ip_source
+  return first->ip_source == second->ip_source
       && first->ip_destination == second->ip_destination
       && first->transport_protocol == second->transport_protocol
       && first->port_source == second->port_source
@@ -26,6 +22,10 @@ static int flow_entry_compare(const flow_table_entry_t* const first,
 
 void flow_table_init(flow_table_t* const table) {
   memset(table->entries, '\0', sizeof(*table));
+}
+
+void flow_table_entry_init(flow_table_entry_t* const entry) {
+  memset(entry, '\0', sizeof(*entry));
 }
 
 int flow_table_process_flow(flow_table_t* const table,
@@ -67,7 +67,9 @@ int flow_table_process_flow(flow_table_t* const table,
       --table->num_elements;
       ++table->num_expired_flows;
     }
-    if (flow_entry_compare(new_entry, entry)) {
+    if ((entry->occupied == ENTRY_OCCUPIED
+          || entry->occupied == ENTRY_OCCUPIED_BUT_UNSENT)
+        && flow_entry_compare(new_entry, entry)) {
       entry->last_update_time_seconds
           = timestamp_seconds - table->base_timestamp_seconds;
       return table_idx;
