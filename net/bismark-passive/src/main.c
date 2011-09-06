@@ -156,13 +156,18 @@ void process_packet(
 
 /* Write an update to UPDATE_FILENAME. This is the file that will be sent to the
  * server. The data is compressed on-the-fly using gzip. */
-void write_update() {
+void write_update(const struct pcap_stat* statistics) {
   gzFile handle = gzopen (UPDATE_FILENAME, "wb9");
   if (!handle) {
     perror("Could not open update file for writing");
     exit(1);
   }
-  if (!gzprintf(handle, "%ld\n", first_packet_timestamp_microseconds)) {
+  if (!gzprintf(handle,
+                "%ld\n%d %d %d\n",
+                first_packet_timestamp_microseconds,
+                statistics->ps_recv,
+                statistics->ps_drop,
+                statistics->ps_ifdrop)) {
     perror("Error writing update");
     exit(1);
   }
@@ -187,6 +192,7 @@ void write_update() {
 }
 
 void* updater(void* arg) {
+  pcap_t* handle = (pcap_t*)arg;
   while (1) {
     sleep (UPDATE_PERIOD_SECONDS);
 
@@ -197,7 +203,15 @@ void* updater(void* arg) {
 #ifndef NDEBUG
     printf("Sending update\n");
 #endif
-    write_update();
+    struct pcap_stat statistics;
+    if (!pcap_stats(handle, &statistics)) {
+      write_update(&statistics);
+    } else {
+#ifndef NDEBUG
+      pcap_perror(handle, "Error fetching pcap statistics");
+#endif
+      write_update(NULL);
+    }
     if (pthread_mutex_unlock(&update_lock)) {
       perror("Error unlocking update mutex");
       exit(1);
@@ -237,7 +251,7 @@ int main(int argc, char *argv[]) {
   dns_table_init(&dns_table);
   mac_table_init(&mac_table);
 
-  pthread_create(&update_thread, NULL, updater, NULL);
+  pthread_create(&update_thread, NULL, updater, handle);
 
   /* By default, pcap uses an internal buffer of 500 KB. Any packets that
    * overflow this buffer will be dropped. pcap_stats tells the number of
