@@ -30,7 +30,7 @@ void flow_table_init(flow_table_t* table) {
 
 int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* new_entry,
-                            int64_t timestamp_seconds) {
+                            time_t timestamp_seconds) {
   const int hash_size = sizeof(new_entry->ip_source)
                       + sizeof(new_entry->ip_destination)
                       + sizeof(new_entry->port_source)
@@ -100,7 +100,7 @@ int flow_table_process_flow(flow_table_t* table,
 }
 
 void flow_table_advance_base_timestamp(flow_table_t* table,
-                                       int64_t new_timestamp) {
+                                       time_t new_timestamp) {
   const int64_t offset = new_timestamp - table->base_timestamp_seconds;
   int idx;
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
