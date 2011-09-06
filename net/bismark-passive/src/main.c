@@ -133,7 +133,8 @@ void process_packet(
 
   flow_table_entry_t flow_entry;
   get_flow_entry_for_packet(bytes, header->caplen, &flow_entry);
-  int table_idx = flow_table_process_flow(&flow_table, &flow_entry, &header->ts);
+  int table_idx = flow_table_process_flow(
+      &flow_table, &flow_entry, header->ts.tv_sec);
 #ifndef NDEBUG
   if (table_idx < 0) {
     fprintf(stderr, "Error adding to flow table\n");

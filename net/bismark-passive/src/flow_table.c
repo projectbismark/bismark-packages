@@ -34,7 +34,7 @@ void flow_table_init(flow_table_t* table) {
 
 int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* new_entry,
-                            const struct timeval* timestamp) {
+                            int64_t timestamp_seconds) {
 
   const int hash_size = sizeof(new_entry->ip_source)
                       + sizeof(new_entry->ip_destination)
@@ -49,8 +49,10 @@ int flow_table_process_flow(flow_table_t* table,
 #endif
 
   /* Don't let the last_update of a flow exceed its datatype bounds. */
-  if (timestamp->tv_sec - table->base_timestamp_seconds > INT16_MAX
-      || timestamp->tv_sec - table->base_timestamp_seconds < INT16_MIN) {
+  if (timestamp_seconds - table->base_timestamp_seconds
+          > FLOW_TABLE_MAX_UPDATE_OFFSET
+      || timestamp_seconds - table->base_timestamp_seconds
+          < FLOW_TABLE_MIN_UPDATE_OFFSET) {
     ++table->num_dropped_flows;
     return -1;
   }
@@ -64,14 +66,14 @@ int flow_table_process_flow(flow_table_t* table,
     if (entry->occupied == ENTRY_OCCUPIED
         && table->base_timestamp_seconds
             + entry->last_update_time_seconds
-            + FLOW_TABLE_EXPIRATION_SECONDS < timestamp->tv_sec) {
+            + FLOW_TABLE_EXPIRATION_SECONDS < timestamp_seconds) {
       entry->occupied = ENTRY_DELETED;
       --table->num_elements;
       ++table->num_expired_flows;
     }
     if (flow_entry_compare(new_entry, entry)) {
       entry->last_update_time_seconds
-          = timestamp->tv_sec - table->base_timestamp_seconds;
+          = timestamp_seconds - table->base_timestamp_seconds;
       return table_idx;
     }
     if (entry->occupied != ENTRY_OCCUPIED
@@ -91,11 +93,11 @@ int flow_table_process_flow(flow_table_t* table,
   }
 
   if (table->num_elements == 0) {
-    table->base_timestamp_seconds = timestamp->tv_sec;
+    table->base_timestamp_seconds = timestamp_seconds;
   }
   new_entry->occupied = ENTRY_OCCUPIED_BUT_UNSENT;
   new_entry->last_update_time_seconds
-      = timestamp->tv_sec - table->base_timestamp_seconds;
+      = timestamp_seconds - table->base_timestamp_seconds;
   table->entries[first_available] = *new_entry;
   ++table->num_elements;
   return first_available;
@@ -109,8 +111,9 @@ void flow_table_advance_base_timestamp(flow_table_t* table,
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT ||
         table->entries[idx].occupied == ENTRY_OCCUPIED) {
       if ((int32_t)table->entries[idx].last_update_time_seconds - offset
-          < INT16_MIN) {
+          < FLOW_TABLE_MIN_UPDATE_OFFSET) {
         table->entries[idx].occupied = ENTRY_DELETED;
+        --table->num_elements;
       } else {
         table->entries[idx].last_update_time_seconds -= offset;
       }

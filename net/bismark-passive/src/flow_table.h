@@ -3,9 +3,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 #include <zlib.h>
-
-struct timeval;
 
 #include "constants.h"
 
@@ -37,7 +36,7 @@ typedef struct {
   /* An open addressed hash table with quadratic probing. */
   flow_table_entry_t entries[FLOW_TABLE_ENTRIES];
   /* The timestamp used to calculate all timestamp offsets in the table. */
-  int64_t base_timestamp_seconds;
+  time_t base_timestamp_seconds;
   uint32_t num_elements;
   /* Flows are expired after FLOW_TABLE_EXPIRATION_SECONDS */
   int num_expired_flows;
@@ -51,13 +50,13 @@ void flow_table_init(flow_table_t* table);
  * process, then delete them. */
 int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* entry,
-                            const struct timeval* timestamp);
+                            time_t timestamp_seconds);
 
 /* Advance the base timestamp to a new value. This will rewrite offsets of
  * existing flows to match the new base timestamp, which can cause flows to be
  * deleted if the new base makes the offsets larger than INT16_MAX. */
 void flow_table_advance_base_timestamp(flow_table_t* table,
-                                       int64_t new_timestamp);
+                                       time_t new_timestamp);
 
 /* Write entries in the hash table that are marked ENTRY_OCCUPIED_BUT_UNSENT,
  * then update their state to ENTRY_OCCUPIED. This ensures each flow record is
