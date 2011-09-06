@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <check.h>
 
@@ -15,7 +16,7 @@
 static packet_series_t series;
 static const int kMySize = 12;
 static const int kMyFlowId = 1;
-static const uint32_t kMySec = 100;
+static const time_t kMySec = 123456789;
 static const uint32_t kMyUSec = 20000;
 
 void series_setup() {
@@ -36,8 +37,8 @@ START_TEST(test_series_add) {
   fail_unless(series.packet_data[0].size == kMySize);
   fail_unless(series.packet_data[0].flow == kMyFlowId);
 
-  second_tv.tv_sec = kMySec * 2;
-  second_tv.tv_usec = kMyUSec * 2;
+  second_tv.tv_sec = kMySec + 60;
+  second_tv.tv_usec = kMyUSec + 1000;
   fail_if(packet_series_add_packet(&series, &second_tv, kMySize * 2, kMyFlowId));
   fail_unless(series.length == 2);
   fail_unless(series.start_time_microseconds == TIMEVAL_TO_MICROS(&first_tv));
@@ -235,8 +236,8 @@ START_TEST(test_flows_can_set_last_update_time) {
   fail_unless(table.entries[0].last_update_time_seconds == 0);
   fail_unless(table.num_elements == 1);
 
-  fail_unless(flow_table_process_flow(&table, &entry, kMySec * 2) == 0);
-  fail_unless(table.entries[0].last_update_time_seconds == kMySec);
+  fail_unless(flow_table_process_flow(&table, &entry, kMySec + 60) == 0);
+  fail_unless(table.entries[0].last_update_time_seconds == 60);
   fail_unless(table.num_elements == 1);
 
   fail_unless(table.num_expired_flows == 0);
@@ -456,6 +457,9 @@ START_TEST(test_dns_parser_fails_on_invalid_responses) {
 }
 END_TEST
 
+/********************************************************
+ * Test setup
+ ********************************************************/
 Suite* build_suite() {
   Suite *s = suite_create("Bismark passive");
 
