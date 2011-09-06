@@ -13,15 +13,15 @@ static uint32_t (*alternate_hash_function)(const char* data, int len) = NULL;
 
 static int flow_entry_compare(flow_table_entry_t* first,
                                    flow_table_entry_t* second) {
-    return (first->occupied == ENTRY_OCCUPIED_BUT_UNSENT
-            || first->occupied == ENTRY_OCCUPIED)
-        && (second->occupied == ENTRY_OCCUPIED_BUT_UNSENT
-            || second->occupied == ENTRY_OCCUPIED)
-        && first->ip_source == second->ip_source
-        && first->ip_destination == second->ip_destination
-        && first->transport_protocol == second->transport_protocol
-        && first->port_source == second->port_source
-        && first->port_destination == second->port_destination;
+  return (first->occupied == ENTRY_OCCUPIED_BUT_UNSENT
+          || first->occupied == ENTRY_OCCUPIED)
+      && (second->occupied == ENTRY_OCCUPIED_BUT_UNSENT
+          || second->occupied == ENTRY_OCCUPIED)
+      && first->ip_source == second->ip_source
+      && first->ip_destination == second->ip_destination
+      && first->transport_protocol == second->transport_protocol
+      && first->port_source == second->port_source
+      && first->port_destination == second->port_destination;
 }
 
 void flow_table_init(flow_table_t* table) {
@@ -31,7 +31,6 @@ void flow_table_init(flow_table_t* table) {
 int flow_table_process_flow(flow_table_t* table,
                             flow_table_entry_t* new_entry,
                             int64_t timestamp_seconds) {
-
   const int hash_size = sizeof(new_entry->ip_source)
                       + sizeof(new_entry->ip_destination)
                       + sizeof(new_entry->port_source)
