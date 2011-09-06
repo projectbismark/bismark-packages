@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
-PKG_VERSION:=0.2
-PKG_RELEASE:=6
+PKG_VERSION:=0.3
+PKG_RELEASE:=1
 #GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
@@ -40,7 +40,7 @@ define Build/Prepare
 	# mgmt clash $(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{action-lite,bootstrap-lite} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
-	$(CP) -L files/device/OpenWrt_common/keys/cert.pem $(PKG_BUILD_DIR)/keys
+	$(CP) -L files/device/OpenWrt_common/keys/gd_*.crt $(PKG_BUILD_DIR)/keys
 
 	#VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
 	#sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
@@ -61,7 +61,7 @@ define Package/bismark-lite/install
 	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/etc/dropbear $(1)/etc/ssl/certs
 	# mgmt clash $(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
-	$(CP) -p $(PKG_BUILD_DIR)/keys/cert.pem $(1)/etc/bismark
+	$(CP) -p $(PKG_BUILD_DIR)/keys/gd_*.crt $(1)/etc/bismark
 	###$(LN) $(1)/etc/bismark/cert.pem $(1)/etc/ssl/certs/381178f4.0
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
 	# mgmt clash $(CP) -p $(PKG_BUILD_DIR)/lib/* $(1)/usr/lib/bismark/
@@ -74,7 +74,9 @@ define Package/bismark-lite/postinst
 
 ###cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys >> $${IPKG_INSTROOT}/etc/dropbear/authorized_keys
 ###cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/known_hosts
-ln -sf ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/381178f4.0
+##ln -sf ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/381178f4.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
 
 endef
 
