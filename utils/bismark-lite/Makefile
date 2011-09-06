@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.2
-PKG_RELEASE:=1
+PKG_RELEASE:=6
 #GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
@@ -20,7 +20,7 @@ define Package/bismark-lite
    TITLE:=Broadband Internet Service benchMARK - A light management tool
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+netcat
+   DEPENDS:=+wget +bismark-mgmt
 endef
 
 define Package/bismark-lite/description
@@ -35,13 +35,15 @@ define Build/Prepare
 	[ -d files ] && ( cd files ; git pull ) \
 		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) 
 
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{action-lite,bootstrap-lite,probe} $(PKG_BUILD_DIR)/scripts
-	$(CP) files/device/OpenWrt_common/etc/{bismark.conf,bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
-	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
+	# mgmt clash $(CP) files/device/OpenWrt_common/scripts/bismark-{action-lite,bootstrap-lite,probe} $(PKG_BUILD_DIR)/scripts
+	# mgmt clash $(CP) files/device/OpenWrt_common/etc/{bismark.conf,bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
+	# mgmt clash $(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{action-lite,bootstrap-lite} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/etc/{bismark-lite.{conf,initd},crontab-lite} $(PKG_BUILD_DIR)/etc
 	$(CP) -L files/device/OpenWrt_common/keys/cert.pem $(PKG_BUILD_DIR)/keys
 
-	VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
-	sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
+	#VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
+	#sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
 endef
 
 define Build/Compile
@@ -57,11 +59,12 @@ endef
 # directory) to the install directory.
 define Package/bismark-lite/install
 	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/etc/dropbear $(1)/etc/ssl/certs
-	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark.conf,bismark-lite.conf,crontab-lite} $(1)/etc/bismark
+	# mgmt clash $(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
+	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark-lite.conf,crontab-lite} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/keys/cert.pem $(1)/etc/bismark
 	###$(LN) $(1)/etc/bismark/cert.pem $(1)/etc/ssl/certs/381178f4.0
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
-	$(CP) -p $(PKG_BUILD_DIR)/lib/* $(1)/usr/lib/bismark/
+	# mgmt clash $(CP) -p $(PKG_BUILD_DIR)/lib/* $(1)/usr/lib/bismark/
 	$(CP) $(PKG_BUILD_DIR)/etc/bismark-lite.initd $(1)/etc/init.d/bismark-lite
 endef
 

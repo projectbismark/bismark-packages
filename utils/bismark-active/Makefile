@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active
-PKG_VERSION:=0.5
-PKG_RELEASE:=1
+PKG_VERSION:=0.6
+PKG_RELEASE:=4
 
 include $(INCLUDE_DIR)/package.mk
 
