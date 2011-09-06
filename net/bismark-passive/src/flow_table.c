@@ -49,10 +49,11 @@ int flow_table_process_flow(flow_table_t* table,
 #endif
 
   /* Don't let the last_update of a flow exceed its datatype bounds. */
-  if (timestamp_seconds - table->base_timestamp_seconds
-          > FLOW_TABLE_MAX_UPDATE_OFFSET
-      || timestamp_seconds - table->base_timestamp_seconds
-          < FLOW_TABLE_MIN_UPDATE_OFFSET) {
+  if (table->num_elements > 0
+      && (timestamp_seconds - table->base_timestamp_seconds
+            > FLOW_TABLE_MAX_UPDATE_OFFSET
+        || timestamp_seconds - table->base_timestamp_seconds
+            < FLOW_TABLE_MIN_UPDATE_OFFSET)) {
     ++table->num_dropped_flows;
     return -1;
   }
