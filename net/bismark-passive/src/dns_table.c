@@ -14,6 +14,7 @@ void dns_table_destroy(dns_table_t* const table) {
   }
   for (idx = 0; idx < table->cname_length; ++idx) {
     free(table->cname_entries[idx].domain_name);
+    free(table->cname_entries[idx].cname);
   }
 }
 
