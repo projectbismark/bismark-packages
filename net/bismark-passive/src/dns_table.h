@@ -14,7 +14,6 @@ typedef struct {
   uint32_t ip_address;  /* IPv4 address in network byte order */
 } dns_a_entry_t;
 
-
 typedef struct {
   uint8_t mac_id;
   char* domain_name;
@@ -28,22 +27,23 @@ typedef struct {
   int num_dropped_a_entries, num_dropped_cname_entries;
 } dns_table_t;
 
-void dns_table_init(dns_table_t* table);
+void dns_table_init(dns_table_t* const table);
 
 /* You *must* call this before a table goes out of scope, since tables contain
  * malloced strings that must be freed. */
-void dns_table_destroy(dns_table_t* table);
+void dns_table_destroy(dns_table_t* const table);
 
 /* Add a new DNS A record to the table. Claims ownership of entry->domain_name
  * and will free() at some later point. Does *not* claim ownership of entry. */
-int dns_table_add_a(dns_table_t* table, dns_a_entry_t* entry);
+int dns_table_add_a(dns_table_t* const table, const dns_a_entry_t* const entry);
 
 /* Add a new DNS CNAME record to the table. Claims ownership of
  * entry->domain_name and entry->cname and will free() at some later point. Does
  * *not* claim ownership of entry. */
-int dns_table_add_cname(dns_table_t* table, dns_cname_entry_t* entry);
+int dns_table_add_cname(dns_table_t* const table,
+                        const dns_cname_entry_t* const entry);
 
 /* Serialize all table data to an open gzFile handle. */
-int dns_table_write_update(dns_table_t* table, gzFile handle);
+int dns_table_write_update(dns_table_t* const table, gzFile handle);
 
 #endif

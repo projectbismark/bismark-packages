@@ -5,8 +5,8 @@
 
 #define FNV_OFFSET_BASIS 0x811c9dc5
 static uint32_t fnv_hash_32(const char* data, int len) {
-  const unsigned char *bp = (const unsigned char *)data;
-  const unsigned char *be = bp + len;
+  const unsigned char* bp = (const unsigned char *)data;
+  const unsigned char* const be = bp + len;
   uint32_t hval = FNV_OFFSET_BASIS;
 
   while (bp < be) {

@@ -7,7 +7,7 @@ void dns_table_init(dns_table_t* table) {
   memset(table, '\0', sizeof(*table));
 }
 
-void dns_table_destroy(dns_table_t* table) {
+void dns_table_destroy(dns_table_t* const table) {
   int idx;
   for (idx = 0; idx < table->a_length; ++idx) {
     free(table->a_entries[idx].domain_name);
@@ -17,7 +17,8 @@ void dns_table_destroy(dns_table_t* table) {
   }
 }
 
-int dns_table_add_a(dns_table_t* table, dns_a_entry_t* new_entry) {
+int dns_table_add_a(dns_table_t* const table,
+                    const dns_a_entry_t* const new_entry) {
   if (table->a_length >= DNS_TABLE_A_ENTRIES) {
     ++table->num_dropped_a_entries;
     return -1;
@@ -27,7 +28,8 @@ int dns_table_add_a(dns_table_t* table, dns_a_entry_t* new_entry) {
   return 0;
 }
 
-int dns_table_add_cname(dns_table_t* table, dns_cname_entry_t* new_entry) {
+int dns_table_add_cname(dns_table_t* const table,
+                        const dns_cname_entry_t* const new_entry) {
   if (table->cname_length >= DNS_TABLE_CNAME_ENTRIES) {
     ++table->num_dropped_cname_entries;
     return -1;
@@ -37,7 +39,7 @@ int dns_table_add_cname(dns_table_t* table, dns_cname_entry_t* new_entry) {
   return 0;
 }
 
-int dns_table_write_update(dns_table_t* table, gzFile handle) {
+int dns_table_write_update(dns_table_t* const table, gzFile handle) {
   if (!gzprintf(handle,
                 "%d %d\n",
                 table->num_dropped_a_entries,

@@ -47,22 +47,22 @@ static int64_t first_packet_timestamp_microseconds = -1;
 
 /* This extracts flow information from raw packet contents. */
 static void get_flow_entry_for_packet(
-    const u_char* bytes,
+    const u_char* const bytes,
     int len,
-    flow_table_entry_t* entry) {
-  const struct ether_header* eth_header = (const struct ether_header*)bytes;
+    flow_table_entry_t* const entry) {
+  const struct ether_header* const eth_header = (struct ether_header*)bytes;
   if (ntohs(eth_header->ether_type) == ETHERTYPE_IP) {
-    const struct iphdr* ip_header = (const struct iphdr*)(bytes + ETHER_HDR_LEN);
+    const struct iphdr* ip_header = (struct iphdr*)(bytes + ETHER_HDR_LEN);
     entry->ip_source = ip_header->saddr;
     entry->ip_destination = ip_header->daddr;
     entry->transport_protocol = ip_header->protocol;
     if (ip_header->protocol == IPPROTO_TCP) {
-      const struct tcphdr* tcp_header = (const struct tcphdr*)(
+      const struct tcphdr* tcp_header = (struct tcphdr*)(
           (void *)ip_header + ip_header->ihl * sizeof(uint32_t));
       entry->port_source = tcp_header->source;
       entry->port_destination = tcp_header->dest;
     } else if (ip_header->protocol == IPPROTO_UDP) {
-      const struct udphdr* udp_header = (const struct udphdr*)(
+      const struct udphdr* udp_header = (struct udphdr*)(
           (void *)ip_header + ip_header->ihl * sizeof(uint32_t));
       entry->port_source = udp_header->source;
       entry->port_destination = udp_header->dest;
@@ -88,17 +88,17 @@ static void get_flow_entry_for_packet(
 }
 
 /* libpcap calls this function for every packet it receives. */
-void process_packet(
-        u_char* user,
-        const struct pcap_pkthdr* header,
-        const u_char* bytes) {
+static void process_packet(
+        u_char* const user,
+        const struct pcap_pkthdr* const header,
+        const u_char* const bytes) {
   if (pthread_mutex_lock(&update_lock)) {
     perror("Error locking global mutex");
     exit(1);
   }
 
 #ifndef NDEBUG
-  pcap_t* handle = (pcap_t*)user;
+  pcap_t* const handle = (pcap_t*)user;
   static int packets_received = 0;
   static int last_dropped = 0;
   struct pcap_stat statistics;
@@ -192,7 +192,7 @@ void write_update(const struct pcap_stat* statistics) {
 }
 
 void* updater(void* arg) {
-  pcap_t* handle = (pcap_t*)arg;
+  pcap_t* const handle = (pcap_t*)arg;
   while (1) {
     sleep (UPDATE_PERIOD_SECONDS);
 
@@ -220,17 +220,14 @@ void* updater(void* arg) {
 }
 
 int main(int argc, char *argv[]) {
-  char *dev;
-  char errbuf[PCAP_ERRBUF_SIZE];
-  pcap_t *handle;
-
   if (argc != 2) {
     fprintf(stderr, "Usage: %s <interface>\n", argv[0]);
     return 1;
   }
 
-  dev = argv[1];
-  handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
+  char* const dev = argv[1];
+  char errbuf[PCAP_ERRBUF_SIZE];
+  pcap_t* const handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
   if (!handle) {
     fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
     return 2;

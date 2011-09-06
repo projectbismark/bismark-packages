@@ -2,14 +2,14 @@
 
 #include <string.h>
 
-void mac_table_init(mac_table_t* table) {
+void mac_table_init(mac_table_t* const table) {
   memset(table, '\0', sizeof(*table));
 }
 
 #define MODULUS(m, d)  ((((m) % (d)) + (d)) % (d))
 #define NORM(m)  (MODULUS(m, MAC_TABLE_ENTRIES))
 
-int mac_table_lookup(mac_table_t* table, uint64_t mac) {
+int mac_table_lookup(mac_table_t* const table, uint64_t mac) {
   if (table->length > 0) {
     /* Search table starting w/ most recent MAC addresses. */
     int idx;
@@ -37,7 +37,7 @@ int mac_table_lookup(mac_table_t* table, uint64_t mac) {
   return table->last;
 }
 
-int mac_table_write_update(mac_table_t* table, gzFile handle) {
+int mac_table_write_update(mac_table_t* const table, gzFile handle) {
   int idx;
   for (idx = table->added_since_last_update; idx > 0; --idx) {
     int mac_id = NORM(table->last - idx + 1);

@@ -39,19 +39,19 @@ typedef struct {
   uint32_t discarded_by_overflow;
 } packet_series_t;
 
-void packet_series_init(packet_series_t* packet_series);
+void packet_series_init(packet_series_t* const series);
 
 /* Add a packet to the end of the packet series. timestamp should be an absolure
  * timestamp (e.g., as provided by libc or libpcap. Does not take ownership of
  * timestamp. flow must be a valid index into the flow table, or -1 if no such
  * index exists. */
 int packet_series_add_packet(
-    packet_series_t* packet_series,
-    const struct timeval* timestamp,
+    packet_series_t* const packet_series,
+    const struct timeval* const timestamp,
     uint32_t size,
     uint16_t flow);
 
 /* Serialize all time series entries to an open gzFile handle. */
-int packet_series_write_update(packet_series_t* series, gzFile handle);
+int packet_series_write_update(const packet_series_t* const series, gzFile handle);
 
 #endif

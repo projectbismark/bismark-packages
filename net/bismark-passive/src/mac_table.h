@@ -20,13 +20,13 @@ typedef struct {
   int added_since_last_update;
 } mac_table_t;
 
-void mac_table_init(mac_table_t* table);
+void mac_table_init(mac_table_t* const table);
 
 /* Add a new address to the MAC table. If the table if full, then the oldest
  * address will be discarded to make room. */
-int mac_table_lookup(mac_table_t* table, uint64_t mac);
+int mac_table_lookup(mac_table_t* const table, uint64_t mac);
 
 /* Serialize all MAC addresses in the table to a file. */
-int mac_table_write_update(mac_table_t* table, gzFile handle);
+int mac_table_write_update(mac_table_t* const table, gzFile handle);
 
 #endif

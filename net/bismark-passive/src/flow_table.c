@@ -11,8 +11,8 @@
 static uint32_t (*alternate_hash_function)(const char* data, int len) = NULL;
 #endif
 
-static int flow_entry_compare(flow_table_entry_t* first,
-                                   flow_table_entry_t* second) {
+static int flow_entry_compare(const flow_table_entry_t* const first,
+                              const flow_table_entry_t* const second) {
   return (first->occupied == ENTRY_OCCUPIED_BUT_UNSENT
           || first->occupied == ENTRY_OCCUPIED)
       && (second->occupied == ENTRY_OCCUPIED_BUT_UNSENT
@@ -24,12 +24,12 @@ static int flow_entry_compare(flow_table_entry_t* first,
       && first->port_destination == second->port_destination;
 }
 
-void flow_table_init(flow_table_t* table) {
+void flow_table_init(flow_table_t* const table) {
   memset(table->entries, '\0', sizeof(*table));
 }
 
-int flow_table_process_flow(flow_table_t* table,
-                            flow_table_entry_t* new_entry,
+int flow_table_process_flow(flow_table_t* const table,
+                            flow_table_entry_t* const new_entry,
                             time_t timestamp_seconds) {
   const int hash_size = sizeof(new_entry->ip_source)
                       + sizeof(new_entry->ip_destination)
@@ -99,7 +99,7 @@ int flow_table_process_flow(flow_table_t* table,
   return first_available;
 }
 
-void flow_table_advance_base_timestamp(flow_table_t* table,
+void flow_table_advance_base_timestamp(flow_table_t* const table,
                                        time_t new_timestamp) {
   const int64_t offset = new_timestamp - table->base_timestamp_seconds;
   int idx;
@@ -118,7 +118,7 @@ void flow_table_advance_base_timestamp(flow_table_t* table,
   table->base_timestamp_seconds = new_timestamp;
 }
 
-int flow_table_write_update(flow_table_t* table, gzFile handle) {
+int flow_table_write_update(flow_table_t* const table, gzFile handle) {
   if (!gzprintf(handle,
                 "%ld %u %d %d\n",
                 table->base_timestamp_seconds,

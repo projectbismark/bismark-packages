@@ -20,7 +20,7 @@ typedef struct {
   const uint8_t* rdata;
 } resource_record_t;
 
-static const uint8_t* parse_resource_record(const uint8_t* bytes,
+static const uint8_t* parse_resource_record(const uint8_t* const bytes,
                                             int len,
                                             const uint8_t* offset,
                                             resource_record_t* record) {
@@ -89,10 +89,10 @@ static void add_a_record(dns_table_t* dns_table,
 #endif
 }
 
-static void add_cname_record(dns_table_t* dns_table,
+static void add_cname_record(dns_table_t* const dns_table,
                              uint8_t mac_id,
-                             const resource_record_t* record,
-                             const uint8_t* bytes,
+                             const resource_record_t* const record,
+                             const uint8_t* const bytes,
                              int len) {
   dns_cname_entry_t entry;
   entry.mac_id = mac_id;
@@ -115,9 +115,9 @@ static void add_cname_record(dns_table_t* dns_table,
 #endif
 }
 
-int process_dns_packet(const uint8_t* bytes,
+int process_dns_packet(const uint8_t* const bytes,
                        int len,
-                       dns_table_t* dns_table,
+                       dns_table_t* const dns_table,
                        uint8_t mac_id)
 {
   if (len < sizeof(HEADER)) {
@@ -127,7 +127,7 @@ int process_dns_packet(const uint8_t* bytes,
     return -1;
   }
 
-  HEADER* dns_header = (HEADER*)bytes;
+  HEADER* const dns_header = (HEADER*)bytes;
   if (dns_header->qr != 1 ||
       dns_header->opcode != QUERY ||
       dns_header->rcode != NOERROR) {

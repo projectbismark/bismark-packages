@@ -1,19 +1,21 @@
 #include "packet_series.h"
 
 #include <stdio.h>
+#include <string.h>
 
 void packet_series_init(packet_series_t* series) {
-  series->length = 0;
-  series->discarded_by_overflow = 0;
+  memset(series, '\0', sizeof(*series));
 }
 
 int packet_series_add_packet(
-    packet_series_t* series,
-    const struct timeval* timestamp,
+    packet_series_t* const series,
+    const struct timeval* const timestamp,
     uint32_t size,
     uint16_t flow) {
   if (series->length >= PACKET_DATA_BUFFER_ENTRIES) {
-    ++series->discarded_by_overflow;
+    if (series->discarded_by_overflow + 1 > series->discarded_by_overflow) {
+      ++series->discarded_by_overflow;
+    }
     return -1;
   }
 
@@ -34,7 +36,8 @@ int packet_series_add_packet(
   return 0;
 }
 
-int packet_series_write_update(packet_series_t* series, gzFile handle) {
+int packet_series_write_update(const packet_series_t* const series,
+                               gzFile handle) {
   if (!gzprintf(handle,
                 "%ld %d\n",
                 series->start_time_microseconds,
