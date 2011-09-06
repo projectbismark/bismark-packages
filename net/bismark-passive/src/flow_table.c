@@ -25,11 +25,7 @@ static int flow_entry_compare(flow_table_entry_t* first,
 }
 
 void flow_table_init(flow_table_t* table) {
-  memset(table->entries, '\0', sizeof(table->entries));
-  table->num_elements = 0;
-  table->base_timestamp_seconds = 0;
-  table->num_expired_flows = 0;
-  table->num_dropped_flows = 0;
+  memset(table->entries, '\0', sizeof(*table));
 }
 
 int flow_table_process_flow(flow_table_t* table,
