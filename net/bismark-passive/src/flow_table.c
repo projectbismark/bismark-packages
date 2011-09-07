@@ -136,7 +136,7 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
       if (!gzprintf(handle,
-            "%u %" PRIu32 " %" PRIu32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
+            "%d %" PRIu32 " %" PRIu32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
             idx,
             table->entries[idx].ip_source,
             table->entries[idx].ip_destination,

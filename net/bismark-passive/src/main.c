@@ -159,13 +159,13 @@ static void process_packet(
 /* Write an update to UPDATE_FILENAME. This is the file that will be sent to the
  * server. The data is compressed on-the-fly using gzip. */
 void write_update(const struct pcap_stat* statistics) {
-  gzFile handle = gzopen (UPDATE_FILENAME, "wb9");
+  gzFile handle = gzopen (UPDATE_FILENAME, "wb");
   if (!handle) {
     perror("Could not open update file for writing");
     exit(1);
   }
   if (!gzprintf(handle,
-                "%" PRId64 "\n%d %d %d\n",
+                "%" PRId64 "\n%u %u %u\n",
                 first_packet_timestamp_microseconds,
                 statistics->ps_recv,
                 statistics->ps_drop,
