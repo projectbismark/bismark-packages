@@ -1,5 +1,6 @@
 #include "dns_table.h"
 
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -51,7 +52,7 @@ int dns_table_write_update(dns_table_t* const table, gzFile handle) {
   int idx;
   for (idx = 0; idx < table->a_length; ++idx) {
     if (!gzprintf(handle,
-                  "%hhu %s %u\n",
+                  "%" PRIu8 " %s %" PRIu32 "\n",
                   table->a_entries[idx].mac_id,
                   table->a_entries[idx].domain_name,
                   table->a_entries[idx].ip_address)) {
@@ -66,7 +67,7 @@ int dns_table_write_update(dns_table_t* const table, gzFile handle) {
 
   for (idx = 0; idx < table->cname_length; ++idx) {
     if (!gzprintf(handle,
-                  "%hhu %s %s\n",
+                  "%" PRIu8 " %s %s\n",
                   table->cname_entries[idx].mac_id,
                   table->cname_entries[idx].domain_name,
                   table->cname_entries[idx].cname)) {

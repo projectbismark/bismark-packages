@@ -1,5 +1,6 @@
 #include "mac_table.h"
 
+#include <inttypes.h>
 #include <string.h>
 
 void mac_table_init(mac_table_t* const table) {
@@ -41,7 +42,7 @@ int mac_table_write_update(mac_table_t* const table, gzFile handle) {
   int idx;
   for (idx = table->added_since_last_update; idx > 0; --idx) {
     int mac_id = NORM(table->last - idx + 1);
-    if (!gzprintf(handle, "%lu\n", table->entries[mac_id])) {
+    if (!gzprintf(handle, "%" PRIu64 "\n", table->entries[mac_id])) {
       perror("Error writing update");
       return -1;
     }

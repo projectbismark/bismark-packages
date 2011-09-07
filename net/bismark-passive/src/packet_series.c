@@ -1,5 +1,6 @@
 #include "packet_series.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -39,7 +40,7 @@ int packet_series_add_packet(
 int packet_series_write_update(const packet_series_t* const series,
                                gzFile handle) {
   if (!gzprintf(handle,
-                "%ld %d\n",
+                "%" PRIu64 " %" PRIu32 "\n",
                 series->start_time_microseconds,
                 series->discarded_by_overflow)) {
     perror("Error writing update");
@@ -48,7 +49,7 @@ int packet_series_write_update(const packet_series_t* const series,
   int idx;
   for (idx = 0; idx < series->length; ++idx) {
     if (!gzprintf(handle,
-                  "%d %hu %hu\n",
+                  "%" PRId32 " %" PRIu16 " %" PRIu16 "\n",
                   series->packet_data[idx].timestamp,
                   series->packet_data[idx].size,
                   series->packet_data[idx].flow)) {

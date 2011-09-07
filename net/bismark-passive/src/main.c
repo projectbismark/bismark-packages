@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <pcap.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -164,7 +165,7 @@ void write_update(const struct pcap_stat* statistics) {
     exit(1);
   }
   if (!gzprintf(handle,
-                "%ld\n%d %d %d\n",
+                "%" PRId64 "\n%d %d %d\n",
                 first_packet_timestamp_microseconds,
                 statistics->ps_recv,
                 statistics->ps_drop,

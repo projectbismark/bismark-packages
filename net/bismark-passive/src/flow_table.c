@@ -1,5 +1,6 @@
 #include "flow_table.h"
 
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -122,7 +123,7 @@ void flow_table_advance_base_timestamp(flow_table_t* const table,
 
 int flow_table_write_update(flow_table_t* const table, gzFile handle) {
   if (!gzprintf(handle,
-                "%ld %u %d %d\n",
+                "%" PRIu64 " %" PRIu32 " %d %d\n",
                 table->base_timestamp_seconds,
                 table->num_elements,
                 table->num_expired_flows,
@@ -135,7 +136,7 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
       if (!gzprintf(handle,
-            "%u %u %u %hhu %hu %hu\n",
+            "%u %" PRIu32 " %" PRIu32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
             idx,
             table->entries[idx].ip_source,
             table->entries[idx].ip_destination,
