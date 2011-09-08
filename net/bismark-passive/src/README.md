@@ -16,8 +16,8 @@ repository.
 2. From the OpenWRT build directory:
     - `scripts/feeds install bismark-passive`
     - `make package/bismark-passive/compile`
-3. Copy `bin/ar71xx/packages/bismark-passive_\*.ipk` to an OpenWRT router.
-4. `opkg install bismark-passive_\*.ipk`
+3. Copy `bin/ar71xx/packages/bismark-passive_*.ipk` to an OpenWRT router.
+4. `opkg install bismark-passive_*.ipk`
 
 Build options
 -------------
