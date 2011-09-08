@@ -45,6 +45,10 @@ debug: $(EXE)
 $(EXE): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
+fixperms: $(EXE)
+	chmod 700 $(EXE)
+	sudo setcap cap_net_raw,cap_net_admin=eip $(EXE)
+
 $(TEST_EXE): CFLAGS += -g -DTESTING
 $(TEST_EXE): LDFLAGS += -lcheck
 $(TEST_EXE): $(TEST_OBJS)
