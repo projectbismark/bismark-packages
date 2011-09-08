@@ -11,7 +11,7 @@ PKG_NAME:=bismark-passive
 PKG_VERSION:=0.1
 PKG_RELEASE:=1
 
-PKG_BUILD_DEPENDS:=libpcap zlib
+PKG_BUILD_DEPENDS:=libpcap zlib libopenssl
 
 include $(INCLUDE_DIR)/package.mk
 

@@ -34,7 +34,7 @@ int mac_table_lookup(mac_table_t* const table, const uint8_t mac[ETH_ALEN]) {
   if (table->length > 1) {
     table->last = NORM(table->last + 1);
   }
-  memcpy(table->entries[table->last], mac, sizeof(mac));
+  memcpy(table->entries[table->last], mac, ETH_ALEN);
   if (table->added_since_last_update < MAC_TABLE_ENTRIES) {
     ++table->added_since_last_update;
   }
