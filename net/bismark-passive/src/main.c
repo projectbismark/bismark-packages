@@ -217,9 +217,9 @@ void* updater(void* arg) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 2 || argc > 3) {
-    fprintf(stderr, "Usage: %s <interface> [mac address]\n", argv[0]);
-    fprintf(stderr, "  if mac address is provided, only packets to/from that address will be collected\n");
+  if (argc < 2) {
+    fprintf(stderr, "Usage: %s <interface> [mac address 0] [mac address 1] ...\n", argv[0]);
+    fprintf(stderr, "  if mac addresses are provided, only inspect packets to/from those addresses\n");
     return 1;
   }
 
@@ -236,14 +236,12 @@ int main(int argc, char *argv[]) {
     return 3;
   }
 
-  if (argc == 3) {
-    char filter_program[256];
-    if (snprintf(filter_program,
-                 sizeof(filter_program),
-                 "ether host %s",
-                 argv[2]) < 0) {
-      perror("Error creating filter program");
-      return 1;
+  if (argc >= 3) {
+    char filter_program[256] = "ether host";
+    int idx;
+    for (idx = 2; idx < argc; ++idx) {
+      strncat(filter_program, " ", sizeof(filter_program));
+      strncat(filter_program, argv[idx], sizeof(filter_program));
     }
     struct bpf_program fp;
     if (pcap_compile(handle, &fp, filter_program, 0, PCAP_NETMASK_UNKNOWN)) {
