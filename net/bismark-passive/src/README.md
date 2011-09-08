@@ -34,9 +34,7 @@ Operation instructions
 
 Usage: `bismark-passive [network interface]`
 
-It dumps anonymized updates into /tmp/bismark-passive-update.gz every 30
-seconds. Pass DISABLE\_ANONYMIZATION=1 to `make` to disable anonymization for
-your build.
+It dumps into `/tmp/bismark-passive-update.gz` every 30 seconds.
 
 File format for differential updates
 ------------------------------------
