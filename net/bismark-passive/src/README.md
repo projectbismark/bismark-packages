@@ -19,14 +19,24 @@ repository.
 3. Copy `bin/ar71xx/packages/bismark-passive_\*.ipk` to an OpenWRT router.
 4. `opkg install bismark-passive_\*.ipk`
 
+Build options
+-------------
+
+You can pass options when `make`'ing the package:
+
+1. `DISABLE\_ANONYMIZATION=1` disables anonymization
+2. `BISMARK_PASSIVE_TARGET=release` disables debugging support
+3. `BISMARK_PASSIVE_TARGET=debug` enables debugging messages and binary symbols
+   (default)
+
 Operation instructions
 ----------------------
 
 Usage: `bismark-passive [network interface]`
 
 It dumps anonymized updates into /tmp/bismark-passive-update.gz every 30
-seconds. Pass DISABLE_ANONYMIZATION=1 to the Makefile to disable anonymization
-for your build.
+seconds. Pass DISABLE\_ANONYMIZATION=1 to `make` to disable anonymization for
+your build.
 
 File format for differential updates
 ------------------------------------
