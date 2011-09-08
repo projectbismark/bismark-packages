@@ -43,7 +43,9 @@ int packet_series_write_update(const packet_series_t* const series,
                 "%" PRIu64 " %" PRIu32 "\n",
                 series->start_time_microseconds,
                 series->discarded_by_overflow)) {
+#ifndef NDEBUG
     perror("Error writing update");
+#endif
     return -1;
   }
   int idx;
@@ -53,12 +55,16 @@ int packet_series_write_update(const packet_series_t* const series,
                   series->packet_data[idx].timestamp,
                   series->packet_data[idx].size,
                   series->packet_data[idx].flow)) {
+#ifndef NDEBUG
       perror("Error writing update");
+#endif
       return -1;
     }
   }
   if (!gzprintf(handle, "\n")) {
+#ifndef NDEBUG
     perror("Error writing update");
+#endif
     return -1;
   }
   return 0;

@@ -76,7 +76,7 @@ static void add_a_record(dns_table_t* dns_table,
   dns_a_entry_t entry;
   entry.mac_id = mac_id;
   entry.domain_name = strdup(record->name);
-  entry.ip_address = *(uint32_t*)record->rdata;
+  entry.ip_address = ntohl(*(uint32_t*)record->rdata);
   dns_table_add_a(dns_table, &entry);
 #ifndef NDEBUG
   char ip_buffer[16];

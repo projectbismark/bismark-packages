@@ -4,8 +4,11 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <openssl/sha.h>
 #include <sys/time.h>
 
+#include "anonymization.h"
+#include "constants.h"
 #include "hashing.h"
 
 #ifdef TESTING
@@ -128,29 +131,55 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
                 table->num_elements,
                 table->num_expired_flows,
                 table->num_dropped_flows)) {
+#ifndef NDEBUG
     perror("Error sending update");
+#endif
     return -1;
   }
 
   int idx;
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
+#ifndef DISABLE_ANONYMIZATION
+      uint64_t source_digest, destination_digest;
+      if (anonymize_ip(table->entries[idx].ip_source, &source_digest)
+          || anonymize_ip(table->entries[idx].ip_destination,
+                          &destination_digest)) {
+#ifndef NDEBUG
+        fprintf(stderr, "Error anonymizing update\n");
+#endif
+        return -1;
+      }
+#endif
       if (!gzprintf(handle,
+#ifndef DISABLE_ANONYMIZATION
+            "%d %" PRIu64 " %" PRIu64 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
+#else
             "%d %" PRIu32 " %" PRIu32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
+#endif
             idx,
+#ifndef DISABLE_ANONYMIZATION
+            source_digest,
+            destination_digest,
+#else
             table->entries[idx].ip_source,
             table->entries[idx].ip_destination,
+#endif
             table->entries[idx].transport_protocol,
             table->entries[idx].port_source,
             table->entries[idx].port_destination)) {
+#ifndef NDEBUG
         perror("Error sending update");
+#endif
         return -1;
       }
       table->entries[idx].occupied = ENTRY_OCCUPIED;
     }
   }
   if (!gzprintf(handle, "\n")) {
+#ifndef NDEBUG
     perror("Error sending update");
+#endif
     return -1;
   }
 

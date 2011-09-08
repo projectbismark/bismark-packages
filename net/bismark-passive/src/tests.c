@@ -3,6 +3,7 @@
 #include "mac_table.h"
 #include "packet_series.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -375,24 +376,28 @@ void mac_setup() {
 }
 
 START_TEST(test_mac_can_add_to_table) {
-  int first_mac_id = mac_table_lookup(&mac_table, 512);
+  char first_mac[6] = "abcdef";
+  char second_mac[6] = "123456";
+  int first_mac_id = mac_table_lookup(&mac_table, first_mac);
   fail_unless(first_mac_id >= 0);
-  int second_mac_id = mac_table_lookup(&mac_table, 123);
+  int second_mac_id = mac_table_lookup(&mac_table, second_mac);
   fail_unless(second_mac_id >= 0);
-  fail_unless(mac_table_lookup(&mac_table, 512) == first_mac_id);
-  fail_unless(mac_table_lookup(&mac_table, 123) == second_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, first_mac) == first_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, second_mac) == second_mac_id);
 }
 END_TEST
 
 START_TEST(test_mac_can_discard_old_entries) {
-  int idx;
-  int first_id = mac_table_lookup(&mac_table, 0);
-  fail_if(mac_table_lookup(&mac_table, 0) != first_id);
-  for (idx = 1; idx < MAC_TABLE_ENTRIES; ++idx) {
-    mac_table_lookup(&mac_table, idx);
+  uint64_t mac = 0;
+  int first_id = mac_table_lookup(&mac_table, (uint8_t*)&mac);
+  fail_if(mac_table_lookup(&mac_table, (uint8_t*)&mac) != first_id);
+  for (mac = 1; mac < MAC_TABLE_ENTRIES; ++mac) {
+    mac_table_lookup(&mac_table, (uint8_t*)&mac);
   }
-  fail_unless(mac_table_lookup(&mac_table, MAC_TABLE_ENTRIES + 1) == first_id);
-  fail_unless(mac_table_lookup(&mac_table, 0) != first_id);
+  mac = MAC_TABLE_ENTRIES + 1;
+  fail_unless(mac_table_lookup(&mac_table, (uint8_t*)&mac) == first_id);
+  mac = 0;
+  fail_unless(mac_table_lookup(&mac_table, (uint8_t*)&mac) != first_id);
 }
 END_TEST
 

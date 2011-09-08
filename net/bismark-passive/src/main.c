@@ -27,6 +27,7 @@
 /* struct udphdr */
 #include <netinet/udp.h>
 
+#include "anonymization.h"
 #include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
@@ -54,26 +55,24 @@ static void get_flow_entry_for_packet(
   const struct ether_header* const eth_header = (struct ether_header*)bytes;
   if (ntohs(eth_header->ether_type) == ETHERTYPE_IP) {
     const struct iphdr* ip_header = (struct iphdr*)(bytes + ETHER_HDR_LEN);
-    entry->ip_source = ip_header->saddr;
-    entry->ip_destination = ip_header->daddr;
+    entry->ip_source = ntohl(ip_header->saddr);
+    entry->ip_destination = ntohl(ip_header->daddr);
     entry->transport_protocol = ip_header->protocol;
     if (ip_header->protocol == IPPROTO_TCP) {
       const struct tcphdr* tcp_header = (struct tcphdr*)(
           (void *)ip_header + ip_header->ihl * sizeof(uint32_t));
-      entry->port_source = tcp_header->source;
-      entry->port_destination = tcp_header->dest;
+      entry->port_source = ntohs(tcp_header->source);
+      entry->port_destination = ntohs(tcp_header->dest);
     } else if (ip_header->protocol == IPPROTO_UDP) {
       const struct udphdr* udp_header = (struct udphdr*)(
           (void *)ip_header + ip_header->ihl * sizeof(uint32_t));
-      entry->port_source = udp_header->source;
-      entry->port_destination = udp_header->dest;
+      entry->port_source = ntohs(udp_header->source);
+      entry->port_destination = ntohs(udp_header->dest);
 
-      if (ntohs(entry->port_source) == NS_DEFAULTPORT) {
+      if (entry->port_source == NS_DEFAULTPORT) {
         u_char* dns_bytes = (u_char*)udp_header + sizeof(struct udphdr);
         int dns_len = len - (dns_bytes - bytes);
-        uint64_t mac_address = 0;
-        memcpy(&mac_address, eth_header->ether_dhost, ETH_ALEN);
-        int mac_id = mac_table_lookup(&mac_table, mac_address);
+        int mac_id = mac_table_lookup(&mac_table, eth_header->ether_dhost);
         process_dns_packet(dns_bytes, dns_len, &dns_table, mac_id);
       }
     } else {
@@ -165,7 +164,7 @@ void write_update(const struct pcap_stat* statistics) {
     exit(1);
   }
   if (!gzprintf(handle,
-                "%" PRId64 "\n%u %u %u\n",
+                "%" PRId64 " %u %u %u\n\n",
                 first_packet_timestamp_microseconds,
                 statistics->ps_recv,
                 statistics->ps_drop,
@@ -173,6 +172,11 @@ void write_update(const struct pcap_stat* statistics) {
     perror("Error writing update");
     exit(1);
   }
+#ifndef DISABLE_ANONYMIZATION
+  if (anonymization_write_update(handle)) {
+    exit(1);
+  }
+#endif
   if (packet_series_write_update(&packet_data, handle)) {
     exit(1);
   }
@@ -243,6 +247,11 @@ int main(int argc, char *argv[]) {
   if (pthread_mutex_init(&update_lock, NULL)) {
     perror("Error initializing mutex");
     return 4;
+  }
+
+  if (anonymization_init()) {
+    fprintf(stderr, "Error initializing anonymizer\n");
+    return 1;
   }
 
   packet_series_init(&packet_data);

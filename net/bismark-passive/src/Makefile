@@ -1,14 +1,14 @@
 CC=gcc
 #CFLAGS+=-c -Wall -O3 -fno-strict-aliasing
 CFLAGS+=-c -Wall -fno-strict-aliasing -g
-LDFLAGS+=-lpcap -lresolv -pthread -lz
-SRCS=main.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c
+LDFLAGS+=-lpcap -lresolv -pthread -lz -lssl
+SRCS=main.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c anonymization.c util.c
 OBJS=$(SRCS:.c=.o)
 EXE=bismark-passive
 
 TEST_CFLAGS=-DTESTING
-TEST_LDFLAGS=-lcheck -lresolv -lz
-TEST_SRCS=tests.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c
+TEST_LDFLAGS=-lcheck -lresolv -lz -lssl
+TEST_SRCS=tests.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c anonymization.c util.c
 TEST_EXE=tests
 
 all: $(EXE)
