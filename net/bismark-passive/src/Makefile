@@ -1,6 +1,6 @@
 CC=gcc
-#CFLAGS+=-c -Wall -O3 -fno-strict-aliasing
-CFLAGS+=-c -Wall -fno-strict-aliasing -g
+CFLAGS+=-c -Wall -O3 -fno-strict-aliasing
+#CFLAGS+=-c -Wall -fno-strict-aliasing -g
 LDFLAGS+=-lpcap -lresolv -pthread -lz -lssl -lcrypto
 SRCS=main.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c anonymization.c util.c
 OBJS=$(SRCS:.c=.o)

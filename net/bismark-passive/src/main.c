@@ -98,31 +98,22 @@ static void process_packet(
   }
 
 #ifndef NDEBUG
-  pcap_t* const handle = (pcap_t*)user;
   static int packets_received = 0;
-  static int last_dropped = 0;
-  struct pcap_stat statistics;
   ++packets_received;
   if (packets_received % 1000 == 0) {
-    int idx;
-    int flow_counter;
+    pcap_t* const handle = (pcap_t*)user;
+    struct pcap_stat statistics;
     pcap_stats(handle, &statistics);
-    printf("%d ", statistics.ps_drop - last_dropped);
-    fflush(stdout);
-    last_dropped = statistics.ps_drop;
-
-    flow_counter = 0;
-    for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
-      if (flow_table.entries[idx].occupied == ENTRY_OCCUPIED) {
-        ++flow_counter;
-      }
-    }
-    printf("There are %d entries in the flow table\n", flow_counter);
-    printf("Flow table has dropped %d flows\n", flow_table.num_dropped_flows);
-    printf("Flow table has expired %d flows\n", flow_table.num_expired_flows);
+    printf("-----\n");
+    printf("STATISTICS (printed once for every thousand packets)\n");
+    printf("Libpcap has dropped %d packets since process creation\n", statistics.ps_drop);
+    printf("There are %d entries in the flow table\n", flow_table.num_elements);
+    printf("The flow table has dropped %d flows\n", flow_table.num_dropped_flows);
+    printf("The flow table has expired %d flows\n", flow_table.num_expired_flows);
+    printf("-----\n");
   }
   if (packet_data.discarded_by_overflow % 1000 == 1) {
-    printf("[%d] ", packet_data.discarded_by_overflow);
+    printf("%d packets have overflowed the packet table!\n", packet_data.discarded_by_overflow);
   }
 #endif
 

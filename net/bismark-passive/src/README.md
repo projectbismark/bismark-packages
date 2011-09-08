@@ -36,7 +36,7 @@ Bismark-passive periodically generates differential updates about the traffic it
 has observed since the last update. Updates are gzipped text files with the
 following format:
 
-    [timestamp when process started] [total packets received by pcap] [total packets dropped by pcap] [total packets dropped by interface]
+    [timestamp at process creation] [total packets received by pcap] [total packets dropped by pcap] [total packets dropped by interface]
     
     [hash of anonymization key]
     
