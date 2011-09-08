@@ -9,15 +9,15 @@ networks.
 Installation instructions
 -------------------------
 
-1. Follow instruction at dp4:/data/users/bismark/openwrt/src/instructions.txt to
+1. Follow instruction at `dp4:/data/users/bismark/openwrt/src/instructions.txt` to
 prepare a build tree.  When cloning the bismark-packages repository, be sure to
-add the "-b passive" option to clone the bismark-passive branch of the
+add the `-b passive` option to clone the passive branch of the
 repository.
 2. From the OpenWRT build directory:
-  a. scripts/feeds install bismark-passive
-  b. make package/bismark-passive/compile
-3. Copy bin/ar71xx/packages/bismark-passive_\*.ipk to an OpenWRT router.
-4. opkg install bismark-passive_\*.ipk
+  a. `scripts/feeds install bismark-passive`
+  b. `make package/bismark-passive/compile`
+3. Copy `bin/ar71xx/packages/bismark-passive_\*.ipk` to an OpenWRT router.
+4. `opkg install bismark-passive_\*.ipk`
 
 Operation instructions
 ----------------------
@@ -25,8 +25,7 @@ Operation instructions
 Usage: `bismark-passive [network interface]`
 
 It dumps anonymized updates into /tmp/bismark-passive-update.gz every 30
-seconds. Enable the DISABLE_ANONYMIZATION flag in
-bismark-packages/net/bismark-passive/src/constants.h to disable anonymization
+seconds. Pass DISABLE_ANONYMIZATION=1 to the Makefile to disable anonymization
 for your build.
 
 File format for differential updates

@@ -1,27 +1,55 @@
-CC=gcc
-CFLAGS+=-c -Wall -O3 -fno-strict-aliasing
-#CFLAGS+=-c -Wall -fno-strict-aliasing -g
-LDFLAGS+=-lpcap -lresolv -pthread -lz -lssl -lcrypto
-SRCS=main.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c anonymization.c util.c
-OBJS=$(SRCS:.c=.o)
-EXE=bismark-passive
+CC = gcc
+CFLAGS += -c -Wall -O3 -fno-strict-aliasing
+ifdef DISABLE_ANONYMIZATION
+CFLAGS += -DDISABLE_ANONYMIZATION
+endif
+ifdef USE_TEMP_SEED
+CFLAGS += -DANONYMIZATION_SEED_FILE="\"/tmp/passive.key\""
+endif
+LDFLAGS += -lpcap -lresolv -pthread -lz -lssl -lcrypto
+SRCS = \
+	anonymization.c \
+	dns_parser.c \
+	dns_table.c \
+	flow_table.c \
+	mac_table.c \
+	main.c \
+	packet_series.c \
+	util.c
+OBJS = $(SRCS:.c=.o)
+EXE = bismark-passive
 
-TEST_CFLAGS=-DTESTING
-TEST_LDFLAGS=-lcheck -lresolv -lz -lssl
-TEST_SRCS=tests.c packet_series.c flow_table.c dns_table.c dns_parser.c mac_table.c anonymization.c util.c
-TEST_EXE=tests
+TEST_SRCS = \
+	anonymization.c \
+	dns_parser.c \
+	dns_table.c \
+	flow_table.c \
+	mac_table.c \
+	packet_series.c \
+	tests.c \
+	util.c
+TEST_OBJS = $(TEST_SRCS:.c=.o)
+TEST_EXE = tests
 
-all: $(EXE)
+all: debug
 
-$(EXE): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+release: CFLAGS += -O3 -DNDEBUG
+release: $(EXE)
+
+debug: CFLAGS += -g
+debug: $(EXE)
 
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 
-$(TEST_EXE): $(TEST_SRCS)
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) $(TEST_SRCS) -o $(TEST_EXE)
-	./$(TEST_EXE)
+$(EXE): $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
+
+$(TEST_EXE): CFLAGS += -g -DTESTING
+$(TEST_EXE): LDFLAGS += -lcheck
+$(TEST_EXE): $(TEST_OBJS)
+	$(CC) $(LDFLAGS) $(TEST_OBJS) -o $@
+	./$(@)
 
 clean:
 	rm -rf $(OBJS) $(EXE) $(TEST_OBJS) $(TEST_EXE)

@@ -4,8 +4,8 @@
 /* Uncomment to disable debug messages */
 /*#define NDEBUG*/
 
-/* Uncomment to disable anonymization.
- * IMPORTANT: Never commit changes to git! */
+/* Defining this variable disables anonymization. Don't uncomment this
+ * line. Instead, pass DISABLE_ANONYMIZATION=yes as a Makefile argument. */
 /*#define DISABLE_ANONYMIZATION*/
 
 #define PACKET_DATA_BUFFER_ENTRIES 65536
@@ -28,9 +28,9 @@
 #define UPDATE_FILENAME "/tmp/bismark-passive-update.gz"
 
 #define ANONYMIZATION_SEED_LEN 16
+#ifndef ANONYMIZATION_SEED_FILE
 #define ANONYMIZATION_SEED_FILE "/etc/bismark/passive.key"
-/* For testing on non-Bismark machines */
-/*#define ANONYMIZATION_SEED_FILE "/tmp/passive.key"*/
+#endif
 
 /* Hashtable parameters */
 #define HT_NUM_PROBES 3
