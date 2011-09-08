@@ -30,7 +30,7 @@
 #define ANONYMIZATION_SEED_LEN 16
 #define ANONYMIZATION_SEED_FILE "/etc/bismark/passive.key"
 /* For testing on non-Bismark machines */
-#define ANONYMIZATION_SEED_FILE "/tmp/passive.key"
+/*#define ANONYMIZATION_SEED_FILE "/tmp/passive.key"*/
 
 /* Hashtable parameters */
 #define HT_NUM_PROBES 3
