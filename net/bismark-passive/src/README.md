@@ -41,10 +41,10 @@ following format:
     [hash of anonymization key]
     
     [timestamp of first packet] [packets dropped]
-    [timestamp offset microseconds] [packet size bytes] [flow id]
-    [timestamp offset microseconds] [packet size bytes] [flow id]
+    [microseconds offset from previous packet] [packet size bytes] [flow id]
+    [microseconds offset from previous packet] [packet size bytes] [flow id]
     ...
-    [timestamp offset microseconds] [packet size bytes] [flow id]
+    [microseconds offset from previous packet] [packet size bytes] [flow id]
     
     [baseline timestamp] [num elements in flow table] [total expired flows] [total dropped flows]
     [flow id] [hashed source IP address] [hashed destination IP address] [transport protocol] [source port] [destination port]
