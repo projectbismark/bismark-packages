@@ -99,7 +99,9 @@ int anonymization_init() {
 int anonymization_process(const uint8_t* const data,
                           const int len,
                           unsigned char* const digest) {
+#ifndef NDEBUG
   assert(initialized);
+#endif
 
   if (!EVP_DigestInit_ex(&digest_context, EVP_sha1(), NULL)) {
     return -1;

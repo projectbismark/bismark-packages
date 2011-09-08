@@ -23,6 +23,9 @@ define Package/bismark-passive
 	URL:=http://www.projectbismark.net
 endef
 
+MAKE_FLAGS += DISABLE_ANONYMIZATION=$(DISABLE_ANONYMIZATION)
+MAKE_FLAGS += $(BISMARK_PASSIVE_TARGET)
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./src/* $(PKG_BUILD_DIR)
