@@ -14,8 +14,8 @@ prepare a build tree.  When cloning the bismark-packages repository, be sure to
 add the `-b passive` option to clone the passive branch of the
 repository.
 2. From the OpenWRT build directory:
-    1. `scripts/feeds install bismark-passive`
-    2. `make package/bismark-passive/compile`
+    - `scripts/feeds install bismark-passive`
+    - `make package/bismark-passive/compile`
 3. Copy `bin/ar71xx/packages/bismark-passive_\*.ipk` to an OpenWRT router.
 4. `opkg install bismark-passive_\*.ipk`
 
@@ -24,7 +24,7 @@ Build options
 
 You can pass options when `make`'ing the package:
 
-1. `DISABLE\_ANONYMIZATION=1` disables anonymization
+1. `DISABLE_ANONYMIZATION=1` disables anonymization
 2. `BISMARK_PASSIVE_TARGET=release` disables debugging support
 3. `BISMARK_PASSIVE_TARGET=debug` enables debugging messages and binary symbols
    (default)
