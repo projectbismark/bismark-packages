@@ -198,7 +198,7 @@ void* updater(void* arg) {
       exit(1);
     }
 #ifndef NDEBUG
-    printf("Sending update\n");
+    printf("Writing differential log to %s\n", UPDATE_FILENAME);
 #endif
     struct pcap_stat statistics;
     if (!pcap_stats(handle, &statistics)) {
