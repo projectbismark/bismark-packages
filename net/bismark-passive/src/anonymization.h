@@ -23,13 +23,6 @@ inline int anonymize_domain(const char* domain, unsigned char* digest);
  * digest buffer must be at least ANONYMIZATION_DIGEST_LENGTH bytes long. */
 inline int anonymize_mac(uint8_t mac[ETH_ALEN], uint8_t digest[ETH_ALEN]);
 
-/* Anonymize a buffer of given length. Places the resulting digest into the
- * provided digest buffer, which must be at least ANONYMIZATION_DIGEST_LENGTH
- * bytes long. */
-int anonymization_process(const uint8_t* const data,
-                          const int len,
-                          unsigned char* const digest);
-
 /* Write an anonymized version of the anonymization key as part of an update.
  * We do this so that the server can identify updates that were prepared using
  * the same anonymization key, without actually knowing what that key is. */

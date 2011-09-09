@@ -21,6 +21,31 @@ static char seed_hex_digest[SHA_DIGEST_LENGTH * 2 + 1];
 static int initialized = 0;
 #endif
 
+/* Anonymize a buffer of given length. Places the resulting digest into the
+ * provided digest buffer, which must be at least ANONYMIZATION_DIGEST_LENGTH
+ * bytes long. */
+static int anonymization_process(const uint8_t* const data,
+                                 const int len,
+                                 unsigned char* const digest) {
+#ifndef NDEBUG
+  assert(initialized);
+#endif
+
+  if (!EVP_DigestInit_ex(&digest_context, EVP_sha1(), NULL)) {
+    return -1;
+  }
+  if (!EVP_DigestUpdate(&digest_context, seed, ANONYMIZATION_SEED_LEN)) {
+    return -1;
+  }
+  if (!EVP_DigestUpdate(&digest_context, data, len)) {
+    return -1;
+  }
+  if (!EVP_DigestFinal_ex(&digest_context, digest, NULL)) {
+    return -1;
+  }
+  return 0;
+}
+
 static int init_hex_seed_digest() {
   unsigned char seed_digest[SHA_DIGEST_LENGTH];
   if (anonymization_process(seed, ANONYMIZATION_SEED_LEN, seed_digest)) {
@@ -93,28 +118,6 @@ int anonymization_init() {
     return -1;
   }
 
-  return 0;
-}
-
-int anonymization_process(const uint8_t* const data,
-                          const int len,
-                          unsigned char* const digest) {
-#ifndef NDEBUG
-  assert(initialized);
-#endif
-
-  if (!EVP_DigestInit_ex(&digest_context, EVP_sha1(), NULL)) {
-    return -1;
-  }
-  if (!EVP_DigestUpdate(&digest_context, seed, ANONYMIZATION_SEED_LEN)) {
-    return -1;
-  }
-  if (!EVP_DigestUpdate(&digest_context, data, len)) {
-    return -1;
-  }
-  if (!EVP_DigestFinal_ex(&digest_context, digest, NULL)) {
-    return -1;
-  }
   return 0;
 }
 
