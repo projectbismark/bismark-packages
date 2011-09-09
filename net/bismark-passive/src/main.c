@@ -27,7 +27,9 @@
 /* struct udphdr */
 #include <netinet/udp.h>
 
+#ifndef DISABLE_ANONYMIZATION
 #include "anonymization.h"
+#endif
 #include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
@@ -259,10 +261,12 @@ int main(int argc, char *argv[]) {
     return 4;
   }
 
+#ifndef DISABLE_ANONYMIZATION
   if (anonymization_init()) {
     fprintf(stderr, "Error initializing anonymizer\n");
     return 1;
   }
+#endif
 
   packet_series_init(&packet_data);
   flow_table_init(&flow_table);
