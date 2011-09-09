@@ -107,12 +107,12 @@ int flow_table_process_flow(flow_table_t* const table,
 
 void flow_table_advance_base_timestamp(flow_table_t* const table,
                                        time_t new_timestamp) {
-  const int64_t offset = new_timestamp - table->base_timestamp_seconds;
+  const time_t offset = new_timestamp - table->base_timestamp_seconds;
   int idx;
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT ||
         table->entries[idx].occupied == ENTRY_OCCUPIED) {
-      if ((int32_t)table->entries[idx].last_update_time_seconds - offset
+      if ((time_t)table->entries[idx].last_update_time_seconds - offset
           < FLOW_TABLE_MIN_UPDATE_OFFSET) {
         table->entries[idx].occupied = ENTRY_DELETED;
         --table->num_elements;
@@ -126,7 +126,7 @@ void flow_table_advance_base_timestamp(flow_table_t* const table,
 
 int flow_table_write_update(flow_table_t* const table, gzFile handle) {
   if (!gzprintf(handle,
-                "%" PRIu64 " %" PRIu32 " %d %d\n",
+                "%ld %" PRIu32 " %d %d\n",
                 table->base_timestamp_seconds,
                 table->num_elements,
                 table->num_expired_flows,

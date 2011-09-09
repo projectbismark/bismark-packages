@@ -15,7 +15,7 @@
 #define MAC_TABLE_ENTRIES 256
 
 /* Flows older than this are eligable for expiration. */
-#define FLOW_TABLE_EXPIRATION_SECONDS (30*60)
+#define FLOW_TABLE_EXPIRATION_SECONDS (30 * 60)
 /* Flows that are this many seconds newer than the base timestamp will be
  * expired to prevent timestamp inaccuracy. */
 #define FLOW_TABLE_MAX_UPDATE_OFFSET INT16_MAX
