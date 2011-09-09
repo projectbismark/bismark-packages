@@ -12,7 +12,7 @@ SRCS = \
 	dns_parser.c \
 	dns_table.c \
 	flow_table.c \
-	mac_table.c \
+	address_table.c \
 	main.c \
 	packet_series.c \
 	util.c
@@ -24,7 +24,7 @@ TEST_SRCS = \
 	dns_parser.c \
 	dns_table.c \
 	flow_table.c \
-	mac_table.c \
+	address_table.c \
 	packet_series.c \
 	tests.c \
 	util.c

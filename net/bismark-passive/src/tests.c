@@ -1,7 +1,7 @@
 #include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
-#include "mac_table.h"
+#include "address_table.h"
 #include "packet_series.h"
 
 #include <stdint.h>
@@ -370,10 +370,10 @@ END_TEST
 /********************************************************
  * MAC table tests
  ********************************************************/
-static mac_table_t mac_table;
+static address_table_t address_table;
 
 void mac_setup() {
-  mac_table_init(&mac_table);
+  address_table_init(&address_table);
 }
 
 START_TEST(test_mac_can_add_to_table) {
@@ -381,35 +381,45 @@ START_TEST(test_mac_can_add_to_table) {
   unsigned char second_mac[6] = "123456";
   uint32_t first_ip = 123456789;
   uint32_t second_ip = 987654321;
-  int first_mac_id = mac_table_lookup(&mac_table, first_ip, first_mac);
+  int first_mac_id
+    = address_table_lookup(&address_table, first_ip, first_mac);
   fail_unless(first_mac_id >= 0);
-  int second_mac_id = mac_table_lookup(&mac_table, second_ip, second_mac);
+  int second_mac_id
+    = address_table_lookup(&address_table, second_ip, second_mac);
   fail_unless(second_mac_id >= 0);
-  fail_unless(mac_table_lookup(&mac_table, first_ip, first_mac) == first_mac_id);
-  fail_unless(mac_table_lookup(&mac_table, second_ip, second_mac) == second_mac_id);
-  fail_if(mac_table_lookup(&mac_table, second_ip, first_mac) == first_mac_id);
-  fail_if(mac_table_lookup(&mac_table, second_ip, first_mac) == second_mac_id);
-  fail_if(mac_table_lookup(&mac_table, first_ip, second_mac) == first_mac_id);
-  fail_if(mac_table_lookup(&mac_table, first_ip, second_mac) == second_mac_id);
-  fail_unless(mac_table_lookup(&mac_table, first_ip, first_mac) == first_mac_id);
-  fail_unless(mac_table_lookup(&mac_table, second_ip, second_mac) == second_mac_id);
+  fail_unless(address_table_lookup(
+        &address_table, first_ip, first_mac) == first_mac_id);
+  fail_unless(address_table_lookup(
+        &address_table, second_ip, second_mac) == second_mac_id);
+  fail_if(address_table_lookup(
+        &address_table, second_ip, first_mac) == first_mac_id);
+  fail_if(address_table_lookup(
+        &address_table, second_ip, first_mac) == second_mac_id);
+  fail_if(address_table_lookup(
+        &address_table, first_ip, second_mac) == first_mac_id);
+  fail_if(address_table_lookup(
+        &address_table, first_ip, second_mac) == second_mac_id);
+  fail_unless(address_table_lookup(
+        &address_table, first_ip, first_mac) == first_mac_id);
+  fail_unless(address_table_lookup(
+        &address_table, second_ip, second_mac) == second_mac_id);
 }
 END_TEST
 
 START_TEST(test_mac_can_discard_old_entries) {
   uint8_t mac[ETH_ALEN] = { 1, 2, 3, 4, 5 };
   uint32_t ip = 12345;
-  int first_id = mac_table_lookup(&mac_table, ip, mac);
-  fail_unless(mac_table_lookup(&mac_table, ip, mac) == first_id);
+  int first_id = address_table_lookup(&address_table, ip, mac);
+  fail_unless(address_table_lookup(&address_table, ip, mac) == first_id);
   int idx;
   for (idx = 1; idx < MAC_TABLE_ENTRIES; ++idx) {
     ++ip;
-    mac_table_lookup(&mac_table, ip, mac);
+    address_table_lookup(&address_table, ip, mac);
   }
   ++ip;
-  fail_unless(mac_table_lookup(&mac_table, ip, mac) == first_id);
+  fail_unless(address_table_lookup(&address_table, ip, mac) == first_id);
   ip = 12345;
-  fail_unless(mac_table_lookup(&mac_table, ip, mac) != first_id);
+  fail_unless(address_table_lookup(&address_table, ip, mac) != first_id);
 }
 END_TEST
 

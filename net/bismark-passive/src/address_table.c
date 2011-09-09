@@ -1,4 +1,4 @@
-#include "mac_table.h"
+#include "address_table.h"
 
 #include <inttypes.h>
 #include <string.h>
@@ -6,14 +6,14 @@
 #include "anonymization.h"
 #include "util.h"
 
-void mac_table_init(mac_table_t* const table) {
+void address_table_init(address_table_t* const table) {
   memset(table, '\0', sizeof(*table));
 }
 
 #define MODULUS(m, d)  ((((m) % (d)) + (d)) % (d))
 #define NORM(m)  (MODULUS(m, MAC_TABLE_ENTRIES))
 
-int mac_table_lookup(mac_table_t* const table,
+int address_table_lookup(address_table_t* const table,
                      const uint32_t ip_address,
                      const uint8_t mac[ETH_ALEN]) {
   if (table->length > 0) {
@@ -45,7 +45,7 @@ int mac_table_lookup(mac_table_t* const table,
   return table->last;
 }
 
-int mac_table_write_update(mac_table_t* const table, gzFile handle) {
+int address_table_write_update(address_table_t* const table, gzFile handle) {
   int idx;
   for (idx = table->added_since_last_update; idx > 0; --idx) {
     int mac_id = NORM(table->last - idx + 1);
