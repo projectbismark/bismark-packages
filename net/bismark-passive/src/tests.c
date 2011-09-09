@@ -1,3 +1,4 @@
+#include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
 #include "mac_table.h"
@@ -376,8 +377,8 @@ void mac_setup() {
 }
 
 START_TEST(test_mac_can_add_to_table) {
-  char first_mac[6] = "abcdef";
-  char second_mac[6] = "123456";
+  unsigned char first_mac[6] = "abcdef";
+  unsigned char second_mac[6] = "123456";
   int first_mac_id = mac_table_lookup(&mac_table, first_mac);
   fail_unless(first_mac_id >= 0);
   int second_mac_id = mac_table_lookup(&mac_table, second_mac);

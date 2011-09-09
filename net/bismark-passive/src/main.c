@@ -219,9 +219,8 @@ void* updater(void* arg) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s <interface> [mac address 0] [mac address 1] ...\n", argv[0]);
-    fprintf(stderr, "  if mac addresses are provided, only inspect packets to/from those addresses\n");
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s <interface>\n", argv[0]);
     return 1;
   }
 
@@ -236,27 +235,6 @@ int main(int argc, char *argv[]) {
   if (pcap_datalink(handle) != DLT_EN10MB) {
     fprintf(stderr, "Must capture on an Ethernet link\n");
     return 3;
-  }
-
-  if (argc >= 3) {
-    char filter_program[256] = "";
-    int idx;
-    for (idx = 2; idx < argc; ++idx) {
-      strncat(filter_program, "ether host ", sizeof(filter_program));
-      strncat(filter_program, argv[idx], sizeof(filter_program));
-      if (idx < argc - 1) {
-        strncat(filter_program, " or ", sizeof(filter_program));
-      }
-    }
-    struct bpf_program fp;
-    if (pcap_compile(handle, &fp, filter_program, 0, PCAP_NETMASK_UNKNOWN)) {
-      pcap_perror(handle, "Error creating packet filter");
-      return 1;
-    }
-    if (pcap_setfilter(handle, &fp)) {
-      pcap_perror(handle, "Error setting packet filter");
-      return 1;
-    }
   }
 
   if (pthread_mutex_init(&update_lock, NULL)) {
