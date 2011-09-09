@@ -60,6 +60,9 @@ static void get_flow_entry_for_packet(
     entry->ip_source = ntohl(ip_header->saddr);
     entry->ip_destination = ntohl(ip_header->daddr);
     entry->transport_protocol = ip_header->protocol;
+    mac_table_lookup(&mac_table, entry->ip_source, eth_header->ether_shost);
+    mac_table_lookup(
+        &mac_table, entry->ip_destination, eth_header->ether_dhost);
     if (ip_header->protocol == IPPROTO_TCP) {
       const struct tcphdr* tcp_header = (struct tcphdr*)(
           (void *)ip_header + ip_header->ihl * sizeof(uint32_t));
@@ -74,7 +77,8 @@ static void get_flow_entry_for_packet(
       if (entry->port_source == NS_DEFAULTPORT) {
         u_char* dns_bytes = (u_char*)udp_header + sizeof(struct udphdr);
         int dns_len = len - (dns_bytes - bytes);
-        int mac_id = mac_table_lookup(&mac_table, eth_header->ether_dhost);
+        int mac_id = mac_table_lookup(
+            &mac_table, entry->ip_destination, eth_header->ether_dhost);
         process_dns_packet(dns_bytes, dns_len, &dns_table, mac_id);
       }
     } else {

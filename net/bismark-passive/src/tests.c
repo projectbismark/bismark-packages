@@ -379,26 +379,37 @@ void mac_setup() {
 START_TEST(test_mac_can_add_to_table) {
   unsigned char first_mac[6] = "abcdef";
   unsigned char second_mac[6] = "123456";
-  int first_mac_id = mac_table_lookup(&mac_table, first_mac);
+  uint32_t first_ip = 123456789;
+  uint32_t second_ip = 987654321;
+  int first_mac_id = mac_table_lookup(&mac_table, first_ip, first_mac);
   fail_unless(first_mac_id >= 0);
-  int second_mac_id = mac_table_lookup(&mac_table, second_mac);
+  int second_mac_id = mac_table_lookup(&mac_table, second_ip, second_mac);
   fail_unless(second_mac_id >= 0);
-  fail_unless(mac_table_lookup(&mac_table, first_mac) == first_mac_id);
-  fail_unless(mac_table_lookup(&mac_table, second_mac) == second_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, first_ip, first_mac) == first_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, second_ip, second_mac) == second_mac_id);
+  fail_if(mac_table_lookup(&mac_table, second_ip, first_mac) == first_mac_id);
+  fail_if(mac_table_lookup(&mac_table, second_ip, first_mac) == second_mac_id);
+  fail_if(mac_table_lookup(&mac_table, first_ip, second_mac) == first_mac_id);
+  fail_if(mac_table_lookup(&mac_table, first_ip, second_mac) == second_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, first_ip, first_mac) == first_mac_id);
+  fail_unless(mac_table_lookup(&mac_table, second_ip, second_mac) == second_mac_id);
 }
 END_TEST
 
 START_TEST(test_mac_can_discard_old_entries) {
-  uint64_t mac = 0;
-  int first_id = mac_table_lookup(&mac_table, (uint8_t*)&mac);
-  fail_if(mac_table_lookup(&mac_table, (uint8_t*)&mac) != first_id);
-  for (mac = 1; mac < MAC_TABLE_ENTRIES; ++mac) {
-    mac_table_lookup(&mac_table, (uint8_t*)&mac);
+  uint8_t mac[ETH_ALEN] = { 1, 2, 3, 4, 5 };
+  uint32_t ip = 12345;
+  int first_id = mac_table_lookup(&mac_table, ip, mac);
+  fail_unless(mac_table_lookup(&mac_table, ip, mac) == first_id);
+  int idx;
+  for (idx = 1; idx < MAC_TABLE_ENTRIES; ++idx) {
+    ++ip;
+    mac_table_lookup(&mac_table, ip, mac);
   }
-  mac = MAC_TABLE_ENTRIES + 1;
-  fail_unless(mac_table_lookup(&mac_table, (uint8_t*)&mac) == first_id);
-  mac = 0;
-  fail_unless(mac_table_lookup(&mac_table, (uint8_t*)&mac) != first_id);
+  ++ip;
+  fail_unless(mac_table_lookup(&mac_table, ip, mac) == first_id);
+  ip = 12345;
+  fail_unless(mac_table_lookup(&mac_table, ip, mac) != first_id);
 }
 END_TEST
 
