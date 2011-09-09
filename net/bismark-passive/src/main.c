@@ -239,12 +239,16 @@ int main(int argc, char *argv[]) {
   }
 
   if (argc >= 3) {
-    char filter_program[256] = "ether host";
+    char filter_program[256] = "";
     int idx;
     for (idx = 2; idx < argc; ++idx) {
-      strncat(filter_program, " ", sizeof(filter_program));
+      strncat(filter_program, "ether host ", sizeof(filter_program));
       strncat(filter_program, argv[idx], sizeof(filter_program));
+      if (idx < argc - 1) {
+        strncat(filter_program, " or ", sizeof(filter_program));
+      }
     }
+    fprintf(stderr, filter_program);
     struct bpf_program fp;
     if (pcap_compile(handle, &fp, filter_program, 0, PCAP_NETMASK_UNKNOWN)) {
       pcap_perror(handle, "Error creating packet filter");
