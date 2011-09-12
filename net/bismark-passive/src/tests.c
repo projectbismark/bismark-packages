@@ -8,13 +8,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <zlib.h>
 
 #include <check.h>
 
 /********************************************************
+ * Utility functions
+ ********************************************************/
+static char temp_filename[255];
+static gzFile open_tempfile() {
+  char template[] = "/tmp/bismark-passive-test.XXXXXX";
+  int fd = mkstemp(template);
+  fail_if(fd < 0);
+  strcpy(temp_filename, template);
+  gzFile handle = gzdopen(fd, "wb");
+  fail_if(handle == NULL);
+  return handle;
+}
+
+static char* read_tempfile(gzFile whandle) {
+  fail_if(gzclose(whandle));
+
+  gzFile handle = gzopen(temp_filename, "rb");
+  fail_if(handle == NULL);
+
+  int capacity = 1024;
+  char* contents = malloc(capacity);
+  fail_unless(contents != NULL);
+  int len = 0;
+  int bytes_read;
+  while ((bytes_read = gzread(handle, contents, 1024)) > 0) {
+    len += bytes_read;
+    if (len + 1024 > capacity) {
+      contents = realloc(contents, capacity + 1024);
+      fail_unless(contents != NULL);
+    }
+  }
+  gzclose(handle);
+  return contents;
+}
+
+/********************************************************
  * Packet series tests
  ********************************************************/
-
 static packet_series_t series;
 static const int kMySize = 12;
 static const int kMyFlowId = 1;
@@ -78,10 +114,32 @@ START_TEST(test_series_overflow) {
 }
 END_TEST
 
+START_TEST(test_series_write_update) {
+  struct timeval tv;
+  tv.tv_sec = 123456789;
+  tv.tv_usec = 4321;
+  fail_if(packet_series_add_packet(&series, &tv, 25, 1));
+  tv.tv_sec = 123456790;
+  tv.tv_usec = 4321;
+  fail_if(packet_series_add_packet(&series, &tv, 1024, 2));
+
+  gzFile handle = open_tempfile();
+  fail_if(packet_series_write_update(&series, handle));
+
+  char* contents = read_tempfile(handle);
+  char* expected_contents = \
+      "123456789004321 0\n"
+      "0 25 1\n"
+      "1000000 1024 2\n"
+      "\n";
+  fail_if(strcmp(contents, expected_contents));
+  free(contents);
+}
+END_TEST
+
 /********************************************************
  * Flow table tests
  ********************************************************/
-
 static flow_table_t table;
 
 static uint32_t dummy_hash(const char* data, int len) {
@@ -376,7 +434,7 @@ void mac_setup() {
   address_table_init(&address_table);
 }
 
-START_TEST(test_mac_can_add_to_table) {
+START_TEST(test_address_can_add_to_table) {
   unsigned char first_mac[6] = "abcdef";
   unsigned char second_mac[6] = "123456";
   uint32_t first_ip = 123456789;
@@ -406,7 +464,7 @@ START_TEST(test_mac_can_add_to_table) {
 }
 END_TEST
 
-START_TEST(test_mac_can_discard_old_entries) {
+START_TEST(test_address_can_discard_old_entries) {
   uint8_t mac[ETH_ALEN] = { 1, 2, 3, 4, 5 };
   uint32_t ip = 12345;
   int first_id = address_table_lookup(&address_table, ip, mac);
@@ -494,6 +552,7 @@ Suite* build_suite() {
   tcase_add_checked_fixture(tc_series, series_setup, NULL);
   tcase_add_test(tc_series, test_series_add);
   tcase_add_test(tc_series, test_series_overflow);
+  tcase_add_test(tc_series, test_series_write_update);
   suite_add_tcase(s, tc_series);
 
   TCase *tc_flows = tcase_create("Flow table");
@@ -515,11 +574,11 @@ Suite* build_suite() {
   tcase_add_test(tc_dns, test_dns_enforces_size);
   suite_add_tcase(s, tc_dns);
 
-  TCase *tc_mac = tcase_create("MAC table");
-  tcase_add_checked_fixture(tc_mac, mac_setup, NULL);
-  tcase_add_test(tc_mac, test_mac_can_add_to_table);
-  tcase_add_test(tc_mac, test_mac_can_discard_old_entries);
-  suite_add_tcase(s, tc_mac);
+  TCase *tc_address = tcase_create("MAC table");
+  tcase_add_checked_fixture(tc_address, mac_setup, NULL);
+  tcase_add_test(tc_address, test_address_can_add_to_table);
+  tcase_add_test(tc_address, test_address_can_discard_old_entries);
+  suite_add_tcase(s, tc_address);
 
   TCase *tc_dns_parser = tcase_create("DNS parser");
   tcase_add_checked_fixture(tc_dns_parser, dns_setup, NULL);
