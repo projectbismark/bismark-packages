@@ -17,8 +17,8 @@
  ********************************************************/
 static char temp_filename[255];
 static gzFile open_tempfile() {
-  char template[] = "/tmp/bismark-passive-test.XXXXXX";
-  int fd = mkstemp(template);
+  char template[] = "/tmp/bismark-passive-test.XXXXXX.gz";
+  int fd = mkstemps(template, 3);
   fail_if(fd < 0);
   strcpy(temp_filename, template);
   gzFile handle = gzdopen(fd, "wb");
@@ -26,7 +26,7 @@ static gzFile open_tempfile() {
   return handle;
 }
 
-static char* read_tempfile(gzFile whandle) {
+static char* read_tempfile(gzFile whandle, int* len) {
   fail_if(gzclose(whandle));
 
   gzFile handle = gzopen(temp_filename, "rb");
@@ -35,12 +35,13 @@ static char* read_tempfile(gzFile whandle) {
   int capacity = 1024;
   char* contents = malloc(capacity);
   fail_unless(contents != NULL);
-  int len = 0;
   int bytes_read;
-  while ((bytes_read = gzread(handle, contents, 1024)) > 0) {
-    len += bytes_read;
-    if (len + 1024 > capacity) {
-      contents = realloc(contents, capacity + 1024);
+  *len = 0;
+  while ((bytes_read = gzread(handle, contents + *len, 1024)) > 0) {
+    *len += bytes_read;
+    if (*len + 1024 > capacity) {
+      capacity += 1024;
+      contents = realloc(contents, capacity);
       fail_unless(contents != NULL);
     }
   }
@@ -126,13 +127,14 @@ START_TEST(test_series_write_update) {
   gzFile handle = open_tempfile();
   fail_if(packet_series_write_update(&series, handle));
 
-  char* contents = read_tempfile(handle);
+  int len;
+  char* contents = read_tempfile(handle, &len);
   char* expected_contents = \
       "123456789004321 0\n"
       "0 25 1\n"
       "1000000 1024 2\n"
       "\n";
-  fail_if(strcmp(contents, expected_contents));
+  fail_if(memcmp(contents, expected_contents, len));
   free(contents);
 }
 END_TEST
@@ -481,6 +483,33 @@ START_TEST(test_address_can_discard_old_entries) {
 }
 END_TEST
 
+#ifdef DISABLE_ANONYMIZATION
+START_TEST(test_address_write_update) {
+  uint8_t first_mac[ETH_ALEN] = { 1, 2, 3, 4, 5, 6 };
+  uint32_t first_ip = 54321;
+  address_table_lookup(&address_table, first_ip, first_mac);
+  uint8_t second_mac[ETH_ALEN] = { 6, 5, 4, 3, 2, 1 };
+  uint32_t second_ip = 12345;
+  address_table_lookup(&address_table, second_ip, second_mac);
+
+  gzFile handle = open_tempfile();
+  address_table_write_update(&address_table, handle);
+
+  int len;
+  char* contents = read_tempfile(handle, &len);
+  const char* expected_contents = \
+      "010203040506 54321\n"
+      "060504030201 12345\n"
+      "\n";
+
+  printf("%s", expected_contents);
+  printf("%s", contents);
+  fail_if(memcmp(expected_contents, contents, len));
+  free(contents);
+}
+END_TEST
+#endif
+
 /********************************************************
  * DNS parser tests
  ********************************************************/
@@ -578,6 +607,9 @@ Suite* build_suite() {
   tcase_add_checked_fixture(tc_address, mac_setup, NULL);
   tcase_add_test(tc_address, test_address_can_add_to_table);
   tcase_add_test(tc_address, test_address_can_discard_old_entries);
+#ifdef DISABLE_ANONYMIZATION
+  tcase_add_test(tc_address, test_address_write_update);
+#endif
   suite_add_tcase(s, tc_address);
 
   TCase *tc_dns_parser = tcase_create("DNS parser");
