@@ -155,6 +155,17 @@ static void process_packet(
 /* Write an update to UPDATE_FILENAME. This is the file that will be sent to the
  * server. The data is compressed on-the-fly using gzip. */
 void write_update(const struct pcap_stat* statistics) {
+#ifndef DISABLE_FLOW_THRESHOLDING
+  if (flow_table_write_thresholded_ips(&flow_table)) {
+#ifndef NDEBUG
+    fprintf(stderr, "Couldn't write thresholded flows log\n");
+#endif
+  }
+#endif
+
+#ifndef NDEBUG
+  printf("Writing differential log to %s\n", UPDATE_FILENAME);
+#endif
   gzFile handle = gzopen (UPDATE_FILENAME, "wb");
   if (!handle) {
     perror("Could not open update file for writing");
@@ -203,9 +214,6 @@ void* updater(void* arg) {
       perror("Error acquiring mutex for update");
       exit(1);
     }
-#ifndef NDEBUG
-    printf("Writing differential log to %s\n", UPDATE_FILENAME);
-#endif
     struct pcap_stat statistics;
     if (!pcap_stats(handle, &statistics)) {
       write_update(&statistics);

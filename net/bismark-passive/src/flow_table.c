@@ -76,6 +76,13 @@ int flow_table_process_flow(flow_table_t* const table,
         && flow_entry_compare(new_entry, entry)) {
       entry->last_update_time_seconds
           = timestamp_seconds - table->base_timestamp_seconds;
+#ifndef DISABLE_FLOW_THRESHOLDING
+      if (entry->occupied == ENTRY_OCCUPIED_BUT_UNSENT
+          && entry->num_packets < 63) {  /* 63 = 2^6 - 1, the maximum value
+                                            for entry->num_packets */
+        ++entry->num_packets;
+      }
+#endif
       return table_idx;
     }
     if (entry->occupied != ENTRY_OCCUPIED
@@ -98,6 +105,9 @@ int flow_table_process_flow(flow_table_t* const table,
     table->base_timestamp_seconds = timestamp_seconds;
   }
   new_entry->occupied = ENTRY_OCCUPIED_BUT_UNSENT;
+#ifndef DISABLE_FLOW_THRESHOLDING
+  new_entry->num_packets = 1;
+#endif
   new_entry->last_update_time_seconds
       = timestamp_seconds - table->base_timestamp_seconds;
   table->entries[first_available] = *new_entry;
@@ -185,6 +195,41 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
 
   return 0;
 }
+
+#ifndef DISABLE_FLOW_THRESHOLDING
+int flow_table_write_thresholded_ips(const flow_table_t* const table) {
+#ifndef NDEBUG
+  printf("Writing thresholded flows log to %s\n", FLOW_THRESHOLDING_LOG);
+#endif
+  FILE* handle = fopen(FLOW_THRESHOLDING_LOG, "w");
+  if (!handle) {
+#ifndef NDEBUG
+    perror("Error opening thresholded flows log");
+#endif
+    return -1;
+  }
+
+  int idx;
+  for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
+    if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT
+        && table->entries[idx].num_packets >= FLOW_THRESHOLD) {
+      if (fprintf(handle,
+                  "%" PRIu32 " %" PRIu32 " %" PRIu8 "\n",
+                  table->entries[idx].ip_source,
+                  table->entries[idx].ip_destination,
+                  table->entries[idx].num_packets) < 0) {
+#ifndef NDEBUG
+        perror("Error writing thresholded flows log");
+#endif
+        fclose(handle);
+        return -1;
+      }
+    }
+  }
+  fclose(handle);
+  return 0;
+}
+#endif
 
 #ifdef TESTING
 void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len)) {

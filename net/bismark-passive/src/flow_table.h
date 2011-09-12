@@ -17,7 +17,7 @@ typedef struct {
   uint8_t transport_protocol;
 
   /* These fields will not be taken into account for hashing */
-  uint8_t occupied;
+  uint8_t occupied : 2;
 #define ENTRY_EMPTY                  0
   /* All new flow entries are in this state, which indicates that their
    * information hasn't been sent to the server yet. */
@@ -26,6 +26,10 @@ typedef struct {
 #define ENTRY_OCCUPIED               2
   /* An entry is "deleted". Needed because the hash table is open addressed. */
 #define ENTRY_DELETED                3
+
+  /* The number of packets received, used to categorize flows as "marginal" or
+   * "non-marginal". Notice that the maximum value of this field is 63. */
+  uint8_t num_packets : 6;
 
   /* An offset from base_timestamp_seconds. This restricts the age of a flow
    * record to around 9 hours. */
@@ -64,6 +68,17 @@ void flow_table_advance_base_timestamp(flow_table_t* const table,
  * then update their state to ENTRY_OCCUPIED. This ensures each flow record is
  * only sent once. */
 int flow_table_write_update(flow_table_t* const table, gzFile handle);
+
+#ifndef DISABLE_FLOW_THRESHOLDING
+/* Each flow maintains a count of the number of packets in that flow, up to the
+ * first 64 packets. This function inspects these counts and writes the IP
+ * addresses of the flow out to disk if it exceeds FLOW_THRESHOLD. This is only
+ * done before the first update is prepared, to prevent redundant flows.
+ *
+ * This feature was added to support running active measurements
+ * against the set of hosts accessed by the home network. */
+int flow_table_write_thresholded_ips(const flow_table_t* const table);
+#endif
 
 #ifndef NDEBUG
 void testing_set_hash_function(uint32_t (*hasher)(const char* data, int len));

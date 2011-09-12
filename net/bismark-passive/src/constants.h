@@ -8,6 +8,12 @@
  * line. Instead, pass DISABLE_ANONYMIZATION=yes as a Makefile argument. */
 /*#define DISABLE_ANONYMIZATION*/
 
+/* Defining this variable disables flow-level threshold accounting. This feature
+ * counts the number of packets per flow during the first update period of that
+ * flow; if the flow exceeds FLOW_THRESHOLD packets during that period then its
+ * source and destination IP addresses are written to FLOW_THRESHOLDING_LOG. */
+/*#define DISABLE_FLOW_THRESHOLDING*/
+
 #define PACKET_DATA_BUFFER_ENTRIES 65536
 #define FLOW_TABLE_ENTRIES 65535
 #define DNS_TABLE_A_ENTRIES 1024
@@ -31,6 +37,9 @@
 #ifndef ANONYMIZATION_SEED_FILE
 #define ANONYMIZATION_SEED_FILE "/etc/bismark/passive.key"
 #endif
+
+#define FLOW_THRESHOLDING_LOG "/tmp/bismark-passive-flowlog"
+#define FLOW_THRESHOLD 10
 
 /* Hashtable parameters */
 #define HT_NUM_PROBES 3
