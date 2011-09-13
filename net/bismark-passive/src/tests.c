@@ -3,12 +3,15 @@
 #include "flow_table.h"
 #include "address_table.h"
 #include "packet_series.h"
+#include "util.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <zlib.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <check.h>
 
@@ -439,8 +442,8 @@ void mac_setup() {
 START_TEST(test_address_can_add_to_table) {
   unsigned char first_mac[6] = "abcdef";
   unsigned char second_mac[6] = "123456";
-  uint32_t first_ip = 123456789;
-  uint32_t second_ip = 987654321;
+  uint32_t first_ip = 0x0a000001;
+  uint32_t second_ip = 0x0a654321;
   int first_mac_id
     = address_table_lookup(&address_table, first_ip, first_mac);
   fail_unless(first_mac_id >= 0);
@@ -468,7 +471,7 @@ END_TEST
 
 START_TEST(test_address_can_discard_old_entries) {
   uint8_t mac[ETH_ALEN] = { 1, 2, 3, 4, 5 };
-  uint32_t ip = 12345;
+  uint32_t ip = 0x0a123456;
   int first_id = address_table_lookup(&address_table, ip, mac);
   fail_unless(address_table_lookup(&address_table, ip, mac) == first_id);
   int idx;
@@ -572,6 +575,50 @@ START_TEST(test_dns_parser_fails_on_invalid_responses) {
 END_TEST
 
 /********************************************************
+ * Utility functions
+ ********************************************************/
+START_TEST(test_util_is_ip_private) {
+  char *private_addresses[] = {
+    "192.168.0.1",
+    "10.0.0.1",
+    "192.168.254.254",
+    "10.254.254.254",
+    "192.168.142.182",
+    "172.16.0.1",
+    "172.31.254.254",
+    "172.16.17.21"
+  };
+
+  char *public_addresses[] = {
+    "143.215.129.51",
+    "8.8.8.8",
+    "1.2.3.4",
+    "11.0.0.1",
+    "9.254.254.254",
+    "192.167.254.254",
+    "192.169.0.1"
+  };
+
+  int idx;
+  for (idx = 0;
+       idx < sizeof(private_addresses)/sizeof(private_addresses[0]);
+       ++idx) {
+    unsigned char buf[sizeof(struct in_addr)];
+    fail_unless(inet_pton(AF_INET, private_addresses[idx], buf) > 0);
+    fail_unless(is_address_private(ntohl(*(uint32_t *)buf)));
+  }
+
+  for (idx = 0;
+       idx < sizeof(public_addresses)/sizeof(public_addresses[0]);
+       ++idx) {
+    unsigned char buf[sizeof(struct in_addr)];
+    fail_unless(inet_pton(AF_INET, public_addresses[idx], buf) > 0);
+    fail_if(is_address_private(ntohl(*(uint32_t *)buf)));
+  }
+}
+END_TEST
+
+/********************************************************
  * Test setup
  ********************************************************/
 Suite* build_suite() {
@@ -617,6 +664,10 @@ Suite* build_suite() {
   tcase_add_test(tc_dns_parser, test_dns_parser_can_parse_valid_responses);
   tcase_add_test(tc_dns_parser, test_dns_parser_fails_on_invalid_responses);
   suite_add_tcase(s, tc_dns_parser);
+
+  TCase *tc_util = tcase_create("Utilities");
+  tcase_add_test(tc_util, test_util_is_ip_private);
+  suite_add_tcase(s, tc_util);
 
   return s;
 }

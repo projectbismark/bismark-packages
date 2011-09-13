@@ -60,7 +60,8 @@ static void get_flow_entry_for_packet(
     entry->ip_source = ntohl(ip_header->saddr);
     entry->ip_destination = ntohl(ip_header->daddr);
     entry->transport_protocol = ip_header->protocol;
-    address_table_lookup(&address_table, entry->ip_source, eth_header->ether_shost);
+    address_table_lookup(
+        &address_table, entry->ip_source, eth_header->ether_shost);
     address_table_lookup(
         &address_table, entry->ip_destination, eth_header->ether_dhost);
     if (ip_header->protocol == IPPROTO_TCP) {
