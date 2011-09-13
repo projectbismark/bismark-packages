@@ -29,4 +29,3 @@ inline int is_address_private(uint32_t address) {
       || (address & 0xfff00000) == 0xac100000
       || (address & 0xffff0000) == 0xc0a80000;
 }
-
