@@ -102,13 +102,19 @@ int dns_table_write_update(dns_table_t* const table, gzFile handle) {
       fprintf(stderr, "Error anonymizing DNS data\n");
       return -1;
     }
+    char hex_domain_digest[ANONYMIZATION_DIGEST_LENGTH * 2 + 1];
+    strcpy(hex_domain_digest,
+           buffer_to_hex(domain_digest, ANONYMIZATION_DIGEST_LENGTH));
+    char hex_cname_digest[ANONYMIZATION_DIGEST_LENGTH * 2 + 1];
+    strcpy(hex_cname_digest,
+           buffer_to_hex(cname_digest, ANONYMIZATION_DIGEST_LENGTH));
 #endif
     if (!gzprintf(handle,
                   "%" PRIu8 " %s %s\n",
                   table->cname_entries[idx].mac_id,
 #ifndef DISABLE_ANONYMIZATION
-                  buffer_to_hex(domain_digest, ANONYMIZATION_DIGEST_LENGTH),
-                  buffer_to_hex(cname_digest, ANONYMIZATION_DIGEST_LENGTH)
+                  hex_domain_digest,
+                  hex_cname_digest
 #else
                   table->cname_entries[idx].domain_name,
                   table->cname_entries[idx].cname
