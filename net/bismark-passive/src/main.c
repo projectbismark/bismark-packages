@@ -185,6 +185,11 @@ void write_update(const struct pcap_stat* statistics) {
   if (anonymization_write_update(handle)) {
     exit(1);
   }
+#else
+  if (!gzprintf(handle, "UNANONYMIZED")) {
+    perror("Error writing update");
+    exit(1);
+  }
 #endif
   if (packet_series_write_update(&packet_data, handle)) {
     exit(1);
@@ -233,9 +238,9 @@ void* updater(void* arg) {
 
 static pcap_t* initialize_pcap(const char* const interface) {
   char errbuf[PCAP_ERRBUF_SIZE];
-  pcap_t* const handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
+  pcap_t* const handle = pcap_open_live(interface, BUFSIZ, 0, 1000, errbuf);
   if (!handle) {
-    fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
+    fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
     return NULL;
   }
 
@@ -252,7 +257,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (!initialize_pcap(argv[1])) {
+  pcap_t* handle = initialize_pcap(argv[1]);
+  if (!handle) {
     return 2;
   }
 
