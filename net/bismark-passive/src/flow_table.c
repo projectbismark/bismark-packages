@@ -163,9 +163,9 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
 #endif
       if (!gzprintf(handle,
 #ifndef DISABLE_ANONYMIZATION
-            "%d %" PRIu64 " %" PRIu64 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
+            "%d %" PRIx64 " %" PRIx64 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
 #else
-            "%d %" PRIu32 " %" PRIu32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
+            "%d %" PRIx32 " %" PRIx32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
 #endif
             idx,
 #ifndef DISABLE_ANONYMIZATION
@@ -214,7 +214,7 @@ int flow_table_write_thresholded_ips(const flow_table_t* const table) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT
         && table->entries[idx].num_packets >= FLOW_THRESHOLD) {
       if (fprintf(handle,
-                  "%" PRIu32 " %" PRIu32 " %" PRIu8 "\n",
+                  "%" PRIx32 " %" PRIx32 " %" PRIu8 "\n",
                   table->entries[idx].ip_source,
                   table->entries[idx].ip_destination,
                   table->entries[idx].num_packets) < 0) {

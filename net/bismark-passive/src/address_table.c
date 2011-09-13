@@ -60,12 +60,12 @@ int address_table_write_update(address_table_t* const table, gzFile handle) {
       return -1;
     }
     if (!gzprintf(handle,
-                  "%s %" PRIu64 "\n",
+                  "%s %" PRIx64 "\n",
                   buffer_to_hex(digest_mac, ETH_ALEN),
                   digest_ip)) {
 #else
     if (!gzprintf(handle,
-                  "%s %" PRIu32 "\n",
+                  "%s %" PRIx32 "\n",
                   buffer_to_hex(table->entries[mac_id].mac_address, ETH_ALEN),
                   table->entries[mac_id].ip_address)) {
 #endif
