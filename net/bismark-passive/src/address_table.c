@@ -6,6 +6,12 @@
 #include "anonymization.h"
 #include "util.h"
 
+static inline int is_address_private(uint32_t address) {
+  return (address & 0xff000000) == 0x0a000000
+      || (address & 0xfff00000) == 0xac100000
+      || (address & 0xffff0000) == 0xc0a80000;
+}
+
 void address_table_init(address_table_t* const table) {
   memset(table, '\0', sizeof(*table));
 }
@@ -14,8 +20,12 @@ void address_table_init(address_table_t* const table) {
 #define NORM(m)  (MODULUS(m, MAC_TABLE_ENTRIES))
 
 int address_table_lookup(address_table_t* const table,
-                     const uint32_t ip_address,
-                     const uint8_t mac[ETH_ALEN]) {
+                         const uint32_t ip_address,
+                         const uint8_t mac[ETH_ALEN]) {
+  if (!is_address_private(ip_address)) {
+    return -1;
+  }
+
   if (table->length > 0) {
     /* Search table starting w/ most recent MAC addresses. */
     int idx;
