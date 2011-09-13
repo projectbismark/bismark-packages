@@ -5,4 +5,6 @@
 
 const char* buffer_to_hex(uint8_t* buffer, int len);
 
+inline int is_address_private(uint32_t address);
+
 #endif
