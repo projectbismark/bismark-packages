@@ -186,7 +186,7 @@ void write_update(const struct pcap_stat* statistics) {
     exit(1);
   }
 #else
-  if (!gzprintf(handle, "UNANONYMIZED")) {
+  if (!gzprintf(handle, "UNANONYMIZED\n\n")) {
     perror("Error writing update");
     exit(1);
   }

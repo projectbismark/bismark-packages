@@ -73,10 +73,11 @@ following format:
     ...
     [MAC id] [hashed domain name for CNAME record] [hashed ip address for CNAME record]
     
-    [MAC address with lower 24 bits hashed (represents MAC id 0)]
-    [MAC address with lower 24 bits hashed (represents MAC id 1)]
+    [address id of first address in list] [total size of address table]
+    [MAC address with lower 24 bits hashed] [hashed IP address]
+    [MAC address with lower 24 bits hashed] [hashed IP address]
     ...
-    [MAC address with lower 24 bits hashed (represents MAC id N)]
+    [MAC address with lower 24 bits hashed] [hashed IP address]
 
 Complexity of resource usage
 ----------------------------

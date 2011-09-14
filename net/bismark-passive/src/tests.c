@@ -489,10 +489,10 @@ END_TEST
 #ifdef DISABLE_ANONYMIZATION
 START_TEST(test_address_write_update) {
   uint8_t first_mac[ETH_ALEN] = { 1, 2, 3, 4, 5, 6 };
-  uint32_t first_ip = 54321;
+  uint32_t first_ip = 0x0a123456;
   address_table_lookup(&address_table, first_ip, first_mac);
   uint8_t second_mac[ETH_ALEN] = { 6, 5, 4, 3, 2, 1 };
-  uint32_t second_ip = 12345;
+  uint32_t second_ip = 0x0a654321;
   address_table_lookup(&address_table, second_ip, second_mac);
 
   gzFile handle = open_tempfile();
@@ -501,12 +501,10 @@ START_TEST(test_address_write_update) {
   int len;
   char* contents = read_tempfile(handle, &len);
   const char* expected_contents = \
-      "010203040506 54321\n"
-      "060504030201 12345\n"
+      "0 256\n"
+      "010203040506 a123456\n"
+      "060504030201 a654321\n"
       "\n";
-
-  printf("%s", expected_contents);
-  printf("%s", contents);
   fail_if(memcmp(expected_contents, contents, len));
   free(contents);
 }
