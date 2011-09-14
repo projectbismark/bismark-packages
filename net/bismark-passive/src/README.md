@@ -73,7 +73,30 @@ following format:
     ...
     [MAC id] [hashed domain name for CNAME record] [hashed ip address for CNAME record]
     
-    [MAC address with lower 24 bits hashed (represents MAC id 0)]
-    [MAC address with lower 24 bits hashed (represents MAC id 1)]
+    [address id of first address in list] [total size of address table]
+    [MAC address with lower 24 bits hashed] [hashed IP address]
+    [MAC address with lower 24 bits hashed] [hashed IP address]
     ...
-    [MAC address with lower 24 bits hashed (represents MAC id N)]
+    [MAC address with lower 24 bits hashed] [hashed IP address]
+
+Complexity of resource usage
+----------------------------
+
+Bismark Passive runs in a resource constrianed environment, so we care about
+these performance metrics:
+
+* **Per-packet computational complexity** is proportional to the number of hosts
+  on the local network. For DNS packets, computation also depends on the length
+  of the packet.
+* **Per-update computational complexity** is proportional to the number of
+  packets received since the last update, the number of new flows since the last
+  update, the number of DNS responses since the last update, and the number of
+  devices on the local network.
+* **Memory utilization complexity** is proportional to the number of packets
+  since the last update, the number of flows within a window (currently 9 hours,
+  although inactive flows expire sooner), the number of DNS responses since the
+  last update, and the number of hosts on the local network.
+* **Network utilization complexity** per update is proportional to the number of
+  packets since the last update, the number of new flows since the last update,
+  the number of DNS responses since the last update, and the number of hosts on
+  the local network.

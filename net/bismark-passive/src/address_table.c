@@ -56,6 +56,15 @@ int address_table_lookup(address_table_t* const table,
 }
 
 int address_table_write_update(address_table_t* const table, gzFile handle) {
+  if (!gzprintf(handle,
+                "%d %d\n",
+                NORM(table->last - table->added_since_last_update + 1),
+                MAC_TABLE_ENTRIES)) {
+#ifndef NDEBUG
+    perror("Error writing update");
+#endif
+    return -1;
+  }
   int idx;
   for (idx = table->added_since_last_update; idx > 0; --idx) {
     int mac_id = NORM(table->last - idx + 1);

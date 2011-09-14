@@ -185,6 +185,11 @@ void write_update(const struct pcap_stat* statistics) {
   if (anonymization_write_update(handle)) {
     exit(1);
   }
+#else
+  if (!gzprintf(handle, "UNANONYMIZED\n\n")) {
+    perror("Error writing update");
+    exit(1);
+  }
 #endif
   if (packet_series_write_update(&packet_data, handle)) {
     exit(1);
@@ -231,41 +236,47 @@ void* updater(void* arg) {
   }
 }
 
+static pcap_t* initialize_pcap(const char* const interface) {
+  char errbuf[PCAP_ERRBUF_SIZE];
+  pcap_t* const handle = pcap_open_live(interface, BUFSIZ, 0, 1000, errbuf);
+  if (!handle) {
+    fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
+    return NULL;
+  }
+
+  if (pcap_datalink(handle) != DLT_EN10MB) {
+    fprintf(stderr, "Must capture on an Ethernet link\n");
+    return NULL;
+  }
+  return handle;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Usage: %s <interface>\n", argv[0]);
     return 1;
   }
 
-  char* const dev = argv[1];
-  char errbuf[PCAP_ERRBUF_SIZE];
-  pcap_t* const handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
+  pcap_t* handle = initialize_pcap(argv[1]);
   if (!handle) {
-    fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
     return 2;
-  }
-
-  if (pcap_datalink(handle) != DLT_EN10MB) {
-    fprintf(stderr, "Must capture on an Ethernet link\n");
-    return 3;
-  }
-
-  if (pthread_mutex_init(&update_lock, NULL)) {
-    perror("Error initializing mutex");
-    return 4;
   }
 
 #ifndef DISABLE_ANONYMIZATION
   if (anonymization_init()) {
     fprintf(stderr, "Error initializing anonymizer\n");
-    return 1;
+    return 3;
   }
 #endif
-
   packet_series_init(&packet_data);
   flow_table_init(&flow_table);
   dns_table_init(&dns_table);
   address_table_init(&address_table);
+
+  if (pthread_mutex_init(&update_lock, NULL)) {
+    perror("Error initializing mutex");
+    return 4;
+  }
 
   pthread_create(&update_thread, NULL, updater, handle);
 
