@@ -49,6 +49,9 @@ static pthread_mutex_t update_lock;
  * have run on the same machine. */
 static int64_t first_packet_timestamp_microseconds = -1;
 
+/* Will be incremented and sent with each update. */
+static int sequence_number = 0;
+
 /* This extracts flow information from raw packet contents. */
 static void get_flow_entry_for_packet(
     const u_char* const bytes,
@@ -172,14 +175,25 @@ void write_update(const struct pcap_stat* statistics) {
     perror("Could not open update file for writing");
     exit(1);
   }
-  if (!gzprintf(handle,
-                "%" PRId64 " %u %u %u\n\n",
-                first_packet_timestamp_microseconds,
-                statistics->ps_recv,
-                statistics->ps_drop,
-                statistics->ps_ifdrop)) {
-    perror("Error writing update");
-    exit(1);
+  if (statistics) {
+    if (!gzprintf(handle,
+                  "%" PRId64 " %d %u %u %u\n\n",
+                  first_packet_timestamp_microseconds,
+                  sequence_number,
+                  statistics->ps_recv,
+                  statistics->ps_drop,
+                  statistics->ps_ifdrop)) {
+      perror("Error writing update");
+      exit(1);
+    }
+  } else {
+    if (!gzprintf(handle,
+                  "%" PRId64 " %d\n\n",
+                  first_packet_timestamp_microseconds,
+                  sequence_number)) {
+      perror("Error writing update");
+      exit(1);
+    }
   }
 #ifndef DISABLE_ANONYMIZATION
   if (anonymization_write_update(handle)) {
@@ -229,6 +243,7 @@ void* updater(void* arg) {
 #endif
       write_update(NULL);
     }
+    ++sequence_number;
     if (pthread_mutex_unlock(&update_lock)) {
       perror("Error unlocking update mutex");
       exit(1);
