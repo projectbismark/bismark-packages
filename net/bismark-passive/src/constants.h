@@ -33,6 +33,10 @@
 #define UPDATE_PERIOD_SECONDS 30
 #define UPDATE_FILENAME "/tmp/bismark-passive-update.gz"
 
+#ifndef BISMARK_ID_FILENAME
+#define BISMARK_ID_FILENAME "/etc/bismark/ID"
+#endif
+
 #define ANONYMIZATION_SEED_LEN 16
 #ifndef ANONYMIZATION_SEED_FILE
 #define ANONYMIZATION_SEED_FILE "/etc/bismark/passive.key"

@@ -6,6 +6,9 @@ endif
 ifdef USE_TEMP_SEED
 CFLAGS += -DANONYMIZATION_SEED_FILE="\"/tmp/passive.key\""
 endif
+ifdef USE_TEMP_ID
+CFLAGS += -DBISMARK_ID_FILENAME="\"/tmp/bismark.id\""
+endif
 LDFLAGS += -lpcap -lresolv -pthread -lz -lssl -lcrypto
 SRCS = \
 	anonymization.c \

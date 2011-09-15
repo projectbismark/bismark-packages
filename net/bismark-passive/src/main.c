@@ -44,6 +44,9 @@ static address_table_t address_table;
 static pthread_t update_thread;
 static pthread_mutex_t update_lock;
 
+/* Will be filled in the bismark node ID, from /etc/bismark/ID. */
+static char bismark_id[256];
+
 /* Will be filled in with the timestamp of the first packet pcap gives us. This
  * value serves as a unique identifier across instances of bismark-passive that
  * have run on the same machine. */
@@ -172,28 +175,39 @@ void write_update(const struct pcap_stat* statistics) {
 #endif
   gzFile handle = gzopen (UPDATE_FILENAME, "wb");
   if (!handle) {
+#ifndef NDEBUG
     perror("Could not open update file for writing");
+#endif
+    exit(1);
+  }
+
+  if (!gzprintf(handle,
+                "%s %" PRId64 " %d\n",
+                bismark_id,
+                first_packet_timestamp_microseconds,
+                sequence_number)) {
+#ifndef NDEBUG
+    perror("Error writing update");
+#endif
     exit(1);
   }
   if (statistics) {
     if (!gzprintf(handle,
-                  "%" PRId64 " %d %u %u %u\n\n",
-                  first_packet_timestamp_microseconds,
-                  sequence_number,
+                  "%u %u %u\n",
                   statistics->ps_recv,
                   statistics->ps_drop,
                   statistics->ps_ifdrop)) {
+#ifndef NDEBUG
       perror("Error writing update");
+#endif
       exit(1);
     }
-  } else {
-    if (!gzprintf(handle,
-                  "%" PRId64 " %d\n\n",
-                  first_packet_timestamp_microseconds,
-                  sequence_number)) {
-      perror("Error writing update");
-      exit(1);
-    }
+  }
+  if (!gzprintf(handle, "\n")) {
+#ifndef NDEBUG
+    perror("Error writing update");
+#endif
+    exit(1);
   }
 #ifndef DISABLE_ANONYMIZATION
   if (anonymization_write_update(handle)) {
@@ -201,7 +215,9 @@ void write_update(const struct pcap_stat* statistics) {
   }
 #else
   if (!gzprintf(handle, "UNANONYMIZED\n\n")) {
+#ifndef NDEBUG
     perror("Error writing update");
+#endif
     exit(1);
   }
 #endif
@@ -266,21 +282,39 @@ static pcap_t* initialize_pcap(const char* const interface) {
   return handle;
 }
 
+int init_bismark_id() {
+  FILE* handle = fopen(BISMARK_ID_FILENAME, "r");
+  if (!handle) {
+    perror("Cannot open Bismark ID file " BISMARK_ID_FILENAME);
+    return -1;
+  }
+  if(fscanf(handle, "%255s\n", bismark_id) < 1) {
+    perror("Cannot read Bismark ID file " BISMARK_ID_FILENAME);
+    return -1;
+  }
+  fclose(handle);
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Usage: %s <interface>\n", argv[0]);
     return 1;
   }
 
+  if (init_bismark_id()) {
+    return 1;
+  }
+
   pcap_t* handle = initialize_pcap(argv[1]);
   if (!handle) {
-    return 2;
+    return 1;
   }
 
 #ifndef DISABLE_ANONYMIZATION
   if (anonymization_init()) {
     fprintf(stderr, "Error initializing anonymizer\n");
-    return 3;
+    return 1;
   }
 #endif
   packet_series_init(&packet_data);
@@ -290,7 +324,7 @@ int main(int argc, char *argv[]) {
 
   if (pthread_mutex_init(&update_lock, NULL)) {
     perror("Error initializing mutex");
-    return 4;
+    return 1;
   }
 
   pthread_create(&update_thread, NULL, updater, handle);
