@@ -69,10 +69,10 @@ following format:
     ...
     [MAC id] [hashed domain name for A record] [hashed ip address for A record]
     
-    [MAC id] [hashed domain name for CNAME record] [hashed ip address for CNAME record]
-    [MAC id] [hashed domain name for CNAME record] [hashed ip address for CNAME record]
+    [MAC id] [hashed domain name for CNAME record] [hashed cname for CNAME record]
+    [MAC id] [hashed domain name for CNAME record] [hashed cname for CNAME record]
     ...
-    [MAC id] [hashed domain name for CNAME record] [hashed ip address for CNAME record]
+    [MAC id] [hashed domain name for CNAME record] [hashed cname for CNAME record]
     
     [address id of first address in list] [total size of address table]
     [MAC address with lower 24 bits hashed] [hashed IP address]
