@@ -67,9 +67,9 @@ int dns_table_write_update(dns_table_t* const table, gzFile handle) {
 #endif
     if (!gzprintf(handle,
 #ifndef DISABLE_ANONYMIZATION
-                  "%" PRIu8 " %s %" PRIu64 "\n",
+                  "%" PRIu8 " %s %" PRIx64 "\n",
 #else
-                  "%" PRIu8 " %s %" PRIu32 "\n",
+                  "%" PRIu8 " %s %" PRIx32 "\n",
 #endif
                   table->a_entries[idx].mac_id,
 #ifndef DISABLE_ANONYMIZATION
