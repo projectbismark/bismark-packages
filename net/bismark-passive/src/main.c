@@ -163,7 +163,9 @@ static void process_packet(
  * server. The data is compressed on-the-fly using gzip. */
 void write_update(const struct pcap_stat* statistics) {
 #ifndef DISABLE_FLOW_THRESHOLDING
-  if (flow_table_write_thresholded_ips(&flow_table)) {
+  if (flow_table_write_thresholded_ips(&flow_table,
+                                       first_packet_timestamp_microseconds,
+                                       sequence_number)) {
 #ifndef NDEBUG
     fprintf(stderr, "Couldn't write thresholded flows log\n");
 #endif

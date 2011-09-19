@@ -197,7 +197,9 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
 }
 
 #ifndef DISABLE_FLOW_THRESHOLDING
-int flow_table_write_thresholded_ips(const flow_table_t* const table) {
+int flow_table_write_thresholded_ips(const flow_table_t* const table,
+                                     const uint64_t session_id,
+                                     const int sequence_number) {
 #ifndef NDEBUG
   printf("Writing thresholded flows log to %s\n", FLOW_THRESHOLDING_LOG);
 #endif
@@ -206,6 +208,14 @@ int flow_table_write_thresholded_ips(const flow_table_t* const table) {
 #ifndef NDEBUG
     perror("Error opening thresholded flows log");
 #endif
+    return -1;
+  }
+
+  if (fprintf(handle, "%" PRIu64 " %d\n\n", session_id, sequence_number) < 2) {
+#ifndef NDEBUG
+    perror("Error writing thesholded flows log");
+#endif
+    fclose(handle);
     return -1;
   }
 

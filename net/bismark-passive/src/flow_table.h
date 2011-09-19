@@ -77,7 +77,9 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle);
  *
  * This feature was added to support running active measurements
  * against the set of hosts accessed by the home network. */
-int flow_table_write_thresholded_ips(const flow_table_t* const table);
+int flow_table_write_thresholded_ips(const flow_table_t* const table,
+                                     const uint64_t session_id,
+                                     const int sequence_number);
 #endif
 
 #ifndef NDEBUG
