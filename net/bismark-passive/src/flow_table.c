@@ -214,7 +214,8 @@ int flow_table_write_thresholded_ips(const flow_table_t* const table) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT
         && table->entries[idx].num_packets >= FLOW_THRESHOLD) {
       if (fprintf(handle,
-                  "%" PRIx32 " %" PRIx32 " %" PRIu8 "\n",
+                  "%d %" PRIx32 " %" PRIx32 " %" PRIu8 "\n",
+                  idx,
                   table->entries[idx].ip_source,
                   table->entries[idx].ip_destination,
                   table->entries[idx].num_packets) < 0) {
