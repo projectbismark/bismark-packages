@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/evp.h>
+#include <openssl/hmac.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 
@@ -15,7 +16,6 @@
 #include "util.h"
 
 static uint8_t seed[ANONYMIZATION_SEED_LEN];
-static EVP_MD_CTX digest_context;
 static char seed_hex_digest[SHA_DIGEST_LENGTH * 2 + 1];
 #ifndef NDEBUG
 static int initialized = 0;
@@ -31,16 +31,7 @@ static int anonymization_process(const uint8_t* const data,
   assert(initialized);
 #endif
 
-  if (!EVP_DigestInit_ex(&digest_context, EVP_sha1(), NULL)) {
-    return -1;
-  }
-  if (!EVP_DigestUpdate(&digest_context, seed, ANONYMIZATION_SEED_LEN)) {
-    return -1;
-  }
-  if (!EVP_DigestUpdate(&digest_context, data, len)) {
-    return -1;
-  }
-  if (!EVP_DigestFinal_ex(&digest_context, digest, NULL)) {
+  if (!HMAC(EVP_sha1(), seed, ANONYMIZATION_SEED_LEN, data, len, digest, NULL)) {
     return -1;
   }
   return 0;
@@ -104,8 +95,6 @@ int anonymization_init() {
     }
     fclose(handle);
   }
-
-  EVP_MD_CTX_init(&digest_context);
 
 #ifndef NDEBUG
   initialized = 1;
