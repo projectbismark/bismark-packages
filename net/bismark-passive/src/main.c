@@ -172,10 +172,12 @@ void write_update(const struct pcap_stat* statistics) {
   }
 #endif
 
+  char update_filename[FILENAME_MAX];
+  snprintf(update_filename, FILENAME_MAX, UPDATE_FILENAME, sequence_number);
 #ifndef NDEBUG
-  printf("Writing differential log to %s\n", UPDATE_FILENAME);
+  printf("Writing differential log to %s\n", update_filename);
 #endif
-  gzFile handle = gzopen (UPDATE_FILENAME, "wb");
+  gzFile handle = gzopen (update_filename, "wb");
   if (!handle) {
 #ifndef NDEBUG
     perror("Could not open update file for writing");

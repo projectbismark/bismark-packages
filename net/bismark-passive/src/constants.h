@@ -31,7 +31,7 @@
 
 /* Generate differential updates this often. */
 #define UPDATE_PERIOD_SECONDS 30
-#define UPDATE_FILENAME "/tmp/bismark-passive-update.gz"
+#define UPDATE_FILENAME "/tmp/bismark-passive-update-%d.gz"
 
 #ifndef BISMARK_ID_FILENAME
 #define BISMARK_ID_FILENAME "/etc/bismark/ID"

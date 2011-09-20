@@ -37,7 +37,8 @@ Usage: `bismark-passive <network interface> [mac address 0] [mac address 1] ...`
 Recommended: capture on `br-lan` with the MAC addresses of all interfaces on the
 machine.
 
-It dumps into `/tmp/bismark-passive-update.gz` every 30 seconds.
+It dumps into `/tmp/bismark-passive-update-<sequence_number>.gz` every 30
+seconds, where sequence\_number is an integer incrementing from 0.
 
 File format for differential updates
 ------------------------------------
