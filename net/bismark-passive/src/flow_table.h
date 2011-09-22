@@ -27,9 +27,14 @@ typedef struct {
   /* An entry is "deleted". Needed because the hash table is open addressed. */
 #define ENTRY_DELETED                3
 
+  /* Whether or not the ip_source field should be anonymized. */
+  uint8_t ip_source_unanonymized : 1;
+  /* Whether or not the ip_destination field should be anonymized. */
+  uint8_t ip_destination_unanonymized : 1;
+
   /* The number of packets received, used to categorize flows as "marginal" or
-   * "non-marginal". Notice that the maximum value of this field is 63. */
-  uint8_t num_packets : 6;
+   * "non-marginal". Notice that the maximum value of this field is 15. */
+  uint8_t num_packets : 4;
 
   /* An offset from base_timestamp_seconds. This restricts the age of a flow
    * record to around 9 hours. */

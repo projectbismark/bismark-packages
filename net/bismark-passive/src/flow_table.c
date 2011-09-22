@@ -150,31 +150,44 @@ int flow_table_write_update(flow_table_t* const table, gzFile handle) {
   int idx;
   for (idx = 0; idx < FLOW_TABLE_ENTRIES; ++idx) {
     if (table->entries[idx].occupied == ENTRY_OCCUPIED_BUT_UNSENT) {
-#ifndef DISABLE_ANONYMIZATION
       uint64_t source_digest, destination_digest;
-      if (anonymize_ip(table->entries[idx].ip_source, &source_digest)
-          || anonymize_ip(table->entries[idx].ip_destination,
-                          &destination_digest)) {
+#ifndef DISABLE_ANONYMIZATION
+      if (!table->entries[idx].ip_source_unanonymized) {
+#else
+      if (1) {
+#endif
+        if (anonymize_ip(table->entries[idx].ip_source, &source_digest)) {
 #ifndef NDEBUG
-        fprintf(stderr, "Error anonymizing update\n");
+          fprintf(stderr, "Error anonymizing update\n");
 #endif
-        return -1;
+          return -1;
+        }
+      } else {
+        source_digest = table->entries[idx].ip_source;
       }
+#ifndef DISABLE_ANONYMIZATION
+      if (!table->entries[idx].ip_destination_unanonymized) {
+#else
+      if (1) {
 #endif
+        if (anonymize_ip(table->entries[idx].ip_destination,
+                         &destination_digest)) {
+#ifndef NDEBUG
+          fprintf(stderr, "Error anonymizing update\n");
+#endif
+          return -1;
+        }
+      } else {
+        destination_digest = table->entries[idx].ip_destination;
+      }
+
       if (!gzprintf(handle,
-#ifndef DISABLE_ANONYMIZATION
-            "%d %" PRIx64 " %" PRIx64 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
-#else
-            "%d %" PRIx32 " %" PRIx32 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
-#endif
+            "%d %d %" PRIx64 " %d %" PRIx64 " %" PRIu8 " %" PRIu16 " %" PRIu16 "\n",
             idx,
-#ifndef DISABLE_ANONYMIZATION
+            !table->entries[idx].ip_source_unanonymized,
             source_digest,
+            !table->entries[idx].ip_destination_unanonymized,
             destination_digest,
-#else
-            table->entries[idx].ip_source,
-            table->entries[idx].ip_destination,
-#endif
             table->entries[idx].transport_protocol,
             table->entries[idx].port_source,
             table->entries[idx].port_destination)) {

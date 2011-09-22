@@ -27,19 +27,21 @@
 /* struct udphdr */
 #include <netinet/udp.h>
 
+#include "address_table.h"
 #ifndef DISABLE_ANONYMIZATION
 #include "anonymization.h"
 #endif
 #include "dns_parser.h"
 #include "dns_table.h"
 #include "flow_table.h"
-#include "address_table.h"
 #include "packet_series.h"
+#include "whitelist.h"
 
 static packet_series_t packet_data;
 static flow_table_t flow_table;
 static dns_table_t dns_table;
 static address_table_t address_table;
+static domain_whitelist_t domain_whitelist;
 
 static pthread_t update_thread;
 static pthread_mutex_t update_lock;
@@ -185,6 +187,8 @@ void write_update(const struct pcap_stat* statistics) {
     exit(1);
   }
 
+  dns_table_mark_unanonymized(&dns_table, &flow_table);
+
   if (!gzprintf(handle,
                 "%s %" PRId64 " %d\n",
                 bismark_id,
@@ -242,7 +246,7 @@ void write_update(const struct pcap_stat* statistics) {
   packet_series_init(&packet_data);
   flow_table_advance_base_timestamp(&flow_table, time(NULL));
   dns_table_destroy(&dns_table);
-  dns_table_init(&dns_table);
+  dns_table_init(&dns_table, &domain_whitelist);
 }
 
 void* updater(void* arg) {
@@ -300,6 +304,46 @@ int init_bismark_id() {
   return 0;
 }
 
+int init_domain_whitelist() {
+  FILE* handle = fopen(DOMAIN_WHITELIST_FILENAME, "r");
+  if (!handle) {
+    perror("Cannot open domain whitelist " DOMAIN_WHITELIST_FILENAME);
+    return -1;
+  }
+
+  int length;
+  if (fseek(handle, 0, SEEK_END) == -1
+      || ((length = ftell(handle)) == -1)
+      || fseek(handle, 0, SEEK_SET) == -1) {
+    perror("Cannot read domain whitelist " DOMAIN_WHITELIST_FILENAME);
+    fclose(handle);
+    return -1;
+  }
+
+  char* contents = malloc(length);
+  if (!contents) {
+    perror("Cannot allocate whitelist buffer");
+    fclose(handle);
+    return -1;
+  }
+  if (fread(contents, length, 1, handle) != 1) {
+    perror("Cannot read domain whitelist " DOMAIN_WHITELIST_FILENAME);
+    free(contents);
+    fclose(handle);
+    return -1;
+  }
+
+  fclose(handle);
+
+  if (domain_whitelist_init(&domain_whitelist, contents) < 0) {
+    fprintf(stderr, "Error reading domain whitelist.\n");
+    free(contents);
+    return -1;
+  }
+  free(contents);
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Usage: %s <interface>\n", argv[0]);
@@ -315,6 +359,10 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  if (init_domain_whitelist()) {
+    return 1;
+  }
+
 #ifndef DISABLE_ANONYMIZATION
   if (anonymization_init()) {
     fprintf(stderr, "Error initializing anonymizer\n");
@@ -323,7 +371,7 @@ int main(int argc, char *argv[]) {
 #endif
   packet_series_init(&packet_data);
   flow_table_init(&flow_table);
-  dns_table_init(&dns_table);
+  dns_table_init(&dns_table, &domain_whitelist);
   address_table_init(&address_table);
 
   if (pthread_mutex_init(&update_lock, NULL)) {

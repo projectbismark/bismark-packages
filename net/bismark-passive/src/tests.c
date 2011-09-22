@@ -4,6 +4,7 @@
 #include "address_table.h"
 #include "packet_series.h"
 #include "util.h"
+#include "whitelist.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -368,7 +369,7 @@ END_TEST
 static dns_table_t dns_table;
 
 void dns_setup() {
-  dns_table_init(&dns_table);
+  dns_table_init(&dns_table, NULL);
 }
 
 START_TEST(test_dns_adds_a_entries) {
@@ -617,6 +618,36 @@ START_TEST(test_util_is_ip_private) {
 END_TEST
 
 /********************************************************
+ * Whitelist tests
+ ********************************************************/
+START_TEST(test_whitelist_can_lookup) {
+  const char* contents =
+    "foo.com\n"
+    "bar.org\n"
+    "gorp.edu";
+
+  domain_whitelist_t whitelist;
+  domain_whitelist_init(&whitelist, contents);
+
+  fail_if(domain_whitelist_lookup(&whitelist, "foo.com"));
+  fail_if(domain_whitelist_lookup(&whitelist, "bar.org"));
+  fail_if(domain_whitelist_lookup(&whitelist, "gorp.edu"));
+
+  fail_if(domain_whitelist_lookup(&whitelist, "www.foo.com"));
+  fail_if(domain_whitelist_lookup(&whitelist, "mail.cs.gorp.edu"));
+
+  fail_unless(domain_whitelist_lookup(&whitelist, ""));
+  fail_unless(domain_whitelist_lookup(&whitelist, "foobar.org"));
+  fail_unless(domain_whitelist_lookup(&whitelist, "www.foobar.org"));
+  fail_unless(domain_whitelist_lookup(&whitelist, "org"));
+  fail_unless(domain_whitelist_lookup(&whitelist, ".org"));
+  fail_unless(domain_whitelist_lookup(&whitelist, "ar.org"));
+
+  domain_whitelist_destroy(&whitelist);
+}
+END_TEST
+
+/********************************************************
  * Test setup
  ********************************************************/
 Suite* build_suite() {
@@ -666,6 +697,10 @@ Suite* build_suite() {
   TCase *tc_util = tcase_create("Utilities");
   tcase_add_test(tc_util, test_util_is_ip_private);
   suite_add_tcase(s, tc_util);
+
+  TCase *tc_whitelist = tcase_create("Whitelist");
+  tcase_add_test(tc_whitelist, test_whitelist_can_lookup);
+  suite_add_tcase(s, tc_whitelist);
 
   return s;
 }

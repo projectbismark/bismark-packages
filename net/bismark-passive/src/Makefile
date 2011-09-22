@@ -9,6 +9,9 @@ endif
 ifdef USE_TEMP_ID
 CFLAGS += -DBISMARK_ID_FILENAME="\"/tmp/bismark.id\""
 endif
+ifdef USE_TEMP_WHITELIST
+CFLAGS += -DDOMAIN_WHITELIST_FILENAME="\"/tmp/domain-whitelist.txt\""
+endif
 LDFLAGS += -lpcap -lresolv -pthread -lz -lssl -lcrypto
 SRCS = \
 	anonymization.c \
@@ -18,7 +21,8 @@ SRCS = \
 	address_table.c \
 	main.c \
 	packet_series.c \
-	util.c
+	util.c \
+	whitelist.c
 OBJS = $(SRCS:.c=.o)
 EXE = bismark-passive
 
@@ -30,7 +34,8 @@ TEST_SRCS = \
 	address_table.c \
 	packet_series.c \
 	tests.c \
-	util.c
+	util.c \
+	whitelist.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 TEST_EXE = tests
 

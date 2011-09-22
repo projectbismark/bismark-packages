@@ -42,6 +42,10 @@
 #define ANONYMIZATION_SEED_FILE "/etc/bismark/passive.key"
 #endif
 
+#ifndef DOMAIN_WHITELIST_FILENAME
+#define DOMAIN_WHITELIST_FILENAME "/etc/bismark/domain-whitelist.txt"
+#endif
+
 #define FLOW_THRESHOLDING_LOG "/tmp/bismark-passive-flowlog"
 #define FLOW_THRESHOLD 10
 
