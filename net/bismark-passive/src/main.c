@@ -175,7 +175,7 @@ void write_update(const struct pcap_stat* statistics) {
 #endif
 
   char update_filename[FILENAME_MAX];
-  snprintf(update_filename, FILENAME_MAX, UPDATE_FILENAME, sequence_number);
+  snprintf(update_filename, FILENAME_MAX, UPDATE_FILENAME, first_packet_timestamp_microseconds, sequence_number);
 #ifndef NDEBUG
   printf("Writing differential log to %s\n", update_filename);
 #endif

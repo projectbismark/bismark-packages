@@ -1,6 +1,8 @@
 #ifndef _BISMARK_PASSIVE_CONSTANTS_H_
 #define _BISMARK_PASSIVE_CONSTANTS_H_
 
+#include <stdint.h>
+
 /* Uncomment to disable debug messages */
 /*#define NDEBUG*/
 
@@ -31,7 +33,7 @@
 
 /* Generate differential updates this often. */
 #define UPDATE_PERIOD_SECONDS 30
-#define UPDATE_FILENAME "/tmp/bismark-passive-update-%d.gz"
+#define UPDATE_FILENAME "/tmp/bismark-passive-update-%" PRIu64 "-%d.gz"
 
 #ifndef BISMARK_ID_FILENAME
 #define BISMARK_ID_FILENAME "/etc/bismark/ID"
