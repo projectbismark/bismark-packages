@@ -163,7 +163,7 @@ static void process_packet(
 
 /* Write an update to UPDATE_FILENAME. This is the file that will be sent to the
  * server. The data is compressed on-the-fly using gzip. */
-void write_update(const struct pcap_stat* statistics) {
+static void write_update(const struct pcap_stat* statistics) {
 #ifndef DISABLE_FLOW_THRESHOLDING
   if (flow_table_write_thresholded_ips(&flow_table,
                                        first_packet_timestamp_microseconds,
@@ -174,12 +174,10 @@ void write_update(const struct pcap_stat* statistics) {
   }
 #endif
 
-  char update_filename[FILENAME_MAX];
-  snprintf(update_filename, FILENAME_MAX, UPDATE_FILENAME, first_packet_timestamp_microseconds, sequence_number);
 #ifndef NDEBUG
-  printf("Writing differential log to %s\n", update_filename);
+  printf("Writing differential log to %s\n", PENDING_UPDATE_FILENAME);
 #endif
-  gzFile handle = gzopen (update_filename, "wb");
+  gzFile handle = gzopen (PENDING_UPDATE_FILENAME, "wb");
   if (!handle) {
 #ifndef NDEBUG
     perror("Could not open update file for writing");
@@ -243,13 +241,27 @@ void write_update(const struct pcap_stat* statistics) {
   }
   gzclose(handle);
 
+  char update_filename[FILENAME_MAX];
+  snprintf(update_filename,
+           FILENAME_MAX,
+           UPDATE_FILENAME,
+           bismark_id,
+           first_packet_timestamp_microseconds,
+           sequence_number);
+  if (rename(PENDING_UPDATE_FILENAME, update_filename)) {
+#ifndef NDEBUG
+    perror("Could not stage update");
+#endif
+    exit(1);
+  }
+
   packet_series_init(&packet_data);
   flow_table_advance_base_timestamp(&flow_table, time(NULL));
   dns_table_destroy(&dns_table);
   dns_table_init(&dns_table, &domain_whitelist);
 }
 
-void* updater(void* arg) {
+static void* updater(void* arg) {
   pcap_t* const handle = (pcap_t*)arg;
   while (1) {
     sleep (UPDATE_PERIOD_SECONDS);
@@ -290,7 +302,7 @@ static pcap_t* initialize_pcap(const char* const interface) {
   return handle;
 }
 
-int init_bismark_id() {
+static int init_bismark_id() {
   FILE* handle = fopen(BISMARK_ID_FILENAME, "r");
   if (!handle) {
     perror("Cannot open Bismark ID file " BISMARK_ID_FILENAME);
@@ -304,7 +316,7 @@ int init_bismark_id() {
   return 0;
 }
 
-int init_domain_whitelist() {
+static int init_domain_whitelist() {
   domain_whitelist_init(&domain_whitelist);
 
   FILE* handle = fopen(DOMAIN_WHITELIST_FILENAME, "r");

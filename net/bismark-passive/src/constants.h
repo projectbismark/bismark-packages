@@ -33,7 +33,8 @@
 
 /* Generate differential updates this often. */
 #define UPDATE_PERIOD_SECONDS 30
-#define UPDATE_FILENAME "/tmp/bismark-passive-update-%" PRIu64 "-%d.gz"
+#define PENDING_UPDATE_FILENAME "/tmp/bismark-passive/current-update.gz"
+#define UPDATE_FILENAME "/tmp/bismark-passive/updates/%s-%" PRIu64 "-%d.gz"
 
 #ifndef BISMARK_ID_FILENAME
 #define BISMARK_ID_FILENAME "/etc/bismark/ID"
