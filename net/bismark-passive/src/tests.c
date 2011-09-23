@@ -627,7 +627,7 @@ START_TEST(test_whitelist_can_lookup) {
     "gorp.edu";
 
   domain_whitelist_t whitelist;
-  domain_whitelist_init(&whitelist, contents);
+  domain_whitelist_load(&whitelist, contents);
 
   fail_if(domain_whitelist_lookup(&whitelist, "foo.com"));
   fail_if(domain_whitelist_lookup(&whitelist, "bar.org"));

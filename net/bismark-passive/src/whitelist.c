@@ -4,7 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-int domain_whitelist_init(domain_whitelist_t* whitelist,
+void domain_whitelist_init(domain_whitelist_t* whitelist) {
+  whitelist->size = 0;
+}
+
+int domain_whitelist_load(domain_whitelist_t* whitelist,
                           const char* orig_contents) {
   char* contents;
 

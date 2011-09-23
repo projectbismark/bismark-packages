@@ -305,6 +305,8 @@ int init_bismark_id() {
 }
 
 int init_domain_whitelist() {
+  domain_whitelist_init(&domain_whitelist);
+
   FILE* handle = fopen(DOMAIN_WHITELIST_FILENAME, "r");
   if (!handle) {
     perror("Cannot open domain whitelist " DOMAIN_WHITELIST_FILENAME);
@@ -335,7 +337,7 @@ int init_domain_whitelist() {
 
   fclose(handle);
 
-  if (domain_whitelist_init(&domain_whitelist, contents) < 0) {
+  if (domain_whitelist_load(&domain_whitelist, contents) < 0) {
     fprintf(stderr, "Error reading domain whitelist.\n");
     free(contents);
     return -1;
@@ -360,7 +362,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (init_domain_whitelist()) {
-    return 1;
+    fprintf(stderr, "Error loading domain whitelist; whitelisting disabled.\n");
   }
 
 #ifndef DISABLE_ANONYMIZATION
