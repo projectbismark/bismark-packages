@@ -1,0 +1,16 @@
+# bismark-passive-git configuration
+menu "Configuration"
+    depends on PACKAGE_bismark-passive-git
+
+config BISMARK_PASSIVE_TARGET
+    string "Build target"
+    help
+            Specify "debug" or "release"
+    default debug
+
+config BISMARK_PASSIVE_ANONYMIZE
+    bool "Anonymize traces"
+            Whether to anonymize trace outputs before they are uploaded to the server. Anonymized traces are still subject to whitelisting.
+    default y
+
+endmenu

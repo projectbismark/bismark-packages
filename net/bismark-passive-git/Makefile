@@ -13,8 +13,10 @@ PKG_RELEASE:=2
 
 GIT_URL:=git://github.com/sburnett/bismark-passive.git
 
-MAKE_FLAGS += DISABLE_ANONYMIZATION=$(DISABLE_ANONYMIZATION)
-MAKE_FLAGS += $(BISMARK_PASSIVE_TARGET)
+ifeq ($(CONFIG_BISMARK_PASSIVE_ANONYMIZE),n)
+	MAKE_FLAGS += DISABLE_ANONYMIZATION=yes
+endif
+MAKE_FLAGS += $(CONFIG_BISMARK_PASSIVE_TARGET)
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -31,6 +33,10 @@ define Package/bismark-passive-git/description
 	timestamps and headers, but does not record packet contents aside from DNS
 	responses. Unless explicitely disabled, all identifying information (e.g.,
 	domain names, IP addresses) are anonymized using a secure hash function.
+endef
+
+define Package/bismark-passive-git/config
+	source "$(SOURCE)/Config.in"
 endef
 
 define Build/Prepare
