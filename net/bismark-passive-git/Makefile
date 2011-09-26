@@ -15,7 +15,7 @@ GIT_URL:=git://github.com/sburnett/bismark-passive.git
 
 include $(INCLUDE_DIR)/package.mk
 
-ifeq ($(CONFIG_BISMARK_PASSIVE_ANONYMIZE),n)
+ifneq ($(CONFIG_BISMARK_PASSIVE_ANONYMIZE),y)
 	MAKE_FLAGS += DISABLE_ANONYMIZATION=yes
 endif
 MAKE_FLAGS += $(CONFIG_BISMARK_PASSIVE_TARGET)
