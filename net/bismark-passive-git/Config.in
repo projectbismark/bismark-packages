@@ -10,6 +10,7 @@ config BISMARK_PASSIVE_TARGET
 
 config BISMARK_PASSIVE_ANONYMIZE
     bool "Anonymize traces"
+    help
             Whether to anonymize trace outputs before they are uploaded to the server. Anonymized traces are still subject to whitelisting.
     default y
 
