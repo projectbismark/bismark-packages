@@ -13,12 +13,12 @@ PKG_RELEASE:=2
 
 GIT_URL:=git://github.com/sburnett/bismark-passive.git
 
+include $(INCLUDE_DIR)/package.mk
+
 ifeq ($(CONFIG_BISMARK_PASSIVE_ANONYMIZE),n)
 	MAKE_FLAGS += DISABLE_ANONYMIZATION=yes
 endif
 MAKE_FLAGS += $(CONFIG_BISMARK_PASSIVE_TARGET)
-
-include $(INCLUDE_DIR)/package.mk
 
 define Package/bismark-passive-git
 	SECTION:=net
