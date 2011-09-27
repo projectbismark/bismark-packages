@@ -19,6 +19,7 @@ ifneq ($(CONFIG_BISMARK_PASSIVE_ANONYMIZE),y)
 	MAKE_FLAGS += DISABLE_ANONYMIZATION=yes
 endif
 MAKE_FLAGS += $(CONFIG_BISMARK_PASSIVE_TARGET)
+MAKE_FLAGS += UPDATE_INTERVAL=$(CONFIG_BISMARK_PASSIVE_UPDATE_INTERVAL)
 
 define Package/bismark-passive-git
 	SECTION:=net
@@ -55,7 +56,7 @@ define Package/bismark-passive-git/postinst
 #!/bin/sh
 CT_TEMP=`mktemp`
 crontab -l | grep -v bismark-passive-submit > $$CT_TEMP
-echo */10 * * * * /usr/bin/bismark-passive-submit >> $$CT_TEMP
+echo */$(CONFIG_BISMARK_PASSIVE_UPLOAD_INTERVAL) * * * * /usr/bin/bismark-passive-submit >> $$CT_TEMP
 crontab $$CT_TEMP
 rm $$CT_TEMP
 endef
