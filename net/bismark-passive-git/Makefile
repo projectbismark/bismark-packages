@@ -56,7 +56,7 @@ define Package/bismark-passive-git/postinst
 #!/bin/sh
 CT_TEMP=`mktemp`
 crontab -l | grep -v bismark-passive-submit > $$CT_TEMP
-echo */$(CONFIG_BISMARK_PASSIVE_UPLOAD_INTERVAL) * * * * /usr/bin/bismark-passive-submit >> $$CT_TEMP
+echo \*/$(CONFIG_BISMARK_PASSIVE_UPLOAD_INTERVAL) \* \* \* \* /usr/bin/bismark-passive-submit >> $$CT_TEMP
 crontab $$CT_TEMP
 rm $$CT_TEMP
 endef
