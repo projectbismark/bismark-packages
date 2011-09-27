@@ -51,4 +51,21 @@ define Package/bismark-passive-git/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/bismark-passive-submit $(1)/usr/bin/bismark-passive-submit
 endef
 
+define Package/bismark-passive-git/postinst
+#!/bin/sh
+CT_TEMP=`mktemp`
+crontab -l | grep -v bismark-passive-submit > $$CT_TEMP
+echo */10 * * * * /usr/bin/bismark-passive-submit >> $$CT_TEMP
+crontab $$CT_TEMP
+rm $$CT_TEMP
+endef
+
+define Package/bismark-passive-git/prerm
+#!/bin/sh
+CT_TEMP=`mktemp`
+crontab -l | grep -v bismark-passive-submit > $$CT_TEMP
+crontab $$CT_TEMP
+rm $$CT_TEMP
+endef
+
 $(eval $(call BuildPackage,bismark-passive-git))
