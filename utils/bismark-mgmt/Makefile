@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_VERSION:=0.3
-PKG_RELEASE:=6
+PKG_VERSION:=0.4
+PKG_RELEASE:=1
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -41,8 +41,8 @@ define Build/Prepare
 	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
 	$(CP) -L files/device/OpenWrt_common/keys/{authorized_keys,bismark_key*,known_hosts} $(PKG_BUILD_DIR)/keys
 
-	VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
-	sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
+	#VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
+	sed -i -e "/^VERSION=/ s/=.*/=`cd files ; git log --pretty=format:'' | wc -l`/" $(PKG_BUILD_DIR)/etc/bismark.conf
 endef
 
 define Build/Compile
@@ -71,7 +71,9 @@ define Package/bismark-mgmt/postinst
 
 cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys >> $${IPKG_INSTROOT}/etc/dropbear/authorized_keys
 cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/known_hosts
-
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+fi
 endef
 
 $(eval $(call BuildPackage,bismark-mgmt))
