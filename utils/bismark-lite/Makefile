@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.3
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 #GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
@@ -80,6 +80,11 @@ ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/5
 if [ -z "$${IPKG_INSTROOT}" ]; then
     $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap-lite
 fi
+
+define Package/bismark-lite/prerm
+#!/bin/sh
+# Bismark management post-script
+cat /etc/crontabs/root | grep -vFf /etc/bismark/crontab-lite | sort -u | crontab -
 
 endef
 
