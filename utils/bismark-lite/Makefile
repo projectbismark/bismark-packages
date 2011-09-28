@@ -80,7 +80,6 @@ ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/5
 if [ -z "$${IPKG_INSTROOT}" ]; then
     $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap-lite
 fi
-endef
 
 endef
 
