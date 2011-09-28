@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.3
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 #GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
@@ -77,6 +77,10 @@ define Package/bismark-lite/postinst
 ##ln -sf ${IPKG_INSTROOT}/etc/bismark/cert.pem $${IPKG_INSTROOT}/etc/ssl/certs/381178f4.0
 ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
 ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap-lite
+fi
+endef
 
 endef
 
