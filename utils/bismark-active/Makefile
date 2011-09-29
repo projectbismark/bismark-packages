@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active
 PKG_VERSION:=0.7
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -30,7 +30,7 @@ define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib}
 	[ -d files ] && ( cd files ; git pull ) || git clone git://github.com/bismark-devel/bismark.git files
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,measure-wrapper,tr,rtr,ping,netperf,dns,ditg,sp,mstats} $(PKG_BUILD_DIR)/scripts
-	$(CP) files/device/OpenWrt_common/etc/bismark-active.conf $(PKG_BUILD_DIR)/etc
+	$(CP) files/device/OpenWrt_common/etc/{bismark-active.conf,crontab-active} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/*.list $(PKG_BUILD_DIR)/lib
 endef
 
