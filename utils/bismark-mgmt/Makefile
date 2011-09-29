@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.6
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -74,6 +74,10 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 		grep -sFvf /etc/bismark/crontab /etc/crontabs/root | sort -u | crontab -
 	fi
 fi
+endef
+
+define Package/bismark-mgmt/prerm
+$(call Package/bismark-mgmt/preinst)
 endef
 
 define Package/bismark-mgmt/postinst

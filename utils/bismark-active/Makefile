@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active
 PKG_VERSION:=0.7
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -62,6 +62,10 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 		grep -sFvf /etc/bismark/crontab-active /etc/crontabs/root | sort -u | crontab -
 	fi
 fi
+endef
+
+define Package/bismark-active/prerm
+$(call Package/bismark-active/preinst)
 endef
 
 define Package/bismark-active/postinst
