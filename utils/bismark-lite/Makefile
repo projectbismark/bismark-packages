@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lite
 PKG_VERSION:=0.3
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 #GIT_COMMIT:=lite
 
 include $(INCLUDE_DIR)/package.mk
@@ -85,7 +85,7 @@ endef
 define Package/bismark-lite/prerm
 #!/bin/sh
 # Bismark management post-script
-cat /etc/crontabs/root | grep -vFf /etc/bismark/crontab-lite | sort -u | crontab -
+cat /etc/crontabs/root | grep -v '\-lite' | sort -u | crontab -
 endef
 
 $(eval $(call BuildPackage,bismark-lite))
