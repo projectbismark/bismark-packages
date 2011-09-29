@@ -54,4 +54,24 @@ define Package/bismark-active/install
 	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/bismark/
 endef
 
+define Package/bismark-active/preinst
+#!/bin/sh
+# Bismark active pre-install script: clear crontab
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	if [ -e /etc/bismark/crontab-active ]; then
+		grep -sFvf /etc/bismark/crontab-active /etc/crontabs/root | sort -u | crontab -
+	fi
+fi
+endef
+
+define Package/bismark-active/postinst
+#!/bin/sh
+# Bismark active post-install script
+
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+fi
+endef
+
+
 $(eval $(call BuildPackage,bismark-active))
