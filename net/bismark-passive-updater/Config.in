@@ -1,0 +1,11 @@
+# bismark-passive-updater configuration
+menu "Configuration"
+    depends on PACKAGE_bismark-passive-updater
+
+config BISMARK_PASSIVE_UPDATE_INTERVAL
+    int "Update interval in minutes"
+    help
+            Generate gzipped payloads with this interval.
+    default 60
+
+endmenu
