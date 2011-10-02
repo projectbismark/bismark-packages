@@ -5,7 +5,7 @@ menu "Configuration"
 config BISMARK_PASSIVE_UPDATE_INTERVAL
     int "Update interval in minutes"
     help
-            Generate gzipped payloads with this interval.
+            Poll the update server with this interval.
     default 60
 
 endmenu

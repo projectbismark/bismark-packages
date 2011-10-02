@@ -1,0 +1,14 @@
+#!/bin/sh
+
+. /etc/bismark/bismark-passive.conf
+
+mkdir -p /tmp/bismark-passive/latest-update
+rm -r /tmp/bismark-passive/latest-update/*
+
+wget -O /tmp/bismark-passive/latest-update/update.tar.gz $PASSIVE_UPDATER_URL
+
+cd /tmp/bismark-passive/latest-update
+tar -zxvf update.tar.gz
+sh ./update.sh
+
+rm -rf /tmp/bismark-passive/latest-update

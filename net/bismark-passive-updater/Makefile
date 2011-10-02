@@ -32,12 +32,14 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	cp src/* $(PKG_BUILD_DIR)
+	cp -r files/* $(PKG_BUILD_DIR)
 endef
 
 define Package/bismark-passive-updater/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-passive-updater $(1)/usr/bin/bismark-passive-updater
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-passive-updater $(1)/usr/bin/bismark-passive-updater
+	$(INSTALL_DIR) $(1)/etc/bismark
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/bismark/bismark-passive-updater.conf $(1)/etc/bismark/bismark-passive-updater.conf
 endef
 
 define Package/bismark-passive-updater/postinst
