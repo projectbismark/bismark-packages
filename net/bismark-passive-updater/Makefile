@@ -44,7 +44,7 @@ define Package/bismark-passive-updater/install
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/bismark/bismark-passive-updater.conf $(1)/etc/bismark/bismark-passive-updater.conf
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKT_BUILD_DIR)/etc/init.d/bismark-passive-updater /etc/init.d/bismark-passive-updater
+	$(INSTALL_BIN) $(PKT_BUILD_DIR)/etc/init.d/bismark-passive-updater $(1)/etc/init.d/bismark-passive-updater
 endef
 
 define Package/bismark-passive-updater/postinst
