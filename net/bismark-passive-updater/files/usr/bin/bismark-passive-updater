@@ -8,6 +8,7 @@ rm -rf /tmp/bismark-passive/latest-update/*
 wget -O /tmp/bismark-passive/latest-update/update.tar.gz $PASSIVE_UPDATER_URL
 if [ ! -f  update.tar.gz ]; then
   echo "Failed to download update"
+  exit
 fi
 
 cd /tmp/bismark-passive/latest-update
