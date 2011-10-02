@@ -35,6 +35,9 @@ define Build/Prepare
 	cp -r files/* $(PKG_BUILD_DIR)
 endef
 
+define Build/Compile
+endef
+
 define Package/bismark-passive-updater/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-passive-updater $(1)/usr/bin/bismark-passive-updater

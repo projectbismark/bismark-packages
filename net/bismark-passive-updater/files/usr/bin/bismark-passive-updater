@@ -1,11 +1,14 @@
 #!/bin/sh
 
-. /etc/bismark/bismark-passive.conf
+. /etc/bismark/bismark-passive-updater.conf
 
 mkdir -p /tmp/bismark-passive/latest-update
-rm -r /tmp/bismark-passive/latest-update/*
+rm -rf /tmp/bismark-passive/latest-update/*
 
 wget -O /tmp/bismark-passive/latest-update/update.tar.gz $PASSIVE_UPDATER_URL
+if [ ! -f  update.tar.gz ]; then
+  echo "Failed to download update"
+fi
 
 cd /tmp/bismark-passive/latest-update
 tar -zxvf update.tar.gz
