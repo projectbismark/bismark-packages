@@ -43,15 +43,21 @@ define Package/bismark-passive-updater/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-passive-updater $(1)/usr/bin/bismark-passive-updater
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/bismark/bismark-passive-updater.conf $(1)/etc/bismark/bismark-passive-updater.conf
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKT_BUILD_DIR)/etc/init.d/bismark-passive-updater
 endef
 
 define Package/bismark-passive-updater/postinst
 #!/bin/sh
+
 CT_TEMP=`mktemp`
 crontab -l | grep -v bismark-passive-updater > $$CT_TEMP
 echo \*/$(CONFIG_BISMARK_PASSIVE_UPDATE_INTERVAL) \* \* \* \* /usr/bin/bismark-passive-updater >> $$CT_TEMP
 crontab $$CT_TEMP
 rm $$CT_TEMP
+
+bismark-passive-updater
+
 endef
 
 define Package/bismark-passive-updater/prerm
