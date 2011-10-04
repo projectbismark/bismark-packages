@@ -52,23 +52,35 @@ define Package/bismark-passive-git/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/bismark-passive-submit $(1)/usr/bin/bismark-passive-submit
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/config/default-passive-domain-whitelist.txt $(1)/etc/bismark/default-passive-domain-whitelist.txt
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(1)/scripts/bismark-passive.initd $(1)/etc/init.d/bismark-passive
 endef
 
 define Package/bismark-passive-git/postinst
 #!/bin/sh
+
 CT_TEMP=`mktemp`
 crontab -l | grep -v bismark-passive-submit > $$CT_TEMP
 echo \*/$(CONFIG_BISMARK_PASSIVE_UPLOAD_INTERVAL) \* \* \* \* /usr/bin/bismark-passive-submit >> $$CT_TEMP
 crontab $$CT_TEMP
 rm $$CT_TEMP
+
+/etc/init.d/bismark-passive enable
+/etc/init.d/bismark-passive start
+
 endef
 
 define Package/bismark-passive-git/prerm
 #!/bin/sh
+
 CT_TEMP=`mktemp`
 crontab -l | grep -v bismark-passive-submit > $$CT_TEMP
 crontab $$CT_TEMP
 rm $$CT_TEMP
+
+/etc/init.d/bismark-passive stop
+/etc/init.d/bismark-passive disable
+
 endef
 
 $(eval $(call BuildPackage,bismark-passive-git))
