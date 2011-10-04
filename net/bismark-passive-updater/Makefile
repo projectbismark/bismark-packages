@@ -57,7 +57,6 @@ crontab $$CT_TEMP
 rm $$CT_TEMP
 
 /etc/init.d/bismark-passive-updater enable
-/etc/init.d/bismark-passive-updater start
 
 endef
 
