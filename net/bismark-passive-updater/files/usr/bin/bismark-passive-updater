@@ -6,8 +6,12 @@ cd /tmp/bismark-passive
 FILENAME=${DEVICE_ID}.tar.gz
 wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
 if [ ! -f $FILENAME ]; then
-  echo "Failed to download update"
-  exit
+  FILENAME=generic.tar.gz
+  wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
+  if [ ! -f $FILENAME ]; then
+    echo "Failed to download update"
+    exit
+  fi
 fi
 
 mkdir -p /tmp/bismark-passive/latest-update
