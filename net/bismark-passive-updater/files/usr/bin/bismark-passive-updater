@@ -2,6 +2,7 @@
 
 . /etc/bismark/bismark-passive-updater.conf
 
+mkdir -p /tmp/bismark-passive
 cd /tmp/bismark-passive
 FILENAME=${DEVICE_ID}.tar.gz
 wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
