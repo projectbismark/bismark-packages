@@ -7,14 +7,18 @@ cd /tmp/bismark-passive
 FILENAME=${DEVICE_ID}.tar.gz
 OLDSUM=`md5sum $FILENAME | awk '{ print $1 }'`
 wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
-if [ ! -f $FILENAME ]; then
+WGET_RC=$?
+if [ "$WGET_RC" -eq "8" ]; then
   FILENAME=generic.tar.gz
   OLDSUM=`md5sum $FILENAME | awk '{ print $1 }'`
   wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
-  if [ ! -f $FILENAME ]; then
+  if [ "$?" -ne "0"  ]; then
     echo "Failed to download update"
     exit
   fi
+elif [ "$WGET_RC" -ne "0" ]; then
+  echo "Failed to download update"
+  exit
 fi
 NEWSUM=`md5sum $FILENAME | awk '{ print $1 }'`
 
