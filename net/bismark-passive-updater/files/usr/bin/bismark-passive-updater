@@ -5,14 +5,22 @@
 mkdir -p /tmp/bismark-passive
 cd /tmp/bismark-passive
 FILENAME=${DEVICE_ID}.tar.gz
+OLDSUM=`md5sum $FILENAME | awk '{ print $1 }'`
 wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
 if [ ! -f $FILENAME ]; then
   FILENAME=generic.tar.gz
+  OLDSUM=`md5sum $FILENAME | awk '{ print $1 }'`
   wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
   if [ ! -f $FILENAME ]; then
     echo "Failed to download update"
     exit
   fi
+fi
+NEWSUM=`md5sum $FILENAME | awk '{ print $1 }'`
+
+if [ "$OLDSUM" == "$NEWSUM" ]; then
+    echo "Update unnecessary"
+    exit
 fi
 
 mkdir -p /tmp/bismark-passive/latest-update
