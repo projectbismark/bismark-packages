@@ -56,16 +56,22 @@ echo \*/$(CONFIG_BISMARK_PASSIVE_UPDATE_INTERVAL) \* \* \* \* /usr/bin/bismark-p
 crontab $$CT_TEMP
 rm $$CT_TEMP
 
+/etc/init.d/bismark-passive-updater enable
 /etc/init.d/bismark-passive-updater start
 
 endef
 
 define Package/bismark-passive-updater/prerm
 #!/bin/sh
+
 CT_TEMP=`mktemp`
 crontab -l | grep -v bismark-passive-updater > $$CT_TEMP
 crontab $$CT_TEMP
 rm $$CT_TEMP
+
+/etc/init.d/bismark-passive-updater stop
+/etc/init.d/bismark-passive-updater disable
+
 endef
 
 $(eval $(call BuildPackage,bismark-passive-updater))
