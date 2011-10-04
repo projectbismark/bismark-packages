@@ -43,6 +43,7 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
+	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
 endef
 
 define Package/bismark-passive-git/install
