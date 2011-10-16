@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.6
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -21,7 +21,7 @@ define Package/bismark-mgmt
    TITLE:=Broadband Internet Service benchMARK
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+netcat
+   DEPENDS:=+netcat +wget
 endef
 
 define Package/bismark-mgmt/description
