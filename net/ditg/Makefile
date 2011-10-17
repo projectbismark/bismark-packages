@@ -46,7 +46,7 @@ MAKE_PATH := src
 TARGET_CXX=$(STAGING_DIR)/host/bin/g++-uc
 
 MAKE_FLAGS += \
-       CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DMULTIPORT -DARM"
+       CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DARM"
 
 define Package/ditg/install
 	$(INSTALL_DIR) $(1)/usr/bin
