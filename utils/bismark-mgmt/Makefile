@@ -91,7 +91,6 @@ endef
 define Package/bismark-mgmt/postinst
 #!/bin/sh
 # Bismark management post-install script
-
 cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear/authorized_keys | sort -u > $${IPKG_INSTROOT}/tmp/authkeys.bismark
 cp $${IPKG_INSTROOT}/tmp/authkeys.bismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
 rm $${IPKG_INSTROOT}/tmp/authkeys.bismark
@@ -102,9 +101,9 @@ ln -sf $${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs
 ln -sf $${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
 if [ -z "$${IPKG_INSTROOT}" ]; then
     $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+	$${IPKG_INSTROOT}/etc/init.d/cron stop
+	$${IPKG_INSTROOT}/etc/init.d/cron start
 fi
-$${IPKG_INSTROOT}/etc/init.d/cron stop
-$${IPKG_INSTROOT}/etc/init.d/cron start
 endef
 
 $(eval $(call BuildPackage,bismark-mgmt))
