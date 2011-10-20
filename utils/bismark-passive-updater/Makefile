@@ -14,7 +14,7 @@ PKG_RELEASE:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/bismark-passive-updater
-	SECTION:=net
+	SECTION:=utils
 	CATEGORY:=Network
 	TITLE:=PCAP-based passive traffic observer
 	URL:=http://www.projectbismark.net
