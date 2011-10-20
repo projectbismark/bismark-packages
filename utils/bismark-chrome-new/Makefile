@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome-new
 PKG_VERSION:=0.9.0
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_REV:=2693afcf4c08c41067ac11177a1da3a033d6c6c0
 # PKG_VERSION:=20110517
 
@@ -41,6 +41,14 @@ endef
 define Package/bismark-chrome-new/install
 	$(INSTALL_DIR) $(1)/www
 	$(CP) -p $(PKG_BUILD_DIR)/www/* $(1)/www/
+endef
+
+define Package/bismark-chrome-new/postinst
+#!/bin/sh
+# Bismark management post-install script
+if [[ -e /www/index.html ]] && [[ -e /www/index.htm ]]; then
+    rm -f /www/index.html
+fi
 endef
 
 $(eval $(call BuildPackage,bismark-chrome-new))

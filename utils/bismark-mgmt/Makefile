@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_VERSION:=0.3
-PKG_RELEASE:=4
+PKG_VERSION:=0.6
+PKG_RELEASE:=7
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -21,7 +21,7 @@ define Package/bismark-mgmt
    TITLE:=Broadband Internet Service benchMARK
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+netcat
+   DEPENDS:=+netcat +wget
 endef
 
 define Package/bismark-mgmt/description
@@ -40,9 +40,10 @@ define Build/Prepare
 	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
 	$(CP) -L files/device/OpenWrt_common/keys/{authorized_keys,bismark_key*,known_hosts} $(PKG_BUILD_DIR)/keys
+	$(CP) -L files/device/OpenWrt_common/keys/gd_*.crt $(PKG_BUILD_DIR)/keys
 
-	VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
-	sed -i -e "/^VERSION=/ s/=.*/=$${VERSION}/" $(PKG_BUILD_DIR)/etc/bismark.conf
+	#VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
+	sed -i -e "/^VERSION=/ s/=.*/=`cd files ; git log --pretty=format:'' | wc -l`/" $(PKG_BUILD_DIR)/etc/bismark.conf
 endef
 
 define Build/Compile
@@ -57,7 +58,7 @@ endef
 # command to copy the binary file from its current location (in our case the build
 # directory) to the install directory.
 define Package/bismark-mgmt/install
-	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/root/.ssh $(1)/etc/dropbear
+	$(INSTALL_DIR) $(1)/root/.ssh $(1)/usr/bin $(1)/etc/init.d $(1)/etc/bismark $(1)/usr/lib/bismark $(1)/root/.ssh $(1)/etc/dropbear $(1)/etc/ssl/certs
 	$(CP) -p $(PKG_BUILD_DIR)/etc/{bismark.conf,crontab} $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/keys/* $(1)/etc/bismark
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
@@ -65,13 +66,44 @@ define Package/bismark-mgmt/install
 	$(CP) $(PKG_BUILD_DIR)/etc/bismark.initd $(1)/etc/init.d/bismark
 endef
 
+define Package/bismark-mgmt/preinst
+#!/bin/sh
+# Bismark management pre-install script: clear crontab
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	if [ -e /etc/bismark/crontab ]; then
+		grep -sFvf /etc/bismark/crontab /etc/crontabs/root | sort -u | crontab -
+	fi
+fi
+endef
+
+define Package/bismark-mgmt/prerm
+$(call Package/bismark-mgmt/preinst)
+rm $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+rm $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
+grep -sFvf $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear/authorized_keys | sort -u > $${IPKG_INSTROOT}/tmp/authkeys.nonbismark
+grep -sFvf $${IPKG_INSTROOT}/etc/bismark/known_hosts $${IPKG_INSTROOT}/root/.ssh/known_hosts | sort -u > $${IPKG_INSTROOT}/tmp/knownhosts.nonbismark
+cp $${IPKG_INSTROOT}/tmp/authkeys.nonbismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
+rm $${IPKG_INSTROOT}/tmp/authkeys.nonbismark
+cp $${IPKG_INSTROOT}/tmp/knownhosts.nonbismark $${IPKG_INSTROOT}/root/.ssh/known_hosts
+rm $${IPKG_INSTROOT}/tmp/knownhosts.nonbismark
+endef
+
 define Package/bismark-mgmt/postinst
 #!/bin/sh
 # Bismark management post-install script
-
-cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys >> $${IPKG_INSTROOT}/etc/dropbear/authorized_keys
-cat $${IPKG_INSTROOT}/etc/bismark/known_hosts >> $${IPKG_INSTROOT}/root/.ssh/known_hosts
-
+cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear/authorized_keys | sort -u > $${IPKG_INSTROOT}/tmp/authkeys.bismark
+cat $${IPKG_INSTROOT}/etc/bismark/known_hosts $${IPKG_INSTROOT}/root/.ssh/known_hosts | sort -u > $${IPKG_INSTROOT}/tmp/knownhosts.bismark
+cp $${IPKG_INSTROOT}/tmp/authkeys.bismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
+cp $${IPKG_INSTROOT}/tmp/knownhosts.bismark $${IPKG_INSTROOT}/root/.ssh/known_hosts 
+ln -sf $${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+ln -sf $${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
+rm $${IPKG_INSTROOT}/tmp/authkeys.bismark
+rm $${IPKG_INSTROOT}/tmp/knownhosts.bismark
+if [ -z "$${IPKG_INSTROOT}" ]; then
+    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+	$${IPKG_INSTROOT}/etc/init.d/cron stop
+	$${IPKG_INSTROOT}/etc/init.d/cron start
+fi
 endef
 
 $(eval $(call BuildPackage,bismark-mgmt))

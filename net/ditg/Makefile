@@ -8,16 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ditg
-PKG_VERSION:=2.8.0
-PKG_RELEASE:=rc1
+PKG_VERSION:=2.8.0-rc1
+PKG_RELEASE:=2
 
-PKG_SOURCE:=D-ITG-${PKG_VERSION}-${PKG_RELEASE}.tgz
-PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice/
-#PKG_SOURCE_URL:=http://143.215.131.215:4096/
-#PKG_MD5SUM:=a96435720b3cd879007db3532108cc88
+PKG_SOURCE:=D-ITG-$(PKG_VERSION).tgz
+PKG_SOURCE_URL:=http://www.grid.unina.it/software/ITG/codice
 PKG_MD5SUM:=609736113de729df833ac691d1c44ead
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-${PKG_VERSION}-$(PKG_RELEASE)
+PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -46,7 +44,7 @@ MAKE_PATH := src
 TARGET_CXX=$(STAGING_DIR)/host/bin/g++-uc
 
 MAKE_FLAGS += \
-       CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DMULTIPORT -DARM"
+       CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DARM"
 
 define Package/ditg/install
 	$(INSTALL_DIR) $(1)/usr/bin
