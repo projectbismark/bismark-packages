@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.6
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -95,12 +95,12 @@ cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear
 cat $${IPKG_INSTROOT}/etc/bismark/known_hosts $${IPKG_INSTROOT}/root/.ssh/known_hosts | sort -u > $${IPKG_INSTROOT}/tmp/knownhosts.bismark
 cp $${IPKG_INSTROOT}/tmp/authkeys.bismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
 cp $${IPKG_INSTROOT}/tmp/knownhosts.bismark $${IPKG_INSTROOT}/root/.ssh/known_hosts 
-ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
-ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
 rm $${IPKG_INSTROOT}/tmp/authkeys.bismark
 rm $${IPKG_INSTROOT}/tmp/knownhosts.bismark
 if [ -z "$${IPKG_INSTROOT}" ]; then
-    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+	ln -sf $${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+	ln -sf $${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
+    	$${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
 	$${IPKG_INSTROOT}/etc/init.d/cron stop
 	$${IPKG_INSTROOT}/etc/init.d/cron start
 fi
