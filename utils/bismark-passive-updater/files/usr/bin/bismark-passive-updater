@@ -1,0 +1,35 @@
+#!/bin/sh
+
+. /etc/bismark/bismark-passive-updater.conf
+
+mkdir -p /tmp/bismark-passive
+cd /tmp/bismark-passive
+FILENAME=${DEVICE_ID}.tar.gz
+OLDSUM=`md5sum $FILENAME | awk '{ print $1 }'`
+wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
+WGET_RC=$?
+if [ "$WGET_RC" -eq "8" ]; then
+  FILENAME=generic.tar.gz
+  OLDSUM=`md5sum $FILENAME | awk '{ print $1 }'`
+  wget -N ${PASSIVE_UPDATER_URL}/${FILENAME}
+  if [ "$?" -ne "0"  ]; then
+    echo "Failed to download update"
+    exit
+  fi
+elif [ "$WGET_RC" -ne "0" ]; then
+  echo "Failed to download update"
+  exit
+fi
+NEWSUM=`md5sum $FILENAME | awk '{ print $1 }'`
+
+if [ "$OLDSUM" == "$NEWSUM" ]; then
+    echo "Update unnecessary"
+    exit
+fi
+
+mkdir -p /tmp/bismark-passive/latest-update
+rm -rf /tmp/bismark-passive/latest-update/*
+cd /tmp/bismark-passive/latest-update
+tar -zxvf ../$FILENAME
+sh ./update.sh
+rm -rf /tmp/bismark-passive/latest-update
