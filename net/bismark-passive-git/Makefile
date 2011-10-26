@@ -54,6 +54,7 @@ define Package/bismark-passive-git/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/bismark-passive-submit $(1)/usr/bin/bismark-passive-submit
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/config/default-passive-domain-whitelist.txt $(1)/etc/bismark/default-passive-domain-whitelist.txt
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/config/default-bismark-passive.conf $(1)/etc/bismark/default-bismark-passive.conf
 endef
 
 define Package/bismark-passive-git/postinst
