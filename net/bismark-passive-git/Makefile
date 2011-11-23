@@ -45,13 +45,18 @@ define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
 	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
+	cp -r ./files $(PKG_BUILD_DIR)
 endef
 
 define Package/bismark-passive-git/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-passive.bin $(1)/usr/bin/bismark-passive.bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/bismark-passive $(1)/usr/bin/bismark-passive
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/scripts/bismark-passive-submit $(1)/usr/bin/bismark-passive-submit
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-passive $(1)/usr/bin/bismark-passive
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-passive-submit $(1)/usr/bin/bismark-passive-submit
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-passive $(1)/etc/init.d/bismark-passive
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/bismark-passive $(1)/etc/config/bismark-passive
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/config/default-passive-domain-whitelist.txt $(1)/etc/bismark/default-passive-domain-whitelist.txt
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/config/default-bismark-passive.conf $(1)/etc/bismark/default-bismark-passive.conf
