@@ -1,8 +1,8 @@
 config general
-    option enabled true
+    option enabled 1
 
 config whitelist
-    option enabled true
+    option enabled 1
     list domain google.com
     list domain facebook.com
     list domain youtube.com
