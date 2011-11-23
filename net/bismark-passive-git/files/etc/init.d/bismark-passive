@@ -4,6 +4,17 @@ START=99
 PIDFILE=/var/run/bismark-passive.pid
 CONFIG_PATH=/etc/config/bismark-passive
 
+load_general() {
+    local cfg="$1"
+
+    local enabled
+    config_get_bool enabled "$cfg" enabled 1
+    if [ "$enabled" -eq "0" ]; then
+        echo "Bismark-passive has been disabled in ${CONFIG_PATH}"
+        exit 0
+    fi
+}
+
 load_whitelist() {
     local cfg="$1"
 
@@ -27,6 +38,7 @@ start() {
         echo "Default configuration installed as ${CONFIG_PATH}"
     fi
     config_load bismark-passive
+    config_foreach load_general general
     config_foreach load_whitelist whitelist
     mkdir -p /tmp/bismark-passive/updates
     if [ -f $PIDFILE ]; then
