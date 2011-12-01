@@ -1,0 +1,10 @@
+#!/bin/sh
+
+while [ 1 ]; do
+    /usr/bin/bismark-data-transmit.bin "$@" &
+    trap "kill $!; rm -f $2; exit" INT TERM
+    wait $!
+    trap - INT TERM
+    sleep 10
+    echo "Restarting bismark-data-transmit"
+done

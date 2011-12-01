@@ -1,0 +1,29 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+PIDFILE=/var/run/bismark-data-transmit.pid
+
+start() {
+    mkdir -p /tmp/bismark-uploads
+    mkdir -p /tmp/bismark-uploads-failed
+    if [ -f $PIDFILE ]; then
+        echo "pidfile $PIDFILE already exists; bismark-data-transmit already running?"
+        exit 1
+    fi
+    start-stop-daemon -S \
+        -x /usr/bin/bismark-data-transmit \
+        -p $PIDFILE \
+        -m -b -- $DATA_TRANSMIT_ARGUMENTS
+}
+
+stop() {
+    [ -f $PIDFILE ] && {
+        start-stop-daemon -K -q -p $PIDFILE -s TERM
+        rm -f $PIDFILE
+    }
+}
+
+restart() {
+    stop
+    start
+}

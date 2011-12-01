@@ -1,0 +1,26 @@
+# bismark-data-transmit configuration
+menu "Configuration"
+    depends on PACKAGE_bismark-data-transmit
+
+config BISMARK_DATA_TRANSMIT_URL
+    string "Remote URL"
+    help
+            The URL to which we should upload files. Must support HTTP PUT.
+    default "http://127.0.0.1:8000/upload/"
+
+config BISMARK_DATA_TRANSMIT_UPLOADS_ROOT
+    string "Uploads root directory"
+    help
+            Monitor this directory for data files to upload. This is the root of
+            the upload tree. Only files in immediate subdirectories will be
+            monitored. IMPORTANT: This must not have a trailing slash!
+    default "/tmp/bismark-uploads"
+
+config BISMARK_DATA_TRANSMIT_RETRY_INTERVAL_MINUTES
+    int "Interval in minutes with which to retry failed uploads"
+    help
+            Retry failed uploads after this many minutes. Uploads are retried an
+            infinite number of times until they succeed.
+    default 30
+
+endmenu
