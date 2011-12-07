@@ -6,7 +6,7 @@ config BISMARK_DATA_TRANSMIT_URL
     string "Remote URL"
     help
             The URL to which we should upload files. Must support HTTP PUT.
-    default "http://127.0.0.1:8000/upload/"
+    default "https://projectbismark.net:8081/upload/"
 
 config BISMARK_DATA_TRANSMIT_UPLOADS_ROOT
     string "Uploads root directory"
