@@ -50,6 +50,8 @@ define Package/bismark-data-transmit/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-data-transmit $(1)/etc/init.d/bismark-data-transmit
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/bismark-data-transmit $(1)/etc/config/bismark-data-transmit
 endef
 
 $(eval $(call BuildPackage,bismark-data-transmit))

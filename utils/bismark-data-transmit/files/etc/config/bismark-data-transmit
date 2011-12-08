@@ -1,0 +1,4 @@
+config directories
+    list directory passive
+    list directory passive-frequent
+    list directory active

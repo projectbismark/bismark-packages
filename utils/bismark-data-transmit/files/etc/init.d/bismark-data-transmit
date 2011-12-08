@@ -3,9 +3,19 @@
 START=99
 PIDFILE=/var/run/bismark-data-transmit.pid
 
+load_directories() {
+    local cfg="$1"
+    local directories
+    config_get directories "$cfg" directory
+    for directory in $directories; do
+        mkdir -p /tmp/bismark-uploads/$directory
+    done
+}
+
 start() {
+    config_load bismark-data-transmit
+    config_foreach load_directories directories
     mkdir -p /tmp/bismark-uploads
-    mkdir -p /tmp/bismark-uploads-failed
     if [ -f $PIDFILE ]; then
         echo "pidfile $PIDFILE already exists; bismark-data-transmit already running?"
         exit 1
