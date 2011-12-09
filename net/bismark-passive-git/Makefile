@@ -30,7 +30,7 @@ define Package/bismark-passive-git
 	CATEGORY:=Network
 	TITLE:=PCAP-based passive observer for bismark-passive
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+libopenssl +libpcap +libpthread +zlib
+	DEPENDS:=+libpcap +libpthread +zlib
 endef
 
 define Package/bismark-passive-git/description
