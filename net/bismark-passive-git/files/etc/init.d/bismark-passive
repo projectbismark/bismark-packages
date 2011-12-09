@@ -3,6 +3,7 @@
 START=99
 PIDFILE=/var/run/bismark-passive.pid
 CONFIG_PATH=/etc/config/bismark-passive
+HASH_KEY=/etc/bismark/passive.key
 
 load_general() {
     local cfg="$1"
@@ -41,6 +42,10 @@ start() {
     config_foreach load_general general
     config_foreach load_whitelist whitelist
     mkdir -p /tmp/bismark-passive/updates
+    if [ ! -f $HASH_KEY ]; then
+        dd if=/dev/urandom of=$HASH_KEY bs=1 count=16 2>/dev/null
+        echo "Generated fresh anonymization key"
+    fi
     if [ -f $PIDFILE ]; then
         echo "pidfile $PIDFILE already exists; bismark-passive already running?"
         exit 1
