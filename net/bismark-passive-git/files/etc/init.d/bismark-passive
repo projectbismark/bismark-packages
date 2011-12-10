@@ -11,7 +11,7 @@ load_globaloptions() {
     local enabled
     config_get_bool enabled "$cfg" enabled 0
     if [ "$enabled" -ne "1" ]; then
-        echo "Bismark-passive has been disabled in ${CONFIG_PATH}"
+        echo "Bismark-passive has been disabled in ${CONFIG_PATH}" 1>&2
         exit 0
     fi
 }
