@@ -1,4 +1,4 @@
-config general
+config globaloptions
     option enabled 1
 
 config whitelist

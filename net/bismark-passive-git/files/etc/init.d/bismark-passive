@@ -5,7 +5,7 @@ PIDFILE=/var/run/bismark-passive.pid
 CONFIG_PATH=/etc/config/bismark-passive
 HASH_KEY=/etc/bismark/passive.key
 
-load_general() {
+load_globaloptions() {
     local cfg="$1"
 
     local enabled
@@ -39,7 +39,7 @@ start() {
         echo "Default configuration installed as ${CONFIG_PATH}"
     fi
     config_load bismark-passive
-    config_foreach load_general general
+    config_foreach load_globaloptions globaloptions
     config_foreach load_whitelist whitelist
     mkdir -p /tmp/bismark-passive/updates
     if [ ! -f $HASH_KEY ]; then
