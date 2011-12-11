@@ -54,4 +54,11 @@ define Package/bismark-data-transmit/install
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/bismark-data-transmit $(1)/etc/config/bismark-data-transmit
 endef
 
+define Package/bismark-data-transmit/postinst
+#!/bin/sh
+/etc/init.d/bismark-data-transmit enable
+/etc/init.d/bismark-data-transmit restart
+true
+endef
+
 $(eval $(call BuildPackage,bismark-data-transmit))
