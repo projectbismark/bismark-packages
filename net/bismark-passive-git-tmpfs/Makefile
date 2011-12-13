@@ -7,7 +7,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=bismark-passive-git
+PKG_NAME:=bismark-passive-git-tmpfs
 PKG_VERSION:=head
 PKG_RELEASE:=2
 
@@ -25,7 +25,7 @@ ifeq ($(CONFIG_BISMARK_PASSIVE_FREQUENT_UPDATES),y)
 MAKE_FLAGS += FREQUENT_UPDATES=yes
 endif
 
-define Package/bismark-passive-git
+define Package/bismark-passive-git-tmpfs
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=PCAP-based passive observer for bismark-passive
@@ -33,14 +33,14 @@ define Package/bismark-passive-git
 	DEPENDS:=+libpcap +libpthread +zlib +bismark-data-transmit
 endef
 
-define Package/bismark-passive-git/description
+define Package/bismark-passive-git-tmpfs/description
 	A passive packet observer for Bismark. This examines packet sizes,
 	timestamps and headers, but does not record packet contents aside from DNS
 	responses. Unless explicitely disabled, all identifying information (e.g.,
 	domain names, IP addresses) are anonymized using a secure hash function.
 endef
 
-define Package/bismark-passive-git/config
+define Package/bismark-passive-git-tmpfs/config
 	source "$(SOURCE)/Config.in"
 endef
 
@@ -51,7 +51,7 @@ define Build/Prepare
 	cp -r ./files $(PKG_BUILD_DIR)
 endef
 
-define Package/bismark-passive-git/install
+define Package/bismark-passive-git-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-passive.bin $(1)/usr/bin/bismark-passive.bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-passive $(1)/usr/bin/bismark-passive
@@ -62,4 +62,14 @@ define Package/bismark-passive-git/install
 	$(INSTALL_DIR) $(1)/etc/bismark
 endef
 
-$(eval $(call BuildPackage,bismark-passive-git))
+define Package/bismark-passive-git-tmpfs/postinst
+#!/bin/sh
+/tmp/etc/init.d/bismark-passive start
+endef
+
+define Package/bismark-passive-git-tmpfs/prerm
+#!/bin/sh
+/tmp/etc/init.d/bismark-passive stop
+endef
+
+$(eval $(call BuildPackage,bismark-passive-git-tmpfs))
