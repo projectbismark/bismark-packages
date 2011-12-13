@@ -1,2 +1,6 @@
+# bismark-updater will only upgrade packages in the repositories listed in this
+# file. The names are matched against the second field of src and src/gz lines
+# in /etc/opkg.conf.
+
 config repositories
 #   list name snapshots
