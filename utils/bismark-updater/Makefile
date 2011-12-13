@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-updater
 PKG_VERSION:=1
-PKG_RELEASE:=4
+PKG_RELEASE:=6
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -31,6 +31,10 @@ define Build/Prepare
 endef
 
 define Build/Compile
+endef
+
+define Package/bismark-updater/conffiles
+/etc/config/bismark-updater
 endef
 
 define Package/bismark-updater/install
