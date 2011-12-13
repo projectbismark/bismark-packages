@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-updater
 PKG_VERSION:=1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -47,6 +47,8 @@ define Package/bismark-updater/postinst
 
 (crontab -l | grep -v bismark-updater; echo 0 \* \* \* \* /usr/bin/bismark-updater) | crontab -
 /etc/init.d/bismark-updater enable
+echo Bismark-updater is not configured to upgrade any repositories by default.
+echo Edit /etc/config/bismark-updater to rectify this.
 true
 
 endef
