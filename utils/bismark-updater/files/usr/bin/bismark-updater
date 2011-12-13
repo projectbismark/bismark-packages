@@ -1,0 +1,9 @@
+#!/bin/sh
+
+opkg update
+
+packages=`opkg list-upgradable | awk '{ print $1 }'`
+ram_packages=`echo $packages | awk 'BEGIN { RS=" " } /-tmpfs$/'`
+[ `echo $ram_packages` ] && opkg upgrade -d ram $ram_packages
+root_packages=`echo $packages | awk 'BEGIN { RS=" " } $0 !~ /-tmpfs$/'`
+[ `echo $root_packages` ] && opkg upgrade $root_packages
