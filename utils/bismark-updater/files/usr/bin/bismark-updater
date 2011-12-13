@@ -3,7 +3,10 @@
 opkg update
 
 packages=`opkg list-upgradable | awk '{ print $1 }'`
-ram_packages=`echo $packages | awk 'BEGIN { RS=" " } /-tmpfs$/'`
+repositories=`uci get bismark-updater.@repositories[0].name | awk 'BEGIN { RS=" " } { print "/var/opkg-lists/" $1 }'`
+candidates=`awk '/^Package: / { print $2 }' $repositories /dev/null`
+upgradable=`echo $packages $candidates | tr ' ' '\n' | sort | uniq -d`
+ram_packages=`echo $upgradable | awk 'BEGIN { RS=" " } /-tmpfs$/'`
 [ `echo $ram_packages` ] && opkg upgrade -d ram $ram_packages
-root_packages=`echo $packages | awk 'BEGIN { RS=" " } $0 !~ /-tmpfs$/'`
+root_packages=`echo $upgradable | awk 'BEGIN { RS=" " } $0 !~ /-tmpfs$/'`
 [ `echo $root_packages` ] && opkg upgrade $root_packages

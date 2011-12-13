@@ -1,6 +1,6 @@
-# bismark-passive-git configuration
+# bismark-passive-git-tmpfs configuration
 menu "Configuration"
-    depends on PACKAGE_bismark-passive-git
+    depends on PACKAGE_bismark-passive-git-tmpfs
 
 config BISMARK_PASSIVE_ANONYMIZE
     bool "Anonymize traces"
