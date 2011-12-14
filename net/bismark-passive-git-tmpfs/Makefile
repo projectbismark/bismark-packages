@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive-git-tmpfs
 PKG_VERSION:=head
-PKG_RELEASE:=2
+PKG_RELEASE:=5
 
 GIT_URL:=git://github.com/sburnett/bismark-passive.git
 
@@ -64,7 +64,7 @@ endef
 
 define Package/bismark-passive-git-tmpfs/postinst
 #!/bin/sh
-/tmp/etc/init.d/bismark-passive start
+/tmp/etc/init.d/bismark-passive restart
 endef
 
 define Package/bismark-passive-git-tmpfs/prerm
