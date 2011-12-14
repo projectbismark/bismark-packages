@@ -27,7 +27,6 @@ define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
 	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
-	cp -rf ./files $(PKG_BUILD_DIR)
 endef
 
 define Package/wifi_beacons-tmpfs/install
