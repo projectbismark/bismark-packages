@@ -11,6 +11,8 @@ PKG_NAME:=wifi_beacons-tmpfs
 PKG_VERSION:=1.0
 PKG_RELEASE:=1
 
+GIT_URL:=git://github.com/abnarain/wifi_beacons.git
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/wifi_beacons-tmpfs
@@ -23,7 +25,9 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	$(CP) -r ./src/* $(PKG_BUILD_DIR)
+	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
+	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
+	cp -rf ./files $(PKG_BUILD_DIR)
 endef
 
 define Package/wifi_beacons-tmpfs/install
