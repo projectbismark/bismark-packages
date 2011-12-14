@@ -1,12 +1,8 @@
 #!/bin/sh
 
-opkg update
-
-packages=`opkg list-upgradable | awk '{ if($2 == "-") print $1; }'`
-repositories=`uci get bismark-updater.@repositories[0].name | awk 'BEGIN { RS=" " } { print "/var/opkg-lists/" $1 }'`
-candidates=`awk '/^Package: / { print $2 }' $repositories /dev/null | sort | uniq`
-upgradable=`echo $packages $candidates | tr ' ' '\n' | sort | uniq -d`
-ram_packages=`echo $upgradable | awk 'BEGIN { RS=" " } /-tmpfs$/'`
-[ "`echo $ram_packages`" ] && opkg upgrade -d ram $ram_packages
-root_packages=`echo $upgradable | awk 'BEGIN { RS=" " } $0 !~ /-tmpfs$/'`
-[ "`echo $root_packages`" ] && opkg upgrade $root_packages
+node_id=`cat /etc/bismark/ID`
+timestamp=`date +%Y-%m-%d_%H-%M-%S`
+logfile=`mktemp`
+bismark-updater-real 2>&1 | tee $logfile
+gzip $logfile
+mv ${logfile}.gz /tmp/bismark-uploads/bismark-updater/${node_id}_${timestamp}.gz

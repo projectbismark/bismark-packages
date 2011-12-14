@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
 PKG_VERSION:=head
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 GIT_URL:=git://github.com/sburnett/bismark-data-transmit.git
 
