@@ -50,7 +50,7 @@ define Package/bismark-updater/postinst
 #!/bin/sh
 
 (crontab -l | grep -v bismark-updater; echo 0 \* \* \* \* /usr/bin/bismark-updater) | crontab -
-/etc/init.d/bismark-updater enable
+[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-updater enable
 echo Bismark-updater is not configured to upgrade any repositories by default.
 echo Edit /etc/config/bismark-updater to rectify this.
 true
@@ -61,7 +61,7 @@ define Package/bismark-updater/prerm
 #!/bin/sh
 
 crontab -l | grep -v bismark-updater | crontab -
-/etc/init.d/bismark-updater disable
+[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-updater disable
 true
 
 endef
