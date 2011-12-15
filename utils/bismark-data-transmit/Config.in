@@ -19,8 +19,13 @@ config BISMARK_DATA_TRANSMIT_UPLOADS_ROOT
 config BISMARK_DATA_TRANSMIT_RETRY_INTERVAL_MINUTES
     int "Interval in minutes with which to retry failed uploads"
     help
-            Retry failed uploads after this many minutes. Uploads are retried an
-            infinite number of times until they succeed.
-    default 30
+            Retry failed uploads after this many minutes.
+    default 3
+
+config BISMARK_DATA_TRANSMIT_MAX_RETRY_INTERVAL_MINUTES
+    int "Intertval in minutes after which to garbage collect failed uploads"
+    help
+            Garbage collect failed uploads after this many minutes.
+    default 60
 
 endmenu
