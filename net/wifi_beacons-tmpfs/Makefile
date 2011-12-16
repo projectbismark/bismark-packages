@@ -8,10 +8,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifi_beacons-tmpfs
-PKG_VERSION:=1.0
+PKG_VERSION:=2.0
 PKG_RELEASE:=1
 
 GIT_URL:=git://github.com/abnarain/wifi_beacons.git
+#GIT_URL:=src/
 
 include $(INCLUDE_DIR)/package.mk
 
