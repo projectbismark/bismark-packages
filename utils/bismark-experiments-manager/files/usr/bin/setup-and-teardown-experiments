@@ -1,0 +1,38 @@
+#!/bin/sh
+
+. /etc/functions.sh
+
+packages_to_install_root=
+packages_to_install_tmpfs=
+packages_to_remove=
+
+load_experiment() {
+	local cfg="$1"
+	
+	local installed
+	config_get_bool installed "$cfg" installed
+
+	local packages
+	config_get packages "$cfg" package
+	packages_tmpfs=`echo $packages | tr ' ' '\n' | awk '/-tmpfs$/'`
+	packages_root=`echo $packages | tr ' ' '\n' | awk '$0 !~ /-tmpfs$/'`
+
+    if [ "$installed" == "0" ]; then
+        packages_to_remove="$packages_to_remove $packages"
+    else
+        packages_to_install_tmpfs="$packages_to_install_tmpfs $packages_tmpfs"
+        packages_to_install_root="$packages_to_install_root $packages_root"
+    fi
+}
+
+opkg update
+config_load bismark-experiments
+config_foreach load_experiment experiment
+
+packages_to_remove=`echo $packages_to_remove | tr ' ' '\n' | sort | uniq`
+packages_to_install=`echo $packages_to_install_root $packages_to_install_tmpfs | tr ' ' '\n' | sort | uniq`
+dont_remove=`echo $packages_to_install $packages_to_remove | tr ' ' '\n' | sort | uniq -d`
+safely_remove=`echo $packages_to_remove $dont_remove | tr ' ' '\n' | sort | uniq -u`
+[ -z "`echo $safely_remove`" ] || opkg remove --force-depends $safely_remove
+[ -z "`echo $packages_to_install_root`" ] || opkg install --nodeps $packages_to_install_root 
+[ -z "`echo $packages_to_install_tmpfs`" ] || opkg install --nodeps -d ram $packages_to_install_tmpfs
