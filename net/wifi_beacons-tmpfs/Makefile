@@ -42,7 +42,7 @@ endef
  
 define Package/wifi_beacons-tmpfs/postinst
 #!/bin/sh
-/tmp/etc/init.d/wifi_beacons start
+/tmp/etc/init.d/wifi_beacons restart
 endef
 
 define Package/wifi_beacons-tmpfs/prerm
