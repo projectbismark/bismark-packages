@@ -34,7 +34,7 @@ define Build/Compile
 endef
 
 define Package/bismark-experiments-list-tmpfs/install
-	$(INSTALL_DATA) $(1)/var/bismark-experiments-list
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bismark-experiments-list $(1)/bismark-experiments-list
 endef
 
 $(eval $(call BuildPackage,bismark-experiments-list-tmpfs))
