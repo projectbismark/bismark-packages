@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=7
+PKG_RELEASE:=9
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,7 +18,6 @@ define Package/bismark-experiments-manager
 	CATEGORY:=Utilities
 	TITLE:=Track and intstall experiments for the Bismark platform
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-experiments-list-tmpfs
 endef
 
 define Package/bismark-experiments-manager/description
@@ -47,18 +46,16 @@ define Package/bismark-experiments-manager/install
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/config/bismark-experiments $(1)/etc/config/bismark-experiments
 endef
 
-#define Package/bismark-experiments-manager/postinst
-##!/bin/sh
-#(crontab -l | grep -v bismark-experiment-manager; echo 0 \* \* \* \* /usr/bin/setup-and-teardown-experiments) | crontab -
-#[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiments-manager enable
-#true
-#endef
-#
-#define Package/bismark-experiments-manager/prerm
-##!/bin/sh
-#crontab -l | grep -v bismark-experiment-manager | crontab -
-#[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiment-manager disable
-#true
-#endef
+define Package/bismark-experiments-manager/postinst
+#!/bin/sh
+[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiments-manager enable
+true
+endef
+
+define Package/bismark-experiments-manager/prerm
+#!/bin/sh
+[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiment-manager disable
+true
+endef
 
 $(eval $(call BuildPackage,bismark-experiments-manager))

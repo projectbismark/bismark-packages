@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 
-START=99
+START=98
 start() {
     [ -x /usr/bin/setup-and-teardown-experiments ] && \
         /usr/bin/setup-and-teardown-experiments
