@@ -6,19 +6,26 @@ packages_to_install_root=
 packages_to_install_tmpfs=
 packages_to_remove=
 
-load_experiment() {
-	local cfg="$1"
-	
-	local installed
-	config_get_bool installed "$cfg" installed
+load_repositories() {
+    local repositories
+    repositories=`uci get bismark-updater.@repositories[0].name | awk 'BEGIN { RS=" " } { print "/var/opkg-lists/" $1 }'`
+    candidate_packages=`awk '/^Package: / { print $2 }' $repositories /dev/null | sort | uniq`
+}
 
-	local packages
-	config_get packages "$cfg" package
-	packages_tmpfs=`echo $packages | tr ' ' '\n' | awk '/-tmpfs$/'`
-	packages_root=`echo $packages | tr ' ' '\n' | awk '$0 !~ /-tmpfs$/'`
+load_experiment() {
+    local cfg="$1"
+    
+    local installed
+    config_get_bool installed "$cfg" installed
+
+    local packages
+    config_get packages "$cfg" package
+    managed_packages=`echo $packages $candidate_packages | tr ' ' '\n' | sort | uniq -d`
+    packages_tmpfs=`echo $managed_packages | tr ' ' '\n' | awk '/-tmpfs$/'`
+    packages_root=`echo $managed_packages | tr ' ' '\n' | awk '$0 !~ /-tmpfs$/'`
 
     if [ "$installed" == "0" ]; then
-        packages_to_remove="$packages_to_remove $packages"
+        packages_to_remove="$packages_to_remove $managed_packages"
     else
         packages_to_install_tmpfs="$packages_to_install_tmpfs $packages_tmpfs"
         packages_to_install_root="$packages_to_install_root $packages_root"
@@ -26,6 +33,7 @@ load_experiment() {
 }
 
 opkg update
+load_repositories
 config_load bismark-experiments
 config_foreach load_experiment experiment
 
