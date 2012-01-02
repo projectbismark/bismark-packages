@@ -32,4 +32,10 @@ config BISMARK_PASSIVE_FREQUENT_UPDATES
             Write small amount of usage information every 5 seconds.
     default false
 
+config BISMARK_PASSIVE_HTTP_URL
+    bool "Record hashed HTTP URLs"
+    help
+            Recorded hashed URLs for all traffic on port 80. No additional
+            unhashed data is recorded, even for whitelisted domains.
+
 endmenu
