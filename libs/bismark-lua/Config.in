@@ -1,0 +1,11 @@
+# bismark-lua configuration
+menu "Configuration"
+    depends on PACKAGE_bismark-lua
+
+config BISMARK_LUA_REPOSITORY
+    string "Repository URL"
+    help
+            Do a git clone from this repository to fetch the library code.
+    default "git://github.com/sburnett/bmlua.git"
+
+endmenu
