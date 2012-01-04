@@ -29,6 +29,29 @@ UCI_FALSE = '0'
 ------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 ------------------------------------------------------------------------------
+function main(arg)
+    nixio.fs.mkdir(EXPERIMENTS_CACHE)
+    local updated_experiments = false
+    for info in opkg.get_package_list_urls():iter() do
+        local experiments_url = path.join(info.url, "Experiments")
+        local downloaded = path.join(EXPERIMENTS_CACHE, "Experiments")
+        local filename = path.join(EXPERIMENTS_CACHE, info.name)
+        local return_code = os.execute("curl -f -z " .. filename
+                                       .. " -o " .. downloaded
+                                       .. " " .. experiments_url)
+        nixio.fs.remove(downloaded)
+        if return_code == 0 and nixio.fs.stat(downloaded) =~ nil then
+            if nixio.fs.rename(downloaded, filename) then
+                merge_experiments(filename)
+                updated_experiments = true
+            end
+        end
+    end
+    if updated_experiments then
+        os.execute("setup-and-teardown-experiments")
+    end
+end
+
 function merge_experiments(remote_fullpath)
     pdebug("DEBUG MODE ON\n")
 
@@ -75,7 +98,6 @@ function merge_experiments(remote_fullpath)
     local_uci:commit(UCI_CONFIG)
 end
 
-
 function update_local_experiment_list(config, local_uci, remote_uci)
     local rem_exps = remote_uci:get_all(config)
     local loc_exps = local_uci:get_all(config)
@@ -111,7 +133,6 @@ function update_local_experiment_list(config, local_uci, remote_uci)
     end
 end
 
-
 function uci_bool(s)
     -- interpret the many ways true or false can be expressed in UCI.
     local retval = nil
@@ -130,7 +151,6 @@ function pdebug(s, ...)
         io.stderr:write(string.format(s, unpack(arg)))
     end
 end
-
 
 ------------------------------------------------------------------------------
 -- TESTING STUFF
@@ -176,29 +196,8 @@ function init_be_local_uci(uci_cursor)
     end
 end
 
-function main(arg)
-    local updated_experiments = false
-    for info in opkg.get_package_list_urls():iter() do
-        local experiments_url = path.join(info.url, "Experiments")
-        local downloaded = path.join(EXPERIMENTS_CACHE, "Experiments")
-        local filename = path.join(EXPERIMENTS_CACHE, info.name)
-        local return_code = os.execute("curl -f -z " .. filename
-                                       .. " -o " .. downloaded
-                                       .. " " .. experiments_url)
-        nixio.fs.remove(downloaded)
-        if return_code == 0 and nixio.fs.stat(downloaded) =~ nil then
-            if nixio.fs.rename(downloaded, filename) then
-                merge_experiments(filename)
-                updated_experiments = true
-            end
-        end
-    end
-    if updated_experiments then
-        os.execute("setup-and-teardown-experiments")
-    end
-end
-
 ------------------------------------------------------------------------------
 -- EXECUTE THIS SCRIPT
 ------------------------------------------------------------------------------
 return main(arg)
+
