@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=10
+PKG_RELEASE:=11
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,6 +18,7 @@ define Package/bismark-experiments-manager
 	CATEGORY:=Utilities
 	TITLE:=Track and intstall experiments for the Bismark platform
 	URL:=http://www.projectbismark.net
+	DEPENDS:=+bismark-lua +libuci-lua
 endef
 
 define Package/bismark-experiments-manager/description
@@ -40,6 +41,8 @@ endef
 define Package/bismark-experiments-manager/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/setup-and-teardown-experiments $(1)/usr/bin/setup-and-teardown-experiments
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/merge-experiments $(1)/usr/bin/merge-experiments
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/merge-experiments.lua $(1)/usr/bin/merge-experiments.lua
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-experiments-manager $(1)/etc/init.d/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/config
@@ -49,12 +52,14 @@ endef
 define Package/bismark-experiments-manager/postinst
 #!/bin/sh
 [ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiments-manager enable
+(crontab -l | grep -v merge-experiments; echo 0 \* \* \* \* /usr/bin/merge-experiments) | crontab -
 true
 endef
 
 define Package/bismark-experiments-manager/prerm
 #!/bin/sh
 [ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiment-manager disable
+crontab -l | grep -v merge-experiments | crontab -
 true
 endef
 

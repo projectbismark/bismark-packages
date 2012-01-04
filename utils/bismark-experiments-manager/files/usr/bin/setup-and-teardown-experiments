@@ -1,46 +1,71 @@
-#!/bin/sh
+#!/usr/bin/env lua
 
-. /etc/functions.sh
+require("io")
+require("uci")
 
-packages_to_install_root=
-packages_to_install_tmpfs=
-packages_to_remove=
+require('bmlua.set')
+local set = bmlua.set
+require('bmlua.opkg')
+local opkg = bmlua.opkg
 
-load_repositories() {
-    local repositories
-    repositories=`uci get bismark-updater.@repositories[0].name | awk 'BEGIN { RS=" " } { print "/var/opkg-lists/" $1 }'`
-    candidate_packages=`awk '/^Package: / { print $2 }' $repositories /dev/null | sort | uniq`
-}
+local EXPERIMENTS_CONFIG = "bismark-experiments"
 
-load_experiment() {
-    local cfg="$1"
-    
-    local installed
-    config_get_bool installed "$cfg" installed
+local get_managed_repositories = function(config)
+    local repositories = set.Set()
+    for _, section in pairs(config) do
+        if section[".type"] == "repositories" and section.name ~= nil then
+            repositories:update(set.from_array(section.name))
+        end
+    end
+    return repositories
+end
 
-    local packages
-    config_get packages "$cfg" package
-    managed_packages=`echo $packages $candidate_packages | tr ' ' '\n' | sort | uniq -d`
-    packages_tmpfs=`echo $managed_packages | tr ' ' '\n' | awk '/-tmpfs$/'`
-    packages_root=`echo $managed_packages | tr ' ' '\n' | awk '$0 !~ /-tmpfs$/'`
+local get_packages_in_repositories = function(repositories)
+    local packages = set.Set()
+    for repository in repositories:iter() do
+        packages:update(opkg.read_package_list(repository))
+    end
+    return packages
+end
 
-    if [ "$installed" == "0" ]; then
-        packages_to_remove="$packages_to_remove $managed_packages"
-    else
-        packages_to_install_tmpfs="$packages_to_install_tmpfs $packages_tmpfs"
-        packages_to_install_root="$packages_to_install_root $packages_root"
-    fi
-}
+local load_experiments = function(config, candidate_packages)
+    local installed_packages = set.Set()
+    for _, section in pairs(config) do
+        if section[".type"] == "experiment"
+                and section.installed == '1'
+                and section.package ~= nil then
+            installed_packages:update(set.from_array(section.package))
+        end
+    end
+    return installed_packages:intersection(candidate_packages)
+end
 
-opkg update
-load_repositories
-config_load bismark-experiments
-config_foreach load_experiment experiment
+function main(arg)
+    config = uci.cursor():get_all(EXPERIMENTS_CONFIG)
+    if config == nil then
+        print("Invalid UCI file: " .. EXPERIMENTS_CONFIG)
+        return 1
+    end
 
-packages_to_remove=`echo $packages_to_remove | tr ' ' '\n' | sort | uniq`
-packages_to_install=`echo $packages_to_install_root $packages_to_install_tmpfs | tr ' ' '\n' | sort | uniq`
-dont_remove=`echo $packages_to_install $packages_to_remove | tr ' ' '\n' | sort | uniq -d`
-safely_remove=`echo $packages_to_remove $dont_remove | tr ' ' '\n' | sort | uniq -u`
-[ -z "`echo $safely_remove`" ] || opkg remove --force-depends $safely_remove
-[ -z "`echo $packages_to_install_root`" ] || opkg install --nodeps $packages_to_install_root 
-[ -z "`echo $packages_to_install_tmpfs`" ] || opkg install --nodeps -d ram $packages_to_install_tmpfs
+    all_repositories = opkg.get_package_lists()
+    managed_repositories = get_managed_repositories(config)
+    unmanaged_repositories = all_repositories:difference(managed_repositories)
+
+    unmanaged_packages = get_packages_in_repositories(unmanaged_repositories)
+    managed_packages = get_packages_in_repositories(managed_repositories)
+    if managed_packages:intersection(unmanaged_packages):length() > 0 then
+        print("Managed and unmanaged repositories must be disjoint!")
+        return 1
+    end
+
+    should_install = load_experiments(config, managed_packages)
+    currently_installed = opkg.list_installed():intersection(managed_packages)
+    for package_name in should_install:difference(currently_installed):iter() do
+        opkg.install(package_name)
+    end
+    for package_name in currently_installed:difference(should_install):iter() do
+        opkg.remove(package_name)
+    end
+end
+
+return main(arg)

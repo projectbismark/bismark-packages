@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# This script should:
+# 1. Download a fresh experiments file from a remote server
+# 2. Run merge-experiments.lua
+# 3. Run setup-and-teardown-experiments
