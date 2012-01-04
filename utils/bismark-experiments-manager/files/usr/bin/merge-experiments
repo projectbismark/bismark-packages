@@ -1,16 +1,14 @@
 #!/usr/bin/lua
 
 -- BUILT-IN/EXTERNAL MODULES
-require('os')
 require('io')
+require('os')
 require('uci')
-require('nixio.fs')
-
--- BISMARK (BMLUA) MODULES
+require('bmlua.opkg')
+opkg = bmlua.opkg
 require('bmlua.path')
 path = bmlua.path
--- `require('foo.bar'); bar = foo.bar;`
--- is the equivalent of python's `import foo.bar as bar`
+require('nixio.fs')
 
 ------------------------------------------------------------------------------
 -- GLOBALS
@@ -18,7 +16,7 @@ path = bmlua.path
 UCI_DIR = '/etc/config'
 UCI_CONFIG = 'bismark-experiments'
 EXPERIMENTS_CACHE = '/var/bismark-experiments'
-DEBUG = true
+DEBUG = false
 
 ------------------------------------------------------------------------------
 -- CONSTANTS
@@ -31,16 +29,16 @@ UCI_FALSE = '0'
 ------------------------------------------------------------------------------
 function main(arg)
     nixio.fs.mkdir(EXPERIMENTS_CACHE)
+    local downloaded = path.join(EXPERIMENTS_CACHE, "Experiments")
     local updated_experiments = false
     for info in opkg.get_package_list_urls():iter() do
+        nixio.fs.remove(downloaded)
         local experiments_url = path.join(info.url, "Experiments")
-        local downloaded = path.join(EXPERIMENTS_CACHE, "Experiments")
         local filename = path.join(EXPERIMENTS_CACHE, info.name)
         local return_code = os.execute("curl -f -z " .. filename
                                        .. " -o " .. downloaded
                                        .. " " .. experiments_url)
-        nixio.fs.remove(downloaded)
-        if return_code == 0 and nixio.fs.stat(downloaded) =~ nil then
+        if return_code == 0 and nixio.fs.stat(downloaded) ~= nil then
             if nixio.fs.rename(downloaded, filename) then
                 merge_experiments(filename)
                 updated_experiments = true
@@ -55,80 +53,67 @@ end
 function merge_experiments(remote_fullpath)
     pdebug("DEBUG MODE ON\n")
 
-    local remote_dirpath
-    local remote_filename
-    local remote_uci
-    local local_fullpath
-    local local_dirpath
-    local local_filename
-    local local_uci
-
-    remote_dirpath = path.dirname(remote_fullpath)
-    remote_filename = path.basename(remote_fullpath)
-    if not path.exists(remote_fullpath) then
+    local remote_dirpath = path.dirname(remote_fullpath)
+    local remote_filename = path.basename(remote_fullpath)
+    if not nixio.fs.stat(remote_fullpath) then
         print(string.format("Remote experiment UCI file %q not found",
                 remote_fullpath))
-        os.exit(1)
+        return false
     end
 
     if DEBUG ~= nil and DEBUG == true then
         UCI_DIR = 'etc_config'
     end
-    local_fullpath = path.abspath(path.join(UCI_DIR, UCI_CONFIG))
-    local_dirpath = path.dirname(local_fullpath)
-    local_filename = path.basename(local_fullpath)
-    if not path.exists(local_dirpath) then
-        print(string.format("Local config directory %q not found", dirpath))
-        os.exit(1)
-    end
-    if not path.exists(local_fullpath) then
+    local local_fullpath = path.abspath(path.join(UCI_DIR, UCI_CONFIG))
+    if not nixio.fs.stat(local_fullpath) then
         pdebug("UCI file %q does not exist; 'touch'ing.\n", local_fullpath)
         os.execute(string.format('touch %s', local_fullpath))
     end
 
-    remote_uci = uci.cursor(remote_dirpath)
+    local remote_uci = uci.cursor(remote_dirpath)
+    local local_uci
     if DEBUG then
-        local_uci = uci.cursor(local_dirpath)
+        local_uci = uci.cursor(path.dirname(local_fullpath))
     else
         local_uci = uci.cursor()
     end
 
-    update_local_experiment_list(UCI_CONFIG, local_uci, remote_uci)
+    update_local_experiment_list(UCI_CONFIG, remote_filename, local_uci, remote_uci)
     local_uci:save(UCI_CONFIG)
     local_uci:commit(UCI_CONFIG)
 end
 
-function update_local_experiment_list(config, local_uci, remote_uci)
-    local rem_exps = remote_uci:get_all(config)
-    local loc_exps = local_uci:get_all(config)
+function update_local_experiment_list(local_config, remote_config, local_uci, remote_uci)
+    local loc_exps = local_uci:get_all(local_config)
+    local rem_exps = remote_uci:get_all(remote_config)
 
     -- Insert and update experiments found in remote config file
     for ename,exp in pairs(rem_exps) do
         if loc_exps[ename] == nil then
-            local_uci:set(config, ename, 'experiment')
-            local_uci:set(config, ename, 'available', UCI_TRUE)
-            local_uci:set(config, ename, 'installed', UCI_FALSE)
+            local_uci:set(local_config, ename, 'experiment')
+            local_uci:set(local_config, ename, 'installed', UCI_FALSE)
             pdebug("Experiment %q added to local experiment set.\n", ename)
         else
             pdebug("Updating local experiment %q.\n", ename)
         end
-        local_uci:set(config, ename, 'description', exp.description)
-        local_uci:set(config, ename, 'display_name', exp.display_name)
-        local_uci:set(config, ename, 'packages', exp.packages)
+        local_uci:set(local_config, ename, 'description', exp.description)
+        local_uci:set(local_config, ename, 'display_name', exp.display_name)
+        local_uci:set(local_config, ename, 'package', exp.package)
+        local_uci:set(local_config, ename, 'available', UCI_TRUE)
     end
 
     -- Remove experiments not found in remote config file
     local exps_to_delete = {}
     for ename,exp in pairs(loc_exps) do
         if rem_exps[ename] == nil then
-            local_uci:set(config, ename, 'available', UCI_FALSE)
-            if not uci_bool(local_uci:get(config, ename, 'installed')) then
+            local_uci:set(local_config, ename, 'available', UCI_FALSE)
+            if not uci_bool(local_uci:get(local_config, ename, 'installed')) then
                 exps_to_delete[#exps_to_delete + 1] = ename
             end
         end
     end
     for i,ename in pairs(exps_to_delete) do
-        local_uci:delete(config, ename)
+        local_uci:delete(local_config, ename)
         pdebug("Experiment %q deleted from local experiment set.\n", ename)
     end
 end
@@ -168,7 +153,7 @@ function init_be_remote_uci(uci_cursor, filename)
             'BISmark router over wireless, as well as the presence of other ' ..
             'nearby wireless access points. <b>Wifi Beacons does not ' ..
             'collect the contents of your network traffic.</b>')
-    success = success and uci_cursor:set(config_name, sec_name, 'packages',
+    success = success and uci_cursor:set(config_name, sec_name, 'package',
             {'wifi_beacons-tmpfs',
              'bismark-data-uploader'})
     if success then

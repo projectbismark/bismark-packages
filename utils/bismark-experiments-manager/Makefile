@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=12
+PKG_RELEASE:=16
 
 include $(INCLUDE_DIR)/package.mk
 

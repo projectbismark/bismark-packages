@@ -2,22 +2,21 @@
 
 require("io")
 require("uci")
-
 require('bmlua.set')
 local set = bmlua.set
 require('bmlua.opkg')
 local opkg = bmlua.opkg
+require('nixio.fs')
 
 local EXPERIMENTS_CONFIG = "bismark-experiments"
+local EXPERIMENTS_CACHE = "/var/bismark-experiments"
 
 local get_managed_repositories = function(config)
     local repositories = set.Set()
-    for _, section in pairs(config) do
-        if section[".type"] == "repositories" and section.name ~= nil then
-            repositories:update(set.from_array(section.name))
-        end
+    for repository in nixio.fs.dir(EXPERIMENTS_CACHE) do
+        repositories:add(repository)
     end
-    return repositories
+    return repositories:intersection(opkg.get_package_lists())
 end
 
 local get_packages_in_repositories = function(repositories)
@@ -61,9 +60,11 @@ function main(arg)
     should_install = load_experiments(config, managed_packages)
     currently_installed = opkg.list_installed():intersection(managed_packages)
     for package_name in should_install:difference(currently_installed):iter() do
+        print("installing " .. package_name)
         opkg.install(package_name)
     end
     for package_name in currently_installed:difference(should_install):iter() do
+        print("removing " .. package_name)
         opkg.remove(package_name)
     end
 end
