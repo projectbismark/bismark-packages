@@ -30,7 +30,6 @@ UCI_FALSE = '0'
 function main(arg)
     nixio.fs.mkdir(EXPERIMENTS_CACHE)
     local downloaded = path.join(EXPERIMENTS_CACHE, "Experiments")
-    local updated_experiments = false
     for info in opkg.get_package_list_urls():iter() do
         nixio.fs.remove(downloaded)
         local experiments_url = path.join(info.url, "Experiments")
@@ -41,13 +40,10 @@ function main(arg)
         if return_code == 0 and nixio.fs.stat(downloaded) ~= nil then
             if nixio.fs.rename(downloaded, filename) then
                 merge_experiments(filename)
-                updated_experiments = true
             end
         end
     end
-    if updated_experiments then
-        os.execute("setup-and-teardown-experiments")
-    end
+    os.execute("setup-and-teardown-experiments")
 end
 
 function merge_experiments(remote_fullpath)

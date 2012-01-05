@@ -1,6 +1,3 @@
-config globaloptions
-    option enabled 1
-
 config whitelist
     option enabled 1
     list domain google.com
