@@ -103,21 +103,6 @@ function update_local_experiment_list(local_config, remote_config, local_uci, re
             local_uci:set(local_config, ename, 'available', UCI_TRUE)
         end
     end
-
-    -- Remove experiments not found in remote config file
-    local exps_to_delete = {}
-    for ename,exp in pairs(loc_exps) do
-        if rem_exps[ename] == nil then
-            local_uci:set(local_config, ename, 'available', UCI_FALSE)
-            if not uci_bool(local_uci:get(local_config, ename, 'installed')) then
-                exps_to_delete[#exps_to_delete + 1] = ename
-            end
-        end
-    end
-    for i,ename in pairs(exps_to_delete) do
-        local_uci:delete(local_config, ename)
-        pdebug("Experiment %q deleted from local experiment set.\n", ename)
-    end
 end
 
 function uci_bool(s)

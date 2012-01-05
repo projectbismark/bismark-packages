@@ -51,13 +51,13 @@ function main(arg)
 
     should_install = load_experiments(config, managed_packages)
     currently_installed = opkg.list_installed():intersection(managed_packages)
-    for package_name in should_install:difference(currently_installed):iter() do
-        print("installing " .. package_name)
-        opkg.install(package_name)
-    end
     for package_name in currently_installed:difference(should_install):iter() do
         print("removing " .. package_name)
         opkg.remove(package_name)
+    end
+    for package_name in should_install:difference(currently_installed):iter() do
+        print("installing " .. package_name)
+        opkg.install(package_name)
     end
 end
 
