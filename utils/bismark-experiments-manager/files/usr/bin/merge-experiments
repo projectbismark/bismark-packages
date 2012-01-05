@@ -87,19 +87,25 @@ function update_local_experiment_list(local_config, remote_config, local_uci, re
     local loc_exps = local_uci:get_all(local_config)
     local rem_exps = remote_uci:get_all(remote_config)
 
+    if loc_exps == nil or rem_exps == nil then return nil end
+
     -- Insert and update experiments found in remote config file
-    for ename,exp in pairs(rem_exps) do
-        if loc_exps[ename] == nil then
-            local_uci:set(local_config, ename, 'experiment')
-            local_uci:set(local_config, ename, 'installed', UCI_FALSE)
-            pdebug("Experiment %q added to local experiment set.\n", ename)
-        else
-            pdebug("Updating local experiment %q.\n", ename)
+    for ename, exp in pairs(rem_exps) do
+        if exp.description ~= nil
+                and exp.display_name ~= nil
+                and exp.package ~= nil then
+            if loc_exps[ename] == nil then
+                local_uci:set(local_config, ename, 'experiment')
+                local_uci:set(local_config, ename, 'installed', UCI_FALSE)
+                pdebug("Experiment %q added to local experiment set.\n", ename)
+            else
+                pdebug("Updating local experiment %q.\n", ename)
+            end
+            local_uci:set(local_config, ename, 'description', exp.description)
+            local_uci:set(local_config, ename, 'display_name', exp.display_name)
+            local_uci:set(local_config, ename, 'package', exp.package)
+            local_uci:set(local_config, ename, 'available', UCI_TRUE)
         end
-        local_uci:set(local_config, ename, 'description', exp.description)
-        local_uci:set(local_config, ename, 'display_name', exp.display_name)
-        local_uci:set(local_config, ename, 'package', exp.package)
-        local_uci:set(local_config, ename, 'available', UCI_TRUE)
     end
 
     -- Remove experiments not found in remote config file
@@ -129,7 +135,6 @@ function uci_bool(s)
     end
     return retval
 end
-
 
 function pdebug(s, ...)
     if DEBUG ~= nil and DEBUG == true then
@@ -163,7 +168,6 @@ function init_be_remote_uci(uci_cursor, filename)
     end
 end
 
-
 function init_be_local_uci(uci_cursor)
     -- initialize local bismark-experiments config file with reasonable values
     local success = true
@@ -185,4 +189,3 @@ end
 -- EXECUTE THIS SCRIPT
 ------------------------------------------------------------------------------
 return main(arg)
-
