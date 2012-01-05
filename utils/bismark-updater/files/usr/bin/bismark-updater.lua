@@ -9,10 +9,7 @@ require('bmlua.set')
 set = bmlua.set
 require('nixio.fs')
 
-UPGRADABLE_CACHE = "/var/bismark-upgradable"
-
 local get_managed_repositories = function()
-    nixio.fs.mkdir(UPGRADABLE_CACHE)
     local managed_repositories = set.Set()
     for info in opkg.get_package_list_urls():iter() do
         local upgradable_url = path.join(info.url, "Upgradable")
@@ -28,6 +25,8 @@ function main(arg)
 
     local upgradable = opkg.list_upgradable()
     local managed_repositories = get_managed_repositories()
+    print 'Upgradable repositories:'
+    set.print(managed_repositories)
     local candidates = opkg.get_packages_in_repositories(managed_repositories)
     for package in upgradable:intersection(candidates):iter() do
         print('Upgrading ' .. package)
