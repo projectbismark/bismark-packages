@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=17
+PKG_RELEASE:=18
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -51,7 +51,7 @@ endef
 define Package/bismark-experiments-manager/postinst
 #!/bin/sh
 [ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiments-manager enable
-(crontab -l | grep -v merge-experiments; echo 0 \* \* \* \* /usr/bin/merge-experiments) | crontab -
+(crontab -l | grep -v merge-experiments; echo 30 \* \* \* \* /usr/bin/merge-experiments) | crontab -
 true
 endef
 

@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lua
 PKG_VERSION:=head
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 GIT_URL:=$(CONFIG_BISMARK_LUA_REPOSITORY)
 

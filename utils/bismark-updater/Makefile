@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-updater
 PKG_VERSION:=1
-PKG_RELEASE:=14
+PKG_RELEASE:=16
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -33,18 +33,12 @@ endef
 define Build/Compile
 endef
 
-define Package/bismark-updater/conffiles
-/etc/config/bismark-updater
-endef
-
 define Package/bismark-updater/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-updater $(1)/usr/bin/bismark-updater
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-updater.lua $(1)/usr/bin/bismark-updater.lua
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-updater $(1)/etc/init.d/bismark-updater
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/config/bismark-updater $(1)/etc/config/bismark-updater
 endef
 
 define Package/bismark-updater/postinst
