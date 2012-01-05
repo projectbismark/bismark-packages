@@ -19,14 +19,6 @@ local get_managed_repositories = function(config)
     return repositories:intersection(opkg.get_package_lists())
 end
 
-local get_packages_in_repositories = function(repositories)
-    local packages = set.Set()
-    for repository in repositories:iter() do
-        packages:update(opkg.read_package_list(repository))
-    end
-    return packages
-end
-
 local load_experiments = function(config, candidate_packages)
     local installed_packages = set.Set()
     for _, section in pairs(config) do
@@ -50,8 +42,8 @@ function main(arg)
     managed_repositories = get_managed_repositories(config)
     unmanaged_repositories = all_repositories:difference(managed_repositories)
 
-    unmanaged_packages = get_packages_in_repositories(unmanaged_repositories)
-    managed_packages = get_packages_in_repositories(managed_repositories)
+    unmanaged_packages = opkg.get_packages_in_repositories(unmanaged_repositories)
+    managed_packages = opkg.get_packages_in_repositories(managed_repositories)
     if managed_packages:intersection(unmanaged_packages):length() > 0 then
         print("Managed and unmanaged repositories must be disjoint!")
         return 1
