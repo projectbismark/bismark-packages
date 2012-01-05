@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-updater
 PKG_VERSION:=1
-PKG_RELEASE:=16
+PKG_RELEASE:=17
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,6 +18,7 @@ define Package/bismark-updater
 	CATEGORY:=Utilities
 	TITLE:=tmpfs-aware OpenWRT package updater
 	URL:=http://www.projectbismark.net
+	DEPENDS:=+bismark-data-transmit
 endef
 
 define Package/bismark-updater/description
@@ -46,8 +47,6 @@ define Package/bismark-updater/postinst
 
 (crontab -l | grep -v bismark-updater; echo 0 \* \* \* \* /usr/bin/bismark-updater) | crontab -
 [ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-updater enable
-echo Bismark-updater is not configured to upgrade any repositories by default.
-echo Edit /etc/config/bismark-updater to rectify this.
 true
 
 endef

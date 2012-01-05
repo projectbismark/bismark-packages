@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive-git-tmpfs
 PKG_VERSION:=head
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 GIT_URL:=git://github.com/sburnett/bismark-passive.git
 
