@@ -8,15 +8,22 @@ require('bmlua.opkg')
 opkg = bmlua.opkg
 require('bmlua.path')
 path = bmlua.path
+require('bmlua.set')
+set = bmlua.set
+require('bmlua.uci')
 require('nixio.fs')
 
 ------------------------------------------------------------------------------
 -- GLOBALS
 ------------------------------------------------------------------------------
-UCI_DIR = '/etc/config'
+DEBUG = false
+if DEBUG then
+    UCI_DIR = 'etc_config'
+else
+    UCI_DIR = '/etc/config'
+end
 UCI_CONFIG = 'bismark-experiments'
 EXPERIMENTS_CACHE = '/var/bismark-experiments'
-DEBUG = false
 
 ------------------------------------------------------------------------------
 -- CONSTANTS
@@ -27,94 +34,124 @@ UCI_FALSE = '0'
 ------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 ------------------------------------------------------------------------------
-function main(arg)
-    nixio.fs.mkdir(EXPERIMENTS_CACHE)
-    local downloaded = path.join(EXPERIMENTS_CACHE, "Experiments")
-    for info in opkg.get_package_list_urls():iter() do
-        nixio.fs.remove(downloaded)
-        local experiments_url = path.join(info.url, "Experiments")
-        local filename = path.join(EXPERIMENTS_CACHE, info.name)
-        local return_code = os.execute("curl -f -z " .. filename
-                                       .. " -o " .. downloaded
-                                       .. " " .. experiments_url)
-        if return_code == 0 and nixio.fs.stat(downloaded) ~= nil then
-            if nixio.fs.rename(downloaded, filename) then
-                merge_experiments(filename)
-            end
-        end
-    end
-    os.execute("setup-and-teardown-experiments")
-end
-
-function merge_experiments(remote_fullpath)
-    pdebug("DEBUG MODE ON\n")
-
-    local remote_dirpath = path.dirname(remote_fullpath)
-    local remote_filename = path.basename(remote_fullpath)
-    if not nixio.fs.stat(remote_fullpath) then
-        print(string.format("Remote experiment UCI file %q not found",
-                remote_fullpath))
-        return false
-    end
-
-    if DEBUG ~= nil and DEBUG == true then
-        UCI_DIR = 'etc_config'
-    end
+function initialize_local_uci()
     local local_fullpath = path.abspath(path.join(UCI_DIR, UCI_CONFIG))
     if not nixio.fs.stat(local_fullpath) then
         pdebug("UCI file %q does not exist; 'touch'ing.\n", local_fullpath)
         os.execute(string.format('touch %s', local_fullpath))
     end
-
-    local remote_uci = uci.cursor(remote_dirpath)
-    local local_uci
     if DEBUG then
-        local_uci = uci.cursor(path.dirname(local_fullpath))
+        return uci.cursor(path.dirname(local_fullpath))
     else
-        local_uci = uci.cursor()
+        return uci.cursor()
     end
-
-    update_local_experiment_list(UCI_CONFIG, remote_filename, local_uci, remote_uci)
-    local_uci:save(UCI_CONFIG)
-    local_uci:commit(UCI_CONFIG)
 end
 
-function update_local_experiment_list(local_config, remote_config, local_uci, remote_uci)
-    local loc_exps = local_uci:get_all(local_config)
-    local rem_exps = remote_uci:get_all(remote_config)
+function main(arg)
+    local local_uci = initialize_local_uci()
+    local experiments = set.Set()
 
-    if loc_exps == nil or rem_exps == nil then return nil end
+    -- Download newest copies of the experiment files
+    fetch_experiments()
 
-    -- Insert and update experiments found in remote config file
-    for ename, exp in pairs(rem_exps) do
-        if exp.description ~= nil
-                and exp.display_name ~= nil
-                and exp.package ~= nil then
-            if loc_exps[ename] == nil then
-                local_uci:set(local_config, ename, 'experiment')
-                local_uci:set(local_config, ename, 'installed', UCI_FALSE)
-                pdebug("Experiment %q added to local experiment set.\n", ename)
-            else
-                pdebug("Updating local experiment %q.\n", ename)
+    -- Merge all Experiments into the local configuration
+    -- in alphabetical order by repository label.
+    if nixio.fs.stat(EXPERIMENTS_CACHE) ~= nil then
+        local available_lists = set.Set()
+        for filename in nixio.fs.dir(EXPERIMENTS_CACHE) do
+            available_lists:add(filename)
+        end
+        available_lists:intersection_update(opkg.get_package_lists())
+        local available_lists_array = available_lists:to_array()
+        table.sort(available_lists_array)
+        for _, list_name in pairs(available_lists_array) do
+            local remote_uci = uci.cursor(EXPERIMENTS_CACHE)
+            print("Merging experiments from " .. list_name)
+            experiments:update(merge_experiments(local_uci, remote_uci, list_name))
+        end
+    end
+
+    -- Install and remove packages based on the new experiments configuration
+    -- (Installed experiments may have changed the set packages they use.)
+    os.execute("setup-and-teardown-experiments")
+
+    -- Mark all experiments not in the remote experiment files as unavailable
+    local experiments_config = local_uci:get_all(UCI_CONFIG)
+    if experiments_config ~= nil then
+        for name, experiment in pairs(experiments_config) do
+            if not experiments:contains(name) then
+                local_uci:set(UCI_CONFIG, name, 'available', '0')
             end
-            local_uci:set(local_config, ename, 'description', exp.description)
-            local_uci:set(local_config, ename, 'display_name', exp.display_name)
-            local_uci:set(local_config, ename, 'package', exp.package)
-            local_uci:set(local_config, ename, 'available', UCI_TRUE)
+        end
+        local_uci:save(UCI_CONFIG)
+        local_uci:commit(UCI_CONFIG)
+    end
+
+    -- Remove all unavailable experiment entries that are not installed
+    local experiments_config = local_uci:get_all(UCI_CONFIG)
+    if experiments_config ~= nil then
+        for name, experiment in pairs(experiments_config) do
+            if not bmlua.uci.parse_bool(experiment.available)
+                    and not bmlua.uci.parse_bool(experiment.installed) then
+                local_uci:delete(UCI_CONFIG, name)
+            end
+        end
+        local_uci:save(UCI_CONFIG)
+        local_uci:commit(UCI_CONFIG)
+    end
+end
+
+function fetch_experiments()
+    nixio.fs.mkdir(EXPERIMENTS_CACHE)
+    local downloaded = path.join("/tmp/bismark-experiments-downloaded")
+    for info in opkg.get_package_list_urls():iter() do
+        nixio.fs.remove(downloaded)
+        local experiments_url = path.join(info.url, "Experiments")
+        local filename = path.join(EXPERIMENTS_CACHE, info.name)
+        local return_code = os.execute("curl -s -f -z " .. filename
+                                       .. " -o " .. downloaded
+                                       .. " " .. experiments_url)
+        if return_code == 0 and nixio.fs.stat(downloaded) ~= nil then
+            print("Updated experiments from " .. experiments_url)
+            nixio.fs.rename(downloaded, filename)
         end
     end
 end
 
-function uci_bool(s)
-    -- interpret the many ways true or false can be expressed in UCI.
-    local retval = nil
-    s = s:lower()
-    if s == 'true' or s == '1' or s == 'yes' then
-        retval = true
-    elseif s == 'false' or s == '0' or s == 'no' then
-        retval = false
+function merge_experiments(local_uci, remote_uci, remote_filename)
+    local local_experiments = local_uci:get_all(UCI_CONFIG)
+    local remote_experiments = remote_uci:get_all(remote_filename)
+    if local_experiments == nil or remote_experiments == nil then return nil end
+
+    -- Insert and update experiments found in remote config file
+    local available_experiments = set.Set()
+    for ename, exp in pairs(remote_experiments) do
+        if exp.description ~= nil
+                and exp.display_name ~= nil
+                and exp.package ~= nil then
+            available_experiments:add(ename)
+            if local_experiments[ename] == nil then
+                local_uci:set(UCI_CONFIG, ename, 'experiment')
+                local_uci:set(UCI_CONFIG, ename, 'installed', UCI_FALSE)
+                pdebug("Experiment %q added to local experiment set.\n", ename)
+            else
+                pdebug("Updating local experiment %q.\n", ename)
+            end
+            local_uci:set(UCI_CONFIG, ename, 'description', exp.description)
+            local_uci:set(UCI_CONFIG, ename, 'display_name', exp.display_name)
+            local_uci:set(UCI_CONFIG, ename, 'package', exp.package)
+            local_uci:set(UCI_CONFIG, ename, 'available', UCI_TRUE)
+            if exp.conflicts ~= nil then
+                local_uci:set(UCI_CONFIG, ename, 'conflicts', exp.conflicts)
+            else
+                local_uci:delete(UCI_CONFIG, ename, 'conflicts', {})
+            end
+        end
     end
-    return retval
+
+    local_uci:save(UCI_CONFIG)
+    local_uci:commit(UCI_CONFIG)
+    return available_experiments
 end
 
 function pdebug(s, ...)
