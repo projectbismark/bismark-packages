@@ -110,7 +110,9 @@ function fetch_experiments()
         local filename = path.join(EXPERIMENTS_CACHE, info.name)
         local return_code = os.execute("curl -s -f -z " .. filename
                                        .. " -o " .. downloaded
-                                       .. " " .. experiments_url)
+                                       .. " -w '%{http_code}'"
+                                       .. " " .. experiments_url
+                                       .. " | grep -e '^200$' -q")
         if return_code == 0 and nixio.fs.stat(downloaded) ~= nil then
             print("Updated experiments from " .. experiments_url)
             nixio.fs.rename(downloaded, filename)
@@ -120,8 +122,12 @@ end
 
 function merge_experiments(local_uci, remote_uci, remote_filename)
     local local_experiments = local_uci:get_all(UCI_CONFIG)
+    if local_experiments == nil then return nil end
     local remote_experiments = remote_uci:get_all(remote_filename)
-    if local_experiments == nil or remote_experiments == nil then return nil end
+    if remote_experiments == nil then
+        nixio.fs.remove(path.join(EXPERIMENTS_CACHE, remote_filename))
+        return nil
+    end
 
     -- Insert and update experiments found in remote config file
     local available_experiments = set.Set()
