@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive-git-tmpfs
 PKG_VERSION:=head
-PKG_RELEASE:=7
+PKG_RELEASE:=9
 
 GIT_URL:=git://github.com/sburnett/bismark-passive.git
 
@@ -24,13 +24,10 @@ MAKE_FLAGS += BUILD_ID=$(BISMARK_PASSIVE_BUILDID)
 ifeq ($(CONFIG_BISMARK_PASSIVE_FREQUENT_UPDATES),y)
 MAKE_FLAGS += FREQUENT_UPDATES=yes
 endif
-ifeq ($(CONFIG_BISMARK_PASSIVE_HTTP_URL),y)
-MAKE_FLAGS += ENABLE_HTTP_URL=yes
-endif
 
 define Package/bismark-passive-git-tmpfs
-	SECTION:=net
-	CATEGORY:=Network
+	SECTION:=utils
+	CATEGORY:=Utilities
 	TITLE:=PCAP-based passive observer for bismark-passive
 	URL:=http://www.projectbismark.net
 	DEPENDS:=+libpcap +libpthread +zlib +bismark-data-transmit
