@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active
 PKG_VERSION:=0.8
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -19,7 +19,7 @@ define Package/bismark-active
    TITLE:=Broadband Internet Service benchMARK - Active measurement tools
    URL:=http://www.networkdashboard.org/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+bismark-mgmt +shaperprobe +ditg +time +netperf +wget +fping
+   DEPENDS:=+bismark-mgmt +shaperprobe +ditg +time +netperf +curl +fping +iputils-ping
 endef
 
 define Package/bismark-active/description
