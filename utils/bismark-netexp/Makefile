@@ -19,7 +19,7 @@ define Package/bismark-netexp
    TITLE:=Broadband Internet Service benchMARK
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+bing +bwping +tcptraceroute +paris-traceroute +httping +iperf-mt +tcpdump +hping3 
+   DEPENDS:=+bing +bwping +tcptraceroute +paris-traceroute +httping +iperf-mt +tcpdump +hping3 +shaperprobe +ditg +time +netperf +curl +fping +iputils-ping
 endef
 
 define Package/bismark-netexp/description
