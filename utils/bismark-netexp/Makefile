@@ -27,6 +27,7 @@ define Package/bismark-netexp/description
 endef
 
 define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
 endef
 
 define Build/Compile
@@ -40,6 +41,7 @@ endef
 # command to copy the binary file from its current location (in our case the build
 # directory) to the install directory.
 define Package/bismark-netexp/install
+	$(INSTALL_DIR) $(1)/etc
 endef
 
 define Package/bismark-netexp/preinst
