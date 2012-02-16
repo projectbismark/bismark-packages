@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lua
 PKG_VERSION:=head
-PKG_RELEASE:=5
+PKG_RELEASE:=7
 
 GIT_URL:=$(CONFIG_BISMARK_LUA_REPOSITORY)
 
@@ -48,6 +48,7 @@ define Package/bismark-lua/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/set.lua $(1)/usr/lib/lua/bmlua/set.lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/str.lua $(1)/usr/lib/lua/bmlua/str.lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/tbl.lua $(1)/usr/lib/lua/bmlua/tbl.lua
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/uci.lua $(1)/usr/lib/lua/bmlua/uci.lua
 endef
 
 $(eval $(call BuildPackage,bismark-lua))
