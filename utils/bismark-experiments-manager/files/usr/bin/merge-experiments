@@ -152,6 +152,14 @@ function merge_experiments(local_uci, remote_uci, remote_filename)
             else
                 local_uci:delete(UCI_CONFIG, ename, 'conflicts', {})
             end
+            if exp.required ~= nil then
+                local_uci:set(UCI_CONFIG, ename, 'required', exp.required)
+                if exp.required == UCI_TRUE then
+                    local_uci:set(UCI_CONFIG, ename, 'installed', UCI_TRUE)
+                end
+            else
+                local_uci:set(UCI_CONFIG, ename, 'required', UCI_FALSE)
+            end
         end
     end
 
