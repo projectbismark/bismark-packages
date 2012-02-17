@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.7
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -92,7 +92,9 @@ define Package/bismark-mgmt/postinst
 #!/bin/sh
 # Bismark management post-install script
 ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/219d9499.0
 ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/97552d04.0
 cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear/authorized_keys | sort -u > $${IPKG_INSTROOT}/tmp/authkeys.bismark
 cat $${IPKG_INSTROOT}/etc/bismark/known_hosts $${IPKG_INSTROOT}/root/.ssh/known_hosts | sort -u > $${IPKG_INSTROOT}/tmp/knownhosts.bismark
 cp $${IPKG_INSTROOT}/tmp/authkeys.bismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
