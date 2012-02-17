@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome-new
 PKG_VERSION:=0.9.0
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 PKG_REV:=2693afcf4c08c41067ac11177a1da3a033d6c6c0
 # PKG_VERSION:=20110517
 
@@ -21,7 +21,7 @@ define Package/bismark-chrome-new
    TITLE:=Web server files for bismark
    URL:=http://www.gtnoise.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=
+   DEPENDS:=+uhttpd
 endef
 
 define Package/bismark-chrome-new/description
