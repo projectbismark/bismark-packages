@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-netexp
 PKG_VERSION:=0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -19,7 +19,7 @@ define Package/bismark-netexp
    TITLE:=Broadband Internet Service benchMARK
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+bing +bwping +tcptraceroute +paris-traceroute +httping +iperf-mt +tcpdump +hping3 +shaperprobe +ditg +time +netperf +curl +fping 
+   DEPENDS:=+bing +bwping +tcptraceroute +paris-traceroute +httping +iperf-mt +tcpdump +hping3 +shaperprobe +ditg +time +netperf +curl +fping +tc
 endef
 
 define Package/bismark-netexp/description
