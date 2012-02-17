@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-extras
 PKG_VERSION:=0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -19,7 +19,7 @@ define Package/bismark-extras
    TITLE:=Broadband Internet Service benchMARK
    URL:=http://projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+tinyproxy +polipo +lighttpd +lighttpd-mod-cgi +lighttpd-mod-fastcgi +lighttpd-mod-redirect +lighttpd-mod-rewrite
+   DEPENDS:=+tinyproxy +polipo +lighttpd +lighttpd-mod-cgi +lighttpd-mod-fastcgi +lighttpd-mod-redirect +lighttpd-mod-rewrite +qos-scripts +bind-dig
 endef
 
 define Package/bismark-extras/description
@@ -40,6 +40,7 @@ endef
 # command to copy the binary file from its current location (in our case the build
 # directory) to the install directory.
 define Package/bismark-extras/install
+	$(INSTALL_DIR) $(1)/etc
 endef
 
 define Package/bismark-extras/preinst
