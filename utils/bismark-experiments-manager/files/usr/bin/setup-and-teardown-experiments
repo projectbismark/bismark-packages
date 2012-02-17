@@ -26,13 +26,21 @@ local load_experiments = function(cursor, candidate_packages)
     if config ~= nil then
         for _, section in pairs(config) do
             if section[".type"] == "experiment"
-                    and section.installed == '1'
+                    and (section.installed == '1' or section.required == '1')
                     and section.package ~= nil then
                 installed_packages:update(set.from_array(section.package))
             end
         end
     end
     return installed_packages:intersection(candidate_packages)
+end
+
+local parse_bool = function(value)
+    if value == nil then
+        return false
+    else
+        return bmlua.uci.parse_bool(value)
+    end
 end
 
 -- Check for conflicting experiments and remove one of
@@ -43,15 +51,27 @@ local remove_conflicting_experiments = function(cursor)
         for name, experiment in pairs(experiments_config) do
             if experiment.conflicts ~= nil then
                 for _, conflict in pairs(experiment.conflicts) do
-                    local installed = cursor:get(
-                            EXPERIMENTS_CONFIG, name, 'installed')
-                    local conflict_installed =
-                            cursor:get(EXPERIMENTS_CONFIG, conflict, 'installed')
-                    if bmlua.uci.parse_bool(installed)
-                                and bmlua.uci.parse_bool(conflict_installed) then
+                    local installed = parse_bool(
+                            cursor:get(EXPERIMENTS_CONFIG, name, 'installed'))
+                    local required = parse_bool(
+                            cursor:get(EXPERIMENTS_CONFIG, name, 'required'))
+                    local conflict_installed = parse_bool(
+                            cursor:get(EXPERIMENTS_CONFIG, conflict, 'installed'))
+                    local conflict_required = parse_bool(
+                            cursor:get(EXPERIMENTS_CONFIG, conflict, 'required'))
+                    if (installed or required)
+                            and (conflict_installed or conflict_required) then
                         print("Experiments " .. name .. " and " .. conflict .. " conflict")
-                        print("Marking " .. conflict .. " for removal")
-                        cursor:set(EXPERIMENTS_CONFIG, conflict, 'installed', '0')
+                        if not conflict_required then
+                            print("Marking " .. conflict .. " for removal")
+                            cursor:set(EXPERIMENTS_CONFIG, conflict, 'installed', '0')
+                        elseif not required then
+                            print("Marking " .. name .. " for removal")
+                            cursor:set(EXPERIMENTS_CONFIG, name, 'installed', '0')
+                        else
+                            print("Both " .. name .. " and " .. conflict .. " are required!")
+                            print("We will attempt to install both experiments, but this will probably end badly.")
+                        end
                         cursor:save(EXPERIMENTS_CONFIG)
                     end
                 end
