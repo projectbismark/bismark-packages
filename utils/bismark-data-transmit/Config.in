@@ -8,24 +8,10 @@ config BISMARK_DATA_TRANSMIT_URL
             The URL to which we should upload files. Must support HTTP PUT.
     default "https://projectbismark.net:8081/upload/"
 
-config BISMARK_DATA_TRANSMIT_UPLOADS_ROOT
-    string "Uploads root directory"
-    help
-            Monitor this directory for data files to upload. This is the root of
-            the upload tree. Only files in immediate subdirectories will be
-            monitored. IMPORTANT: This must not have a trailing slash!
-    default "/tmp/bismark-uploads"
-
 config BISMARK_DATA_TRANSMIT_RETRY_INTERVAL_MINUTES
     int "Interval in minutes with which to retry failed uploads"
     help
             Retry failed uploads after this many minutes.
     default 3
-
-config BISMARK_DATA_TRANSMIT_MAX_RETRY_INTERVAL_MINUTES
-    int "Intertval in minutes after which to garbage collect failed uploads"
-    help
-            Garbage collect failed uploads after this many minutes.
-    default 60
 
 endmenu
