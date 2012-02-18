@@ -1,0 +1,3 @@
+#!/bin/sh
+/etc/init.d/bismark-experiments-manager enable
+(crontab -l | grep -v merge-experiments; echo '30 * * * * /usr/bin/merge-experiments') | crontab -

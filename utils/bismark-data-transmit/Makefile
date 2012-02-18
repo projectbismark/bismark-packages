@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
 PKG_VERSION:=head
-PKG_RELEASE:=14
+PKG_RELEASE:=15
 
 GIT_URL:=git://github.com/sburnett/bismark-data-transmit.git
 
@@ -66,10 +66,8 @@ endef
 
 define Pakcage/bismark-data-transmit/prerm
 #!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	/etc/init.d/bismark-data-transmit stop
-	/etc/init.d/bismark-data-transmit disable
-fi
+/etc/init.d/bismark-data-transmit stop
+/etc/init.d/bismark-data-transmit disable
 endef
 
 $(eval $(call BuildPackage,bismark-data-transmit))

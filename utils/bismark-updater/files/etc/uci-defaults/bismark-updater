@@ -1,0 +1,3 @@
+#!/bin/sh
+/etc/init.d/bismark-updater enable
+(crontab -l | grep -v bismark-updater; echo '0 * * * * /usr/bin/bismark-updater') | crontab -

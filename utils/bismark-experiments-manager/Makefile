@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=47
+PKG_RELEASE:=48
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -46,22 +46,22 @@ define Package/bismark-experiments-manager/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-experiments-manager $(1)/etc/init.d/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/config/bismark-experiments $(1)/etc/config/bismark-experiments
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/uci-defaults/bismark-experiments-manager $(1)/etc/uci-defaults/bismark-experiments-manager
 endef
 
 define Package/bismark-experiments-manager/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	/etc/init.d/bismark-experiments-manager enable
-	(crontab -l | grep -v merge-experiments; echo 30 \* \* \* \* /usr/bin/merge-experiments) | crontab -
+	/etc/uci-defaults/bismark-experiments-manager
+	rm /etc/uci-defaults/bismark-experiments-manager
 fi
 endef
 
 define Package/bismark-experiments-manager/prerm
 #!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	/etc/init.d/bismark-experiment-manager disable
-	crontab -l | grep -v merge-experiments | crontab -
-fi
+/etc/init.d/bismark-experiment-manager disable
+crontab -l | grep -v merge-experiments | crontab -
 endef
 
 $(eval $(call BuildPackage,bismark-experiments-manager))
