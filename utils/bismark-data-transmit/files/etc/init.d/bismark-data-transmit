@@ -12,9 +12,15 @@ load_directories() {
     done
 }
 
+load_urls() {
+    local cfg="$1"
+    config_get DATA_TRANSMIT_ARGUMENTS "$cfg" url
+}
+
 start() {
     config_load bismark-data-transmit
     config_foreach load_directories directories
+    config_foreach load_urls urls
     mkdir -p /tmp/bismark-uploads
     if [ -f $PIDFILE ]; then
         echo "pidfile $PIDFILE already exists; bismark-data-transmit already running?"
