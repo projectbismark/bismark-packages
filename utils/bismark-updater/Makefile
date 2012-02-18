@@ -45,8 +45,10 @@ endef
 define Package/bismark-updater/postinst
 #!/bin/sh
 
-(crontab -l | grep -v bismark-updater; echo 0 \* \* \* \* /usr/bin/bismark-updater) | crontab -
-[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-updater enable
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	/etc/init.d/bismark-updater enable
+	(crontab -l | grep -v bismark-updater; echo 0 \* \* \* \* /usr/bin/bismark-updater) | crontab -
+fi
 true
 
 endef
@@ -54,8 +56,10 @@ endef
 define Package/bismark-updater/prerm
 #!/bin/sh
 
-crontab -l | grep -v bismark-updater | crontab -
-[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-updater disable
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	/etc/init.d/bismark-updater disable
+	crontab -l | grep -v bismark-updater | crontab -
+fi
 true
 
 endef

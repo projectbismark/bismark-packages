@@ -50,16 +50,18 @@ endef
 
 define Package/bismark-experiments-manager/postinst
 #!/bin/sh
-[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiments-manager enable
-(crontab -l | grep -v merge-experiments; echo 30 \* \* \* \* /usr/bin/merge-experiments) | crontab -
-true
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	/etc/init.d/bismark-experiments-manager enable
+	(crontab -l | grep -v merge-experiments; echo 30 \* \* \* \* /usr/bin/merge-experiments) | crontab -
+fi
 endef
 
 define Package/bismark-experiments-manager/prerm
 #!/bin/sh
-[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/bismark-experiment-manager disable
-crontab -l | grep -v merge-experiments | crontab -
-true
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	/etc/init.d/bismark-experiment-manager disable
+	crontab -l | grep -v merge-experiments | crontab -
+fi
 endef
 
 $(eval $(call BuildPackage,bismark-experiments-manager))
