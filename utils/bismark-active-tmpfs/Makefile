@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
 PKG_VERSION:=0.1
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -58,7 +58,7 @@ define Package/bismark-active-tmpfs/preinst
 #!/bin/sh
 # Bismark active-tmpfs pre-install script: clear crontab
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	if [ -e /tmp/etc/bismark/crontab-active ]; then
+	if [ -e /tmp/etc/bismark/crontab-active-tmpfs ]; then
 		grep -sFvf /tmp/etc/bismark/crontab-active-tmpfs /etc/crontabs/root | sort -u | crontab -
 	fi
 fi
