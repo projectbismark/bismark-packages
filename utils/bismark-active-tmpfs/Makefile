@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
 PKG_VERSION:=0.1
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -29,8 +29,8 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib}
 	[ -d files ] && ( cd files ; git pull ) || git clone git://github.com/bismark-devel/bismark.git files
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,measure-wrapper,tr,rtr,ping,fping,netperf,dns,ditg,sp,mstats} $(PKG_BUILD_DIR)/scripts
-	$(CP) files/device/OpenWrt_common/etc/{bismark-active.conf,crontab-active} $(PKG_BUILD_DIR)/etc
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,measure-wrapper,tr,rtr,ping,fping,netperf,dns,ditg,sp,mstats,sysconf} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/etc/{bismark-active.conf,crontab-active-tmpfs,sysctl.conf} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/*.list $(PKG_BUILD_DIR)/lib
 endef
 
@@ -58,7 +58,7 @@ define Package/bismark-active-tmpfs/preinst
 #!/bin/sh
 # Bismark active-tmpfs pre-install script: clear crontab
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	if [ -e /tmp/etc/bismark/crontab-active]; then
+	if [ -e /tmp/etc/bismark/crontab-active ]; then
 		grep -sFvf /tmp/etc/bismark/crontab-active /etc/crontabs/root | sort -u | crontab -
 	fi
 fi
