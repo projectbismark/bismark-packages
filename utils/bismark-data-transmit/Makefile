@@ -9,17 +9,15 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
 PKG_VERSION:=head
-PKG_RELEASE:=14
+PKG_RELEASE:=18
 
-GIT_URL:=git://github.com/sburnett/bismark-data-transmit.git
+GIT_URL:=git://github.com/projectbismark/bismark-data-transmit.git
 
 include $(INCLUDE_DIR)/package.mk
 
 MAKE_FLAGS += UPLOADS_URL=$(CONFIG_BISMARK_DATA_TRANSMIT_URL)
 MAKE_FLAGS += BUILD_ID=$(BISMARK_DATA_TRANSMIT_BUILDID)
-MAKE_FLAGS += UPLOADS_ROOT=$(CONFIG_BISMARK_DATA_TRANSMIT_UPLOADS_ROOT)
 MAKE_FLAGS += RETRY_INTERVAL_MINUTES=$(CONFIG_BISMARK_DATA_TRANSMIT_RETRY_INTERVAL_MINUTES)
-MAKE_FLAGS += MAX_RETRY_INTERVAL_MINUTES=$(CONFIG_BISMARK_DATA_TRANSMIT_MAX_RETRY_INTERVAL_MINUTES)
 
 define Package/bismark-data-transmit
 	SECTION:=util
@@ -48,9 +46,11 @@ endef
 define Package/bismark-data-transmit/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit.bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-data-transmit-collect $(1)/usr/bin/bismark-data-transmit-collect
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-data-transmit $(1)/etc/init.d/bismark-data-transmit
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-data-transmit-collect $(1)/etc/init.d/bismark-data-transmit-collect
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/bismark-data-transmit $(1)/etc/config/bismark-data-transmit
 endef
@@ -59,17 +59,19 @@ define Package/bismark-data-transmit/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
 	/etc/init.d/bismark-data-transmit enable
+	/etc/init.d/bismark-data-transmit-collect enable
 	/etc/init.d/bismark-data-transmit restart
+	/etc/init.d/bismark-data-transmit-collect restart
 fi
 true
 endef
 
 define Pakcage/bismark-data-transmit/prerm
 #!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	/etc/init.d/bismark-data-transmit stop
-	/etc/init.d/bismark-data-transmit disable
-fi
+/etc/init.d/bismark-data-transmit stop
+/etc/init.d/bismark-data-transmit-collect stop
+/etc/init.d/bismark-data-transmit disable
+/etc/init.d/bismark-data-transmit-collect disable
 endef
 
 $(eval $(call BuildPackage,bismark-data-transmit))

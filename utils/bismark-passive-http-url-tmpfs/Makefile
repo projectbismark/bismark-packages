@@ -11,7 +11,7 @@ PKG_NAME:=bismark-passive-http-url-tmpfs
 PKG_VERSION:=head
 PKG_RELEASE:=4
 
-GIT_URL:=git://github.com/sburnett/bismark-passive.git
+GIT_URL:=git://github.com/projectbismark/bismark-passive.git
 
 include $(INCLUDE_DIR)/package.mk
 

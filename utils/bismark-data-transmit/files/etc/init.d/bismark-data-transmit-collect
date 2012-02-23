@@ -1,0 +1,27 @@
+#!/bin/sh /etc/rc.common
+
+START=97
+PIDFILE=/var/run/bismark-data-transmit-collect.pid
+
+start() {
+    if [ -f $PIDFILE ]; then
+        echo "pidfile $PIDFILE already exists; bismark-data-transmit-collect already running?"
+        exit 1
+    fi
+    start-stop-daemon -S \
+        -x /usr/bin/bismark-data-transmit-collect \
+        -p $PIDFILE \
+        -m -b
+}
+
+stop() {
+    [ -f $PIDFILE ] && {
+        start-stop-daemon -K -q -p $PIDFILE -s TERM
+        rm -f $PIDFILE
+    }
+}
+
+restart() {
+    stop
+    start
+}
