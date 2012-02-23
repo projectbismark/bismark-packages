@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.7
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -103,8 +103,8 @@ rm $${IPKG_INSTROOT}/tmp/authkeys.bismark
 rm $${IPKG_INSTROOT}/tmp/knownhosts.bismark
 if [ -z "$${IPKG_INSTROOT}" ]; then
     	$${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
-	$${IPKG_INSTROOT}/etc/init.d/cron stop
-	$${IPKG_INSTROOT}/etc/init.d/cron start
+	#$${IPKG_INSTROOT}/etc/init.d/cron stop
+	#$${IPKG_INSTROOT}/etc/init.d/cron start
 fi
 endef
 
