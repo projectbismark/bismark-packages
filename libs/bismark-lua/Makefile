@@ -11,7 +11,7 @@ PKG_NAME:=bismark-lua
 PKG_VERSION:=head
 PKG_RELEASE:=7
 
-GIT_URL:=git://github.com/projectbismark.net/bmlua.git
+GIT_URL:=git://github.com/projectbismark/bmlua.git
 
 include $(INCLUDE_DIR)/package.mk
 
