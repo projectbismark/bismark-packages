@@ -15,9 +15,9 @@ GIT_URL:=git://github.com/projectbismark/bismark-data-transmit.git
 
 include $(INCLUDE_DIR)/package.mk
 
-MAKE_FLAGS += UPLOADS_URL=$(CONFIG_BISMARK_DATA_TRANSMIT_URL)
 MAKE_FLAGS += BUILD_ID=$(BISMARK_DATA_TRANSMIT_BUILDID)
-MAKE_FLAGS += RETRY_INTERVAL_MINUTES=$(CONFIG_BISMARK_DATA_TRANSMIT_RETRY_INTERVAL_MINUTES)
+MAKE_FLAGS += UPLOADS_URL="https://projectbismark.net:8081/upload/"
+MAKE_FLAGS += RETRY_INTERVAL_MINUTES=3
 
 define Package/bismark-data-transmit
 	SECTION:=util
