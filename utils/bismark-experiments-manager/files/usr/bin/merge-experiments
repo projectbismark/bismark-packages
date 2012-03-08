@@ -71,6 +71,10 @@ function main(arg)
         end
     end
 
+    -- Update the package list in case there are any new experiments that need
+    -- packages added to the repository at the same time.
+    os.execute("opkg update")
+
     -- Install and remove packages based on the new experiments configuration
     -- (Installed experiments may have changed the set packages they use.)
     os.execute("setup-and-teardown-experiments")
