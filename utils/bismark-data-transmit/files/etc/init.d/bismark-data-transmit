@@ -4,7 +4,7 @@ START=97
 PIDFILE=/var/run/bismark-data-transmit.pid
 DIRECTORIES="
 active
-bismark-experiment-manager
+bismark-experiments-manager
 bismark-updater
 nazanin-traceroute
 passive
