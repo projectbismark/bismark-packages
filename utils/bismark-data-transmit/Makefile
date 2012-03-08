@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
 PKG_VERSION:=head
-PKG_RELEASE:=20
+PKG_RELEASE:=23
 
 GIT_URL:=git://github.com/projectbismark/bismark-data-transmit.git
 
@@ -49,8 +49,6 @@ define Package/bismark-data-transmit/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-data-transmit $(1)/etc/init.d/bismark-data-transmit
-	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/bismark-data-transmit $(1)/etc/config/bismark-data-transmit
 endef
 
 define Package/bismark-data-transmit/postinst

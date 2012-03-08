@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=48
+PKG_RELEASE:=49
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -42,6 +42,7 @@ define Package/bismark-experiments-manager/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/setup-and-teardown-experiments $(1)/usr/bin/setup-and-teardown-experiments
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/merge-experiments $(1)/usr/bin/merge-experiments
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-experiments-manager $(1)/usr/bin/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-experiments-manager $(1)/etc/init.d/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/config
@@ -61,7 +62,7 @@ endef
 define Package/bismark-experiments-manager/prerm
 #!/bin/sh
 /etc/init.d/bismark-experiment-manager disable
-crontab -l | grep -v merge-experiments | crontab -
+crontab -l | grep -v bismark-experiments-manager | crontab -
 endef
 
 $(eval $(call BuildPackage,bismark-experiments-manager))
