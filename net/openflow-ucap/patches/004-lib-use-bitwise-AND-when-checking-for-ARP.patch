@@ -1,0 +1,27 @@
+From 9c6ec98d761076ade9cdb627b773b918827229a5 Mon Sep 17 00:00:00 2001
+From: Srini Seetharaman <seethara@stanford.edu>
+Date: Mon, 17 May 2010 15:36:23 -0700
+Subject: [PATCH] lib: use bitwise AND when checking for ARP
+
+Need to use a bitwise rather than boolean AND operator when checking for
+ARP. (Change && to &)
+---
+ lib/flow.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/lib/flow.c b/lib/flow.c
+index 1855e50..523eff0 100644
+--- a/lib/flow.c
++++ b/lib/flow.c
+@@ -216,7 +216,7 @@ flow_extract(struct ofpbuf *packet, uint16_t in_port, struct flow *flow)
+                     flow->nw_src = arp->ar_spa;
+                     flow->nw_dst = arp->ar_tpa;
+                 }
+-                flow->nw_proto = ntohs(arp->ar_op) && 0xff;
++                flow->nw_proto = ntohs(arp->ar_op) & 0xff;
+             }
+         }
+     }
+-- 
+1.7.0.4
+

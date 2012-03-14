@@ -1,0 +1,35 @@
+diff --git a/lib/util.c b/lib/util.c
+index 21cc28d..3380cc1 100644
+--- a/lib/util.c
++++ b/lib/util.c
+@@ -138,6 +138,7 @@ xasprintf(const char *format, ...)
+     return s;
+ }
+ 
++#ifndef  __USE_BSD
+ void
+ strlcpy(char *dst, const char *src, size_t size)
+ {
+@@ -148,6 +149,7 @@ strlcpy(char *dst, const char *src, size_t size)
+         dst[n_copy] = '\0';
+     }
+ }
++#endif
+ 
+ void
+ ofp_fatal(int err_no, const char *format, ...)
+diff --git a/lib/util.h b/lib/util.h
+index fde681f..3dccd7a 100644
+--- a/lib/util.h
++++ b/lib/util.h
+@@ -105,8 +105,10 @@ char *xasprintf(const char *format, ...) PRINTF_FORMAT(1, 2) MALLOC_LIKE;
+ char *xvasprintf(const char *format, va_list) PRINTF_FORMAT(1, 0) MALLOC_LIKE;
+ 
++#ifndef  __USE_BSD
+ #ifndef HAVE_STRLCPY
+ void strlcpy(char *dst, const char *src, size_t size);
+ #endif
++#endif
+ 
+ void ofp_fatal(int err_no, const char *format, ...)
+     PRINTF_FORMAT(2, 3) NO_RETURN;

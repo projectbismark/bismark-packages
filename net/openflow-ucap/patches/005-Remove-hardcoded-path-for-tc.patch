@@ -1,0 +1,39 @@
+From 880e9aaa055d6fc6f38a0c2808f4d62056dd538b Mon Sep 17 00:00:00 2001
+From: Yiannis Yiakoumis <yiannisy@stanford.edu>
+Date: Wed, 11 Aug 2010 10:46:40 -0700
+Subject: [PATCH] Remove hardcoded path for tc.
+
+We shouldn't assume that tc is in /sbin/ directory.
+Instead the user should make sure that tc is reachable
+through the configured $PATH.
+---
+ lib/netdev.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/lib/netdev.c b/lib/netdev.c
+index 3b6fbc5..f58c02d 100644
+--- a/lib/netdev.c
++++ b/lib/netdev.c
+@@ -195,14 +195,14 @@ get_ipv6_address(const char *name, struct in6_addr *in6)
+ #define TC_DEFAULT_CLASS 0xfffe
+ #define TC_MIN_RATE 1
+ /* This configures an HTB qdisc under the defined device. */
+-#define COMMAND_ADD_DEV_QDISC "/sbin/tc qdisc add dev %s " \
++#define COMMAND_ADD_DEV_QDISC "tc qdisc add dev %s " \
+                               "root handle %x: htb default %x"
+-#define COMMAND_DEL_DEV_QDISC "/sbin/tc qdisc del dev %s root"
+-#define COMMAND_ADD_CLASS "/sbin/tc class add dev %s parent %x:%x " \
++#define COMMAND_DEL_DEV_QDISC "tc qdisc del dev %s root"
++#define COMMAND_ADD_CLASS "tc class add dev %s parent %x:%x " \
+                           "classid %x:%x htb rate %dkbit ceil %dkbit"
+-#define COMMAND_CHANGE_CLASS "/sbin/tc class change dev %s parent %x:%x " \
++#define COMMAND_CHANGE_CLASS "tc class change dev %s parent %x:%x " \
+                              "classid %x:%x htb rate %dkbit ceil %dkbit"
+-#define COMMAND_DEL_CLASS "/sbin/tc class del dev %s parent %x:%x classid %x:%x"
++#define COMMAND_DEL_CLASS "tc class del dev %s parent %x:%x classid %x:%x"
+ 
+ static int
+ netdev_setup_root_class(const struct netdev *netdev, uint16_t class_id,
+-- 
+1.7.0.4
+
