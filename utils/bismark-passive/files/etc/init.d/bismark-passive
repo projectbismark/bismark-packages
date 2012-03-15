@@ -38,10 +38,20 @@ start() {
         echo "pidfile $PIDFILE already exists; bismark-passive already running?"
         exit 1
     fi
-    start-stop-daemon -S \
-        -x /tmp/usr/bin/bismark-passive \
-        -p $PIDFILE \
-        -m -b -- $PASSIVE_ARGUMENTS
+    if [ -x /tmp/usr/bin/bismark-passive ]; then
+        start-stop-daemon -S \
+            -x /tmp/usr/bin/bismark-passive \
+            -p $PIDFILE \
+            -m -b -- $PASSIVE_ARGUMENTS
+    elif [ -x /usr/bin/bismark-passive ]; then
+        start-stop-daemon -S \
+            -x /usr/bin/bismark-passive \
+            -p $PIDFILE \
+            -m -b -- $PASSIVE_ARGUMENTS
+    else
+        echo "Cannot find bismark-passive"
+        exit 1
+    fi
 }
 
 stop() {
