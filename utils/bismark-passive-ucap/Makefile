@@ -8,10 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive-ucap
-PKG_VERSION:=head
 PKG_RELEASE:=1
+PKG_VERSION:=HEAD
 
-GIT_URL:=git://github.com/projectbismark/bismark-passive.git
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-passive.git
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_PROTO:=git
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -37,21 +41,14 @@ define Package/bismark-passive-ucap/description
 	domain names, IP addresses) are anonymized using a secure hash function.
 endef
 
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
-	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
-	cp -r ./files $(PKG_BUILD_DIR)
-endef
-
 define Package/bismark-passive-ucap/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-passive.bin $(1)/usr/bin/bismark-passive.bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-passive $(1)/usr/bin/bismark-passive
+	$(INSTALL_BIN) ./files/usr/bin/bismark-passive $(1)/usr/bin/bismark-passive
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-passive $(1)/etc/init.d/bismark-passive
+	$(INSTALL_BIN) ./files/etc/init.d/bismark-passive $(1)/etc/init.d/bismark-passive
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/files/etc/config/bismark-passive $(1)/etc/config/bismark-passive
+	$(INSTALL_CONF) ./files/etc/config/bismark-passive $(1)/etc/config/bismark-passive
 	$(INSTALL_DIR) $(1)/etc/bismark
 endef
 
