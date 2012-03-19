@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive
-PKG_RELEASE:=13
+PKG_RELEASE:=14
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -146,12 +146,14 @@ endef
 
 define Package/bismark-passive-ucap/postinst
 #!/bin/sh
-/etc/init.d/bismark-passive restart
+/etc/init.d/bismark-passive enable
+/etc/init.d/bismark-passive start
 endef
 
 define Package/bismark-passive-ucap/prerm
 #!/bin/sh
 /etc/init.d/bismark-passive stop
+/etc/init.d/bismark-passive disable
 endef
 
 $(eval $(call BuildPackage,bismark-passive-ucap))
