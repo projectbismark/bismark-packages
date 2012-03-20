@@ -1,0 +1,10 @@
+#!/bin/sh
+while true; do
+    if ! ifconfig | grep -q veth; then
+        sleep 50
+        if ! ifconfig | grep -q veth; then
+            sh /root/enable_ucap.sh
+        fi
+    fi
+	sleep 10
+done

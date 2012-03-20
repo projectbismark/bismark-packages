@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# routing table 
+while ip rule del iif wlan0 table ucap_rt; do true; done
+ip rule add iif wlan0 table ucap_rt
+while ip rule del iif wlan1 table ucap_rt; do true; done
+ip rule add iif wlan1 table ucap_rt
+while ip rule del iif eth0.1 table ucap_rt; do true; done
+ip rule add iif eth0.1 table ucap_rt
+while ip rule del blackhole default table ucap_rt; do true; done
+ip route add blackhole default table ucap_rt
+ip route flush cache
