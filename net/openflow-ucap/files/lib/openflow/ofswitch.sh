@@ -34,9 +34,9 @@ add_ofswitch_datapath() {
 		else
 			echo "Configuring OpenFlow switch for out-of-band control"
 			[ -n "$dpid" ] && {
-				ofdatapath punix:/var/run/dp0.sock -i "$dpports" --no-local-port "--pidfile=$pidfile" -d "$dpid" &
+				ofdatapath punix:/var/run/dp0.sock -i "$dpports" --no-slicing --no-local-port "--pidfile=$pidfile" -d "$dpid" &
 			} || {
-				ofdatapath punix:/var/run/dp0.sock -i "$dpports" --no-local-port "--pidfile=$pidfile" &
+				ofdatapath punix:/var/run/dp0.sock -i "$dpports" --no-slicing --no-local-port "--pidfile=$pidfile" &
 			}
 		fi
 	}
