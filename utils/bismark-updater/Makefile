@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-updater
 PKG_VERSION:=1
-PKG_RELEASE:=20
+PKG_RELEASE:=21
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -26,22 +26,17 @@ define Package/bismark-updater/description
 	update new packages from all repositories listed in opkg.conf.
 endef
 
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	cp -r files/* $(PKG_BUILD_DIR)
-endef
-
 define Build/Compile
 endef
 
 define Package/bismark-updater/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-updater $(1)/usr/bin/bismark-updater
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-updater.lua $(1)/usr/bin/bismark-updater.lua
+	$(INSTALL_BIN) ./files/usr/bin/bismark-updater $(1)/usr/bin/bismark-updater
+	$(INSTALL_BIN) ./files/usr/bin/bismark-updater.lua $(1)/usr/bin/bismark-updater.lua
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-updater $(1)/etc/init.d/bismark-updater
+	$(INSTALL_BIN) ./files/etc/init.d/bismark-updater $(1)/etc/init.d/bismark-updater
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/uci-defaults/bismark-updater $(1)/etc/uci-defaults/bismark-updater
+	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-updater $(1)/etc/uci-defaults/bismark-updater
 endef
 
 define Package/bismark-updater/postinst

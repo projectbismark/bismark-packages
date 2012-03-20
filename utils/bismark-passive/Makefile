@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive
-PKG_RELEASE:=14
+PKG_RELEASE:=16
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -28,6 +28,11 @@ define Build/Compile
 		debug
 	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(MAKE_FLAGS) \
+		EXE=NONE \
+		clean
+
+	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
+		$(MAKE_FLAGS) \
 		UPDATE_INTERVAL=30 \
 		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
 		ENABLE_HTTP_URL=yes \
@@ -35,11 +40,20 @@ define Build/Compile
 		debug
 	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(MAKE_FLAGS) \
+		EXE=NONE \
+		clean
+
+	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
+		$(MAKE_FLAGS) \
 		UPDATE_INTERVAL=30 \
 		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
 		FREQUENT_UPDATES=yes \
 		EXE=bismark-passive-ucap.bin \
 		debug
+	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
+		$(MAKE_FLAGS) \
+		EXE=NONE \
+		clean
 endef
 
 define InstallCommon
@@ -147,7 +161,7 @@ endef
 define Package/bismark-passive-ucap/postinst
 #!/bin/sh
 /etc/init.d/bismark-passive enable
-/etc/init.d/bismark-passive start
+/etc/init.d/bismark-passive restart
 endef
 
 define Package/bismark-passive-ucap/prerm

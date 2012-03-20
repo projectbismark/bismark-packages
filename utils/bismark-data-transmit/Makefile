@@ -8,10 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
-PKG_VERSION:=head
-PKG_RELEASE:=24
+PKG_RELEASE:=1
+PKG_VERSION:=HEAD
 
-GIT_URL:=git://github.com/projectbismark/bismark-data-transmit.git
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-data-transmit.git
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_PROTO:=git
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -36,19 +40,12 @@ define Package/bismark-data-transmit/config
 	source "$(SOURCE)/Config.in"
 endef
 
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
-	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
-	cp -r ./files $(PKG_BUILD_DIR)
-endef
-
 define Package/bismark-data-transmit/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit.bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/usr/bin/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit
+	$(INSTALL_BIN) ./files/usr/bin/bismark-data-transmit $(1)/usr/bin/bismark-data-transmit
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/etc/init.d/bismark-data-transmit $(1)/etc/init.d/bismark-data-transmit
+	$(INSTALL_BIN) ./files/etc/init.d/bismark-data-transmit $(1)/etc/init.d/bismark-data-transmit
 endef
 
 define Package/bismark-data-transmit/postinst

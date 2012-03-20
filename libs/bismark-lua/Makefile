@@ -8,10 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lua
-PKG_VERSION:=head
-PKG_RELEASE:=7
+PKG_RELEASE:=1
+PKG_VERSION:=HEAD
 
-GIT_URL:=git://github.com/projectbismark/bmlua.git
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=git://github.com/projectbismark/bmlua.git
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_PROTO:=git
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -25,17 +29,6 @@ endef
 
 define Package/bismark-lua/description
 	A set of lua libraries used by Bismark.
-endef
-
-define Package/bismark-lua/config
-	source "$(SOURCE)/Config.in"
-endef
-
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	git clone -- $(GIT_URL) $(PKG_BUILD_DIR)
-	git --git-dir=$(PKG_BUILD_DIR)/.git rev-parse HEAD
-#	cp -r ./files $(PKG_BUILD_DIR)
 endef
 
 define Build/Compile

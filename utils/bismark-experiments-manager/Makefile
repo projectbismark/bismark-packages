@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=50
+PKG_RELEASE:=51
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -26,11 +26,6 @@ define Package/bismark-experiments-manager/description
 	Bismark platform, and lets users install and remove experiments.
 endef
 
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-	cp -r files/* $(PKG_BUILD_DIR)
-endef
-
 define Build/Compile
 endef
 
@@ -40,15 +35,15 @@ endef
 
 define Package/bismark-experiments-manager/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/setup-and-teardown-experiments $(1)/usr/bin/setup-and-teardown-experiments
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/merge-experiments $(1)/usr/bin/merge-experiments
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usr/bin/bismark-experiments-manager $(1)/usr/bin/bismark-experiments-manager
+	$(INSTALL_BIN) ./files/usr/bin/setup-and-teardown-experiments $(1)/usr/bin/setup-and-teardown-experiments
+	$(INSTALL_BIN) ./files/usr/bin/merge-experiments $(1)/usr/bin/merge-experiments
+	$(INSTALL_BIN) ./files/usr/bin/bismark-experiments-manager $(1)/usr/bin/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-experiments-manager $(1)/etc/init.d/bismark-experiments-manager
+	$(INSTALL_BIN) ./files/etc/init.d/bismark-experiments-manager $(1)/etc/init.d/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/config/bismark-experiments $(1)/etc/config/bismark-experiments
+	$(INSTALL_CONF) ./files/etc/config/bismark-experiments $(1)/etc/config/bismark-experiments
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/uci-defaults/bismark-experiments-manager $(1)/etc/uci-defaults/bismark-experiments-manager
+	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-experiments-manager $(1)/etc/uci-defaults/bismark-experiments-manager
 endef
 
 define Package/bismark-experiments-manager/postinst
