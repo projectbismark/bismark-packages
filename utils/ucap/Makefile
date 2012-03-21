@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ucap
 PKG_VERSION:=1
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -46,9 +46,19 @@ if uci get wireless.@wifi-iface[0].network \
 	uci delete wireless.@wifi-iface[0].network
 	uci delete wireless.@wifi-iface[1].network
 	uci delete network.lan.ifname
+	uci set network.dum=interface
+	uci set network.dum.ifname=eth0.2
+	uci set network.dum.proto=static
 	uci commit wireless
 	uci commit network
 	/etc/init.d/network restart
+fi
+
+sed -i /^.*ucap_rt$/d /etc/iproute2/rt_tables
+echo 200 ucap_rt >> /etc/iproute2/rt_tables
+
+if [ ! -f /etc/bismark/passive.key ]; then
+	dd if=/dev/urandom of=/etc/bismark/passive.key bs=1 count=16 2>/dev/null
 fi
 
 uci set openflow.@ofswitch[0].dp=dp0
@@ -62,6 +72,10 @@ uci commit openflow
 
 /etc/init.d/ucap enable
 /etc/init.d/ucap restart
+
+if [ -f /etc/init.d/bismark-passive ]; then
+	/etc/init.d/bismark-passive restart
+fi
 endef
 
 define Package/ucap/prerm
