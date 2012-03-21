@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-lua
-PKG_RELEASE:=1
+PKG_RELEASE:=4
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -36,6 +36,7 @@ endef
 
 define Package/bismark-lua/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/bmlua
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/graphs.lua $(1)/usr/lib/lua/bmlua/graphs.lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/opkg.lua $(1)/usr/lib/lua/bmlua/opkg.lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/path.lua $(1)/usr/lib/lua/bmlua/path.lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/bmlua/set.lua $(1)/usr/lib/lua/bmlua/set.lua
