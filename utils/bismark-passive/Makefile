@@ -20,40 +20,33 @@ PKG_SOURCE_PROTO:=git
 include $(INCLUDE_DIR)/package.mk
 
 define Build/Compile
+	mkdir -p \
+		$(PKG_BUILD_DIR)/bismark-passive-tmpfs \
+		$(PKG_BUILD_DIR)/bismark-passive-http-url-tmpfs \
+		$(PKG_BUILD_DIR)/bismark-passive-ucap
 	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(MAKE_FLAGS) \
 		UPDATE_INTERVAL=30 \
 		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
 		EXE=bismark-passive.bin \
-		debug
-	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
-		$(MAKE_FLAGS) \
-		EXE=NONE \
-		clean
-
+		BUILD_DIR=$(PKG_BUILD_DIR)/bismark-passive-tmpfs \
+		release
 	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(MAKE_FLAGS) \
 		UPDATE_INTERVAL=30 \
 		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
 		ENABLE_HTTP_URL=yes \
 		EXE=bismark-passive-http-url.bin \
-		debug
-	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
-		$(MAKE_FLAGS) \
-		EXE=NONE \
-		clean
-
+		BUILD_DIR=$(PKG_BUILD_DIR)/bismark-passive-http-url-tmpfs \
+		release
 	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(MAKE_FLAGS) \
 		UPDATE_INTERVAL=30 \
 		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
 		FREQUENT_UPDATES=yes \
 		EXE=bismark-passive-ucap.bin \
-		debug
-	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
-		$(MAKE_FLAGS) \
-		EXE=NONE \
-		clean
+		BUILD_DIR=$(PKG_BUILD_DIR)/bismark-passive-ucap \
+		release
 endef
 
 define InstallCommon
