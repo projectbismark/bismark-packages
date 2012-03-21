@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive
-PKG_RELEASE:=16
+PKG_RELEASE:=17
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -134,7 +134,7 @@ define Package/bismark-passive-ucap
 	CATEGORY:=Utilities
 	TITLE:=PCAP-based passive observer for bismark-passive
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+libpcap +libpthread +zlib +bismark-data-transmit
+	DEPENDS:=+libpcap +libpthread +zlib +bismark-data-transmit +ucap
 	PROVIDES:=bismark-passive
 endef
 
