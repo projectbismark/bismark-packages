@@ -8,7 +8,7 @@ start() {
         echo "pidfile $PIDFILE already exists; monitor-ucap-veth already running?"
         exit 1
     fi
-    start-stop-daemon -S -x /usr/bin/monitor-ucap-veth -m -p $PIDFILE -b
+    start-stop-daemon -S -x /usr/bin/ucap-monitor-veth -m -p $PIDFILE -b
 }
 
 stop() {

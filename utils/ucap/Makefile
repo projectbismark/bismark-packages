@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ucap
 PKG_VERSION:=1
-PKG_RELEASE:=1
+PKG_RELEASE:=4
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -39,13 +39,13 @@ define Package/ucap/install
 endef
 
 define Package/ucap/postinst
-#!/bin/sh -x
+#!/bin/sh
 if uci get wireless.@wifi-iface[0].network \
 		|| uci get wireless.@wifi-iface[1].network \
 		|| uci get network.lan.ifname; then
-	uci set wireless.@wifi-iface[0].network=''
-	uci set wireless.@wifi-iface[1].network=''
-	uci set network.lan.ifname=''
+	uci delete wireless.@wifi-iface[0].network
+	uci delete wireless.@wifi-iface[1].network
+	uci delete network.lan.ifname
 	uci commit wireless
 	uci commit network
 	/etc/init.d/network restart
@@ -64,15 +64,18 @@ uci commit openflow
 /etc/init.d/ucap restart
 endef
 
-define Pakcage/ucap/prerm
+define Package/ucap/prerm
 #!/bin/sh
 /etc/init.d/ucap stop
 /etc/init.d/ucap disable
 
+/etc/init.d/openflow stop
+
 while ip rule del iif wlan0; do true; done
 while ip rule del iif wlan1; do true; done
 while ip rule del iif eth0.1; do true; done
-while ip rule del blackhole default table ucap_rt; do true; done
+while ip route del blackhole default table ucap_rt; do true; done
+ip route flush cache
 
 uci set wireless.@wifi-iface[0].network='lan'
 uci set wireless.@wifi-iface[1].network='lan'
@@ -80,6 +83,8 @@ uci set network.lan.ifname='eth0.1'
 uci commit wireless
 uci commit network
 /etc/init.d/network restart
+ifconfig eth0.1 up
+brctl addif br-lan eth0.1
 endef
 
 $(eval $(call BuildPackage,ucap))

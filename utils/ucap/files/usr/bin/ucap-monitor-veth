@@ -3,7 +3,7 @@ while true; do
     if ! ifconfig | grep -q veth; then
         sleep 50
         if ! ifconfig | grep -q veth; then
-            sh /root/enable_ucap.sh
+            /etc/init.d/openflow restart
         fi
     fi
 	sleep 10
