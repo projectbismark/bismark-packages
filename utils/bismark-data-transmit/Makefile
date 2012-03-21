@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
-PKG_RELEASE:=1
+PKG_RELEASE:=4
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -57,7 +57,7 @@ fi
 true
 endef
 
-define Pakcage/bismark-data-transmit/prerm
+define Package/bismark-data-transmit/prerm
 #!/bin/sh
 /etc/init.d/bismark-data-transmit stop
 /etc/init.d/bismark-data-transmit disable
