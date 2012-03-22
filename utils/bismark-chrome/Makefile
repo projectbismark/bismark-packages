@@ -8,31 +8,25 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome
-PKG_VERSION:=1.0.0
-PKG_RELEASE:=2
+PKG_VERSION:=2.0.0
+PKG_RELEASE:=1
 PKG_REV:=2693afcf4c08c41067ac11177a1da3a033d6c6c0
 # PKG_VERSION:=20110517
-
-#PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-#PKG_SOURCE_URL:=git://github.com/dtaht/$(PKG_NAME).git
-#PKG_SOURCE_PROTO:=git
-#PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-#PKG_SOURCE_VERSION:=$(PKG_REV)
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/bismark-chrome
    SECTION:=utils
    CATEGORY:=Utilities
-   TITLE:=Web server files for bismark
-   URL:=http://www.gtnoise.net/
+   TITLE:=On-router HTML interface/information files.
+   URL:=http://www.projectbismark.net/
    MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
-   DEPENDS:=+lighttpd
+   DEPENDS:=+uhttpd
 endef
 
 define Package/bismark-chrome/description
-	The bismark-chrome package provides a reference local web page
-	for network resources.
+	The bismark-chrome package provides the default web interface/information
+	files on the bismark router.
 endef
 
 define Build/Prepare
@@ -45,7 +39,18 @@ define Build/Compile
 endef
 
 define Package/bismark-chrome/install
-	$(INSTALL_DIR) $(1)/tmp
+	$(INSTALL_DIR) $(1)/www
+	$(CP) -p $(PKG_BUILD_DIR)/www/* $(1)/www/
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-chrome $(1)/etc/init.d/bismark-chrome
+endef
+
+define Package/bismark-chrome/postinst
+#!/bin/sh
+# Bismark management post-install script
+if [[ -e /www/index.html ]] && [[ -e /www/index.htm ]]; then
+    rm -f /www/index.html
+fi
 endef
 
 $(eval $(call BuildPackage,bismark-chrome))
