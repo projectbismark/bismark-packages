@@ -41,6 +41,8 @@ endef
 define Package/bismark-chrome-new/install
 	$(INSTALL_DIR) $(1)/www
 	$(CP) -p $(PKG_BUILD_DIR)/www/* $(1)/www/
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/etc/init.d/bismark-chrome-new $(1)/etc/init.d/bismark-chrome-new
 endef
 
 define Package/bismark-chrome-new/postinst

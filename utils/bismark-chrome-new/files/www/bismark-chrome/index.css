@@ -24,7 +24,7 @@ a.nocolor:visited {
     color: inherit;
 }
 
-h2 a {
+h2 a, input.h2 {
     color: #0091C9;
 }
 
@@ -119,6 +119,18 @@ h2 {
     font-size: 1.5em;
     font-weight: bold;
     color: #333;
+}
+
+input.h2 {
+    font-size: 18pt;
+    font-weight: bold;
+    border: none;
+    background: none;
+    text-decoration: underline;
+    cursor: pointer;
+    display: in-line;
+    margin: 0px;
+    padding: 0px;
 }
 
 .main {
