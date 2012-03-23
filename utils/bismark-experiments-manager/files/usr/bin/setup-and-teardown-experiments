@@ -1,13 +1,18 @@
 #!/usr/bin/env lua
 
 require("io")
+require('os')
 require("uci")
+require('bmlua.graphs')
 require('bmlua.set')
 local set = bmlua.set
 require('bmlua.opkg')
 local opkg = bmlua.opkg
 require('bmlua.uci')
 require('nixio.fs')
+
+local UCI_TRUE = bmlua.uci.UCI_TRUE
+local UCI_FALSE = bmlua.uci.UCI_FALSE
 
 local EXPERIMENTS_CONFIG = "bismark-experiments"
 local EXPERIMENTS_CACHE = "/var/bismark-experiments"
@@ -26,7 +31,8 @@ local load_experiments = function(cursor, candidate_packages)
     if config ~= nil then
         for _, section in pairs(config) do
             if section[".type"] == "experiment"
-                    and (section.installed == '1' or section.required == '1')
+                    and (bmlua.uci.parse_bool(section.installed)
+                            or bmlua.uci.parse_bool(section.required))
                     and section.package ~= nil then
                 installed_packages:update(set.from_array(section.package))
             end
@@ -64,10 +70,10 @@ local remove_conflicting_experiments = function(cursor)
                         print("Experiments " .. name .. " and " .. conflict .. " conflict")
                         if not conflict_required then
                             print("Marking " .. conflict .. " for removal")
-                            cursor:set(EXPERIMENTS_CONFIG, conflict, 'installed', '0')
+                            cursor:set(EXPERIMENTS_CONFIG, conflict, 'installed', UCI_FALSE)
                         elseif not required then
                             print("Marking " .. name .. " for removal")
-                            cursor:set(EXPERIMENTS_CONFIG, name, 'installed', '0')
+                            cursor:set(EXPERIMENTS_CONFIG, name, 'installed', UCI_FALSE)
                         else
                             print("Both " .. name .. " and " .. conflict .. " are required!")
                             print("We will attempt to install both experiments, but this will probably end badly.")
@@ -79,6 +85,36 @@ local remove_conflicting_experiments = function(cursor)
         end
         cursor:commit(EXPERIMENTS_CONFIG)
     end
+end
+
+function sort_packages(packages)
+    local dependency_graph = {}
+    for package_name in packages:iter() do
+        local info = opkg.info(package_name)
+        dependency_graph[package_name] = info.depends
+        if dependency_graph[package_name] == nil then
+            dependency_graph[package_name] = {}
+        end
+        if info.provides ~= nil then
+            for _, synonym in ipairs(info.provides) do
+                if dependency_graph[synonym] == nil then
+                    dependency_graph[synonym] = {package_name}
+                end
+            end
+        end
+    end
+    local sorted = bmlua.graphs.topological_sort(dependency_graph)
+    if sorted == nil then
+        print("Package dependency graph is inconsistent!")
+        os.exit(1)
+    end
+    local sorted_packages = {}
+    for _, package in ipairs(sorted) do
+        if packages:contains(package) then
+            table.insert(sorted_packages, package)
+        end
+    end
+    return sorted_packages
 end
 
 function main(arg)
@@ -102,11 +138,15 @@ function main(arg)
     local should_install = load_experiments(cursor, managed_packages)
     local currently_installed =
             opkg.list_installed():intersection(managed_packages)
-    for package_name in currently_installed:difference(should_install):iter() do
-        print("removing " .. package_name)
-        opkg.remove(package_name)
+    local to_remove =
+            sort_packages(currently_installed:difference(should_install))
+    for idx = #to_remove,1,-1 do
+        print("removing " .. to_remove[idx])
+        opkg.remove(to_remove[idx])
     end
-    for package_name in should_install:difference(currently_installed):iter() do
+    local to_install =
+            sort_packages(should_install:difference(currently_installed))
+    for _, package_name in ipairs(to_install) do
         print("installing " .. package_name)
         opkg.install(package_name)
     end

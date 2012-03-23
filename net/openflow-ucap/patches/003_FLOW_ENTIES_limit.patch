@@ -1,0 +1,13 @@
+diff --git a/udatapath/chain.h b/udatapath/chain.h
+index fb4e9c3..a6f25c5 100644
+--- a/udatapath/chain.h
++++ b/udatapath/chain.h
+@@ -44,7 +44,7 @@ struct list;
+ struct datapath;
+ 
+ #define TABLE_LINEAR_MAX_FLOWS  100
+-#define TABLE_HASH_MAX_FLOWS    65536
++#define TABLE_HASH_MAX_FLOWS    16384
+ #define TABLE_MAC_MAX_FLOWS      1024
+ #define TABLE_MAC_NUM_BUCKETS   1024
+ 

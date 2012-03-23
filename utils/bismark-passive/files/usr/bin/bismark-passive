@@ -1,0 +1,20 @@
+#!/bin/sh
+
+while [ 1 ]; do
+    if [ -x /tmp/usr/bin/bismark-passive.bin ]; then
+        /tmp/usr/bin/bismark-passive.bin "$@" &
+    elif [ -x /usr/bin/bismark-passive.bin ]; then
+        /usr/bin/bismark-passive.bin "$@" &
+    else
+        echo "Cannot find bismark-passive.bin"
+        exit 1
+    fi
+    trap "kill $!; rm -f $2; exit" INT TERM
+    wait $!
+    RETURN_CODE=$?
+    trap - INT TERM
+    if [ "$RETURN_CODE" != "0" ]; then
+        sleep 10
+    fi
+    echo "Restarting Bismark Passive"
+done

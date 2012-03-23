@@ -1,7 +1,0 @@
-config directories
-    list directory active
-    list directory bismark-updater
-    list directory nazanin-traceroute
-    list directory passive
-    list directory passive-frequent
-    list directory wifi-beacons

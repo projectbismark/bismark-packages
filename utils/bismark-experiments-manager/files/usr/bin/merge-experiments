@@ -13,6 +13,9 @@ set = bmlua.set
 require('bmlua.uci')
 require('nixio.fs')
 
+local UCI_TRUE = bmlua.uci.UCI_TRUE
+local UCI_FALSE = bmlua.uci.UCI_FALSE
+
 ------------------------------------------------------------------------------
 -- GLOBALS
 ------------------------------------------------------------------------------
@@ -24,12 +27,6 @@ else
 end
 UCI_CONFIG = 'bismark-experiments'
 EXPERIMENTS_CACHE = '/var/bismark-experiments'
-
-------------------------------------------------------------------------------
--- CONSTANTS
-------------------------------------------------------------------------------
-UCI_TRUE = '1'
-UCI_FALSE = '0'
 
 ------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -71,6 +68,10 @@ function main(arg)
         end
     end
 
+    -- Update the package list in case there are any new experiments that need
+    -- packages added to the repository at the same time.
+    os.execute("opkg update")
+
     -- Install and remove packages based on the new experiments configuration
     -- (Installed experiments may have changed the set packages they use.)
     os.execute("setup-and-teardown-experiments")
@@ -80,7 +81,7 @@ function main(arg)
     if experiments_config ~= nil then
         for name, experiment in pairs(experiments_config) do
             if not experiments:contains(name) then
-                local_uci:set(UCI_CONFIG, name, 'available', '0')
+                local_uci:set(UCI_CONFIG, name, 'available', UCI_FALSE)
             end
         end
         local_uci:save(UCI_CONFIG)
@@ -103,7 +104,7 @@ end
 
 function fetch_experiments()
     nixio.fs.mkdir(EXPERIMENTS_CACHE)
-    local downloaded = path.join("/tmp/bismark-experiments-downloaded")
+    local downloaded = "/tmp/bismark-experiments-downloaded"
     for info in opkg.get_package_list_urls():iter() do
         nixio.fs.remove(downloaded)
         local experiments_url = path.join(info.url, "Experiments")

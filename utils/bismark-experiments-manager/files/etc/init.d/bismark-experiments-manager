@@ -2,8 +2,8 @@
 
 START=99
 start() {
-    [ -x /usr/bin/merge-experiments ] && \
-        /usr/bin/merge-experiments
+    [ -x /usr/bin/bismark-experiments-manager ] && \
+        /usr/bin/bismark-experiments-manager
 }
 
 stop() {

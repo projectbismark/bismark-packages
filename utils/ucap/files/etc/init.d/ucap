@@ -1,0 +1,24 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+PIDFILE=/var/run/monitor-ucap-veth.pid
+
+start() {
+    if [ -f $PIDFILE ]; then
+        echo "pidfile $PIDFILE already exists; monitor-ucap-veth already running?"
+        exit 1
+    fi
+    start-stop-daemon -S -x /usr/bin/ucap-monitor-veth -m -p $PIDFILE -b
+}
+
+stop() {
+    [ -f $PIDFILE ] && {
+        start-stop-daemon -K -q -p $PIDFILE -s TERM
+        rm -f $PIDFILE
+    }
+}
+
+restart() {
+    stop
+    start
+}

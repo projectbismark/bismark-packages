@@ -1,0 +1,67 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+PIDFILE=/var/run/bismark-passive.pid
+CONFIG_PATH=/etc/config/bismark-passive
+HASH_KEY=/etc/bismark/passive.key
+
+load_whitelist() {
+    local cfg="$1"
+
+    local domains whitelist_enabled
+    config_get_bool whitelist_enabled "$cfg" enabled 0
+    [ "$whitelist_enabled" -eq "1" ] || return
+
+    local whitelist_filename
+    whitelist_filename=`mktemp /tmp/bismark-passive-whitelist.XXXXXX`
+    append PASSIVE_ARGUMENTS "$whitelist_filename"
+    config_get domains "$cfg" domain
+    for domain in $domains; do
+        echo $domain >> $whitelist_filename
+    done
+}
+
+start() {
+    PASSIVE_ARGUMENTS="br-lan"
+    if [ ! -f "$CONFIG_PATH" ]; then
+        cp /tmp$CONFIG_PATH $CONFIG_PATH
+        echo "Default configuration installed as ${CONFIG_PATH}"
+    fi
+    config_load bismark-passive
+    config_foreach load_whitelist whitelist
+    mkdir -p /tmp/bismark-passive/updates
+    if [ ! -f $HASH_KEY ]; then
+        dd if=/dev/urandom of=$HASH_KEY bs=1 count=16 2>/dev/null
+        echo "Generated fresh anonymization key"
+    fi
+    if [ -f $PIDFILE ]; then
+        echo "pidfile $PIDFILE already exists; bismark-passive already running?"
+        exit 1
+    fi
+    if [ -x /tmp/usr/bin/bismark-passive ]; then
+        start-stop-daemon -S \
+            -x /tmp/usr/bin/bismark-passive \
+            -p $PIDFILE \
+            -m -b -- $PASSIVE_ARGUMENTS
+    elif [ -x /usr/bin/bismark-passive ]; then
+        start-stop-daemon -S \
+            -x /usr/bin/bismark-passive \
+            -p $PIDFILE \
+            -m -b -- $PASSIVE_ARGUMENTS
+    else
+        echo "Cannot find bismark-passive"
+        exit 1
+    fi
+}
+
+stop() {
+    [ -f $PIDFILE ] && {
+        start-stop-daemon -K -q -p $PIDFILE -s TERM
+        rm -f $PIDFILE
+    }
+}
+
+restart() {
+    stop
+    start
+}

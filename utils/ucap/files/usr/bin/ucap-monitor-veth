@@ -1,0 +1,11 @@
+#!/bin/sh
+while true; do
+    if ! ifconfig | grep -q veth; then
+        sleep 50
+        if ! ifconfig | grep -q veth; then
+            /etc/init.d/openflow restart
+            /etc/init.d/bismark-passive restart
+        fi
+    fi
+	sleep 10
+done

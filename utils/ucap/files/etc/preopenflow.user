@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# veth device veth0
+if ! ifconfig veth0; then
+	vethd -v veth0 -e eth0.2
+fi
+ifconfig veth0 up
+
+# veth device veth1
+if ! ifconfig veth1; then
+    vethd -v veth1 -e eth0.2 -m `ifconfig eth0 | awk '/HWaddr/{print $5}'`
+fi
+ifconfig veth1 up
+
+# bridge
+ifconfig br-lan down
+brctl addbr br-lan
+brctl delif br-lan eth0.1
+brctl delif br-lan wlan0
+brctl delif br-lan wlan1
+brctl addif br-lan veth1
+ifconfig br-lan up
