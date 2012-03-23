@@ -7,7 +7,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=ditg
+PKG_NAME:=bismark-ditg
 PKG_VERSION:=2.8.0-rc1
 PKG_RELEASE:=2
 
@@ -19,16 +19,17 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/D-ITG-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/ditg
+define Package/bismark-ditg
   TITLE:=D-ITG (Distributed Internet Traffic Generator)
   SECTION:=net
   CATEGORY:=Network
   URL:=http://www.grid.unina.it/software/ITG/
   MAINTAINER:=Giovanni Di Stasi <giovanni.distasi@unina.it>
   DEPENDS:=+libpthread +uclibcxx 
+  PROVIDES:=ditg
 endef
 
-define Package/ditg/description
+define Package/bismark-ditg/description
   D-ITG (Distributed Internet Traffic Generator) is a platform capable
   to produce traffic at packet level accurately replicating appropriate
   stochastic processes for both IDT (Inter Departure Time) and PS
@@ -46,9 +47,9 @@ TARGET_CXX=$(STAGING_DIR)/host/bin/g++-uc
 MAKE_FLAGS += \
        CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DARM"
 
-define Package/ditg/install
+define Package/bismark-ditg/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/ITG{Send,Recv,Log,Dec} $(1)/usr/bin
 endef
 
-$(eval $(call BuildPackage,ditg))
+$(eval $(call BuildPackage,bismark-ditg))
