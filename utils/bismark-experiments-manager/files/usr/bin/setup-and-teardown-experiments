@@ -11,6 +11,9 @@ local opkg = bmlua.opkg
 require('bmlua.uci')
 require('nixio.fs')
 
+local UCI_TRUE = bmlua.uci.UCI_TRUE
+local UCI_FALSE = bmlua.uci.UCI_FALSE
+
 local EXPERIMENTS_CONFIG = "bismark-experiments"
 local EXPERIMENTS_CACHE = "/var/bismark-experiments"
 
@@ -28,7 +31,8 @@ local load_experiments = function(cursor, candidate_packages)
     if config ~= nil then
         for _, section in pairs(config) do
             if section[".type"] == "experiment"
-                    and (section.installed == '1' or section.required == '1')
+                    and (bmlua.uci.parse_bool(section.installed)
+                            or bmlua.uci.parse_bool(section.required))
                     and section.package ~= nil then
                 installed_packages:update(set.from_array(section.package))
             end
@@ -66,10 +70,10 @@ local remove_conflicting_experiments = function(cursor)
                         print("Experiments " .. name .. " and " .. conflict .. " conflict")
                         if not conflict_required then
                             print("Marking " .. conflict .. " for removal")
-                            cursor:set(EXPERIMENTS_CONFIG, conflict, 'installed', '0')
+                            cursor:set(EXPERIMENTS_CONFIG, conflict, 'installed', UCI_FALSE)
                         elseif not required then
                             print("Marking " .. name .. " for removal")
-                            cursor:set(EXPERIMENTS_CONFIG, name, 'installed', '0')
+                            cursor:set(EXPERIMENTS_CONFIG, name, 'installed', UCI_FALSE)
                         else
                             print("Both " .. name .. " and " .. conflict .. " are required!")
                             print("We will attempt to install both experiments, but this will probably end badly.")

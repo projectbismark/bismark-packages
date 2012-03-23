@@ -7,7 +7,6 @@ require('bmlua.path')
 path = bmlua.path
 require('bmlua.set')
 set = bmlua.set
-require('nixio.fs')
 
 local get_managed_repositories = function()
     local managed_repositories = set.Set()

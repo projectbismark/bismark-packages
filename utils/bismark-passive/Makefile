@@ -8,10 +8,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive
-PKG_RELEASE:=17
+PKG_RELEASE:=18
 PKG_VERSION:=HEAD
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_RELEASE).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-passive.git
 PKG_SOURCE_VERSION:=$(PKG_VERSION)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -65,7 +65,7 @@ define Package/bismark-passive-tmpfs
 	CATEGORY:=Utilities
 	TITLE:=PCAP-based passive observer for bismark-passive
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+libpcap +libpthread +zlib +bismark-data-transmit
+	DEPENDS:=+bismark-data-transmit +bismark-mgmt +libpcap +libpthread +zlib 
 	PROVIDES:=bismark-passive
 endef
 

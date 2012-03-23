@@ -28,7 +28,7 @@ define Package/bismark-data-transmit
 	CATEGORY:=Utilities
 	TITLE:=cURL-based data transfer tool for BISmark
 	URL:=https://github.com/sburnett/bismark-data-transmit
-	DEPENDS:=+libcurl
+	DEPENDS:=+bismark-mgmt +libcurl
 endef
 
 define Package/bismark-data-transmit/description

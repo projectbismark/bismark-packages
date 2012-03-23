@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-experiments-manager
 PKG_VERSION:=1
-PKG_RELEASE:=54
+PKG_RELEASE:=55
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,7 +18,7 @@ define Package/bismark-experiments-manager
 	CATEGORY:=Utilities
 	TITLE:=Track and intstall experiments for the Bismark platform
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-lua +libuci-lua
+	DEPENDS:=+bismark-data-transmit +bismark-lua +bismark-mgmt +libuci-lua
 endef
 
 define Package/bismark-experiments-manager/description

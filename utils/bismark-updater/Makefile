@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-updater
 PKG_VERSION:=1
-PKG_RELEASE:=21
+PKG_RELEASE:=22
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,7 +18,7 @@ define Package/bismark-updater
 	CATEGORY:=Utilities
 	TITLE:=tmpfs-aware OpenWRT package updater
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-data-transmit
+	DEPENDS:=+bismark-data-transmit +bismark-lua +bismark-mgmt
 endef
 
 define Package/bismark-updater/description
