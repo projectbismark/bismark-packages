@@ -1,0 +1,8 @@
+--- a/libopkg/Makefile.am	2012-03-07 01:26:52.876586105 +0000
++++ b/libopkg/Makefile.am	2012-03-23 20:10:48.174986938 +0000
+@@ -41,4 +41,4 @@
+ 	$(opkg_cmd_sources) $(opkg_db_sources) \
+ 	$(opkg_util_sources) $(opkg_list_sources)
+ 
+-libopkg_a_LIBADD = $(top_builddir)/libbb/libbb.a $(CURL_LIBS) $(GPGME_LIBS) $(OPENSSL_LIBS) $(PATHFINDER_LIBS)
++libopkg_a_LIBADD = $(top_builddir)/libbb/libbb.a
