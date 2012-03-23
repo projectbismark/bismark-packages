@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ucap
 PKG_VERSION:=1
-PKG_RELEASE:=5
+PKG_RELEASE:=8
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -40,16 +40,10 @@ endef
 
 define Package/ucap/postinst
 #!/bin/sh
-if uci get wireless.@wifi-iface[0].network \
-		|| uci get wireless.@wifi-iface[1].network \
-		|| uci get network.lan.ifname; then
-	uci delete wireless.@wifi-iface[0].network
-	uci delete wireless.@wifi-iface[1].network
-	uci delete network.lan.ifname
+if ! uci get network.dum.ifname; then
 	uci set network.dum=interface
 	uci set network.dum.ifname=eth0.2
 	uci set network.dum.proto=static
-	uci commit wireless
 	uci commit network
 	/etc/init.d/network restart
 fi
@@ -91,14 +85,9 @@ while ip rule del iif eth0.1; do true; done
 while ip route del blackhole default table ucap_rt; do true; done
 ip route flush cache
 
-uci set wireless.@wifi-iface[0].network='lan'
-uci set wireless.@wifi-iface[1].network='lan'
-uci set network.lan.ifname='eth0.1'
-uci commit wireless
-uci commit network
 /etc/init.d/network restart
-ifconfig eth0.1 up
-brctl addif br-lan eth0.1
+#ifconfig eth0.1 up
+#brctl addif br-lan eth0.1
 endef
 
 $(eval $(call BuildPackage,ucap))

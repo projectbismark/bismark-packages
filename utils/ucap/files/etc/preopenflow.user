@@ -13,7 +13,10 @@ fi
 ifconfig veth1 up
 
 # bridge
+ifconfig br-lan down
 brctl addbr br-lan
 brctl delif br-lan eth0.1
+brctl delif br-lan wlan0
+brctl delif br-lan wlan1
 brctl addif br-lan veth1
 ifconfig br-lan up
