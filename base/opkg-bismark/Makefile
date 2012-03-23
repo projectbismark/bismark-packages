@@ -7,14 +7,14 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=opkg
+PKG_NAME:=opkg-bismark
 PKG_REV:=576
 PKG_VERSION:=$(PKG_REV)
 PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=svn
 PKG_SOURCE_VERSION:=$(PKG_REV)
-PKG_SOURCE_SUBDIR:=opkg-$(PKG_VERSION)
+PKG_SOURCE_SUBDIR:=opkg-bismark-$(PKG_VERSION)
 PKG_SOURCE_URL:=http://opkg.googlecode.com/svn/trunk/
 PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
 PKG_FIXUP:=autoreconf
@@ -23,15 +23,16 @@ PKG_REMOVE_FILES = autogen.sh aclocal.m4
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/host-build.mk
 
-define Package/opkg
+define Package/opkg-bismark
   SECTION:=base
   CATEGORY:=Base system
   TITLE:=opkg package management system
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
   URL:=http://wiki.openmoko.org/wiki/Opkg
+  PROBIDES:=opkg
 endef
 
-define Package/opkg/description
+define Package/opkg-bismark/description
   Lightweight package management system
   opkg is the opkg Package Management System, for handling
   installation and removal of packages on a system. It can
@@ -41,7 +42,7 @@ define Package/opkg/description
   opkg knows how to install both .ipk and .deb packages.
 endef
 
-define Package/opkg/conffiles
+define Package/opkg-bismark/conffiles
 /etc/opkg.conf
 endef
 
@@ -63,7 +64,7 @@ define Build/Compile
 		all install
 endef
 
-define Package/opkg/install
+define Package/opkg-bismark/install
 	$(INSTALL_DIR) $(1)/usr/lib/opkg
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_DIR) $(1)/etc
@@ -92,5 +93,5 @@ define Host/Install
 	$(INSTALL_BIN) $(HOST_BUILD_DIR)/src/opkg-cl $(STAGING_DIR_HOST)/bin/opkg
 endef
 
-$(eval $(call BuildPackage,opkg))
+$(eval $(call BuildPackage,opkg-bismark))
 $(eval $(call HostBuild))
