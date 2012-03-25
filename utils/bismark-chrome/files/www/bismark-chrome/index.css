@@ -124,6 +124,7 @@ h2 {
 input.h2 {
     font-size: 18pt;
     font-weight: bold;
+    font-family: arial, sans-serif;
     border: none;
     background: none;
     text-decoration: underline;
