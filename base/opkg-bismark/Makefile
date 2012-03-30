@@ -29,6 +29,7 @@ define Package/opkg-bismark
   TITLE:=opkg package management system
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
   URL:=http://wiki.openmoko.org/wiki/Opkg
+  DEPENDS:=+libcurl
   PROVIDES:=opkg
 endef
 
