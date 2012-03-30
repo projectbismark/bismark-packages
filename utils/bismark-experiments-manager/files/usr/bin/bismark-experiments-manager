@@ -1,5 +1,8 @@
 #!/bin/sh
 
+. /usr/lib/bismark/functions.inc.sh
+sleep $(random 0 120)
+
 node_id=`cat /etc/bismark/ID`
 timestamp=`date +%Y-%m-%d_%H-%M-%S`
 logfile=`mktemp`
