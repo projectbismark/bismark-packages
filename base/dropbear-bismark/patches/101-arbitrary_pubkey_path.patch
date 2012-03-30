@@ -1,7 +1,7 @@
 Index: dropbear-0.53.1/runopts.h
 ===================================================================
---- dropbear-0.53.1.orig/runopts.h	2012-03-30 15:36:59.582215975 -0400
-+++ dropbear-0.53.1/runopts.h	2012-03-30 15:37:46.079648222 -0400
+--- dropbear-0.53.1.orig/runopts.h	2012-03-30 17:04:54.150793789 -0400
++++ dropbear-0.53.1/runopts.h	2012-03-30 17:05:00.858972360 -0400
 @@ -59,6 +59,7 @@
  	char * rsakeyfile;
  	char * dsskeyfile;
@@ -12,9 +12,17 @@ Index: dropbear-0.53.1/runopts.h
  	int usingsyslog;
 Index: dropbear-0.53.1/svr-authpubkey.c
 ===================================================================
---- dropbear-0.53.1.orig/svr-authpubkey.c	2012-03-30 15:56:06.563105929 -0400
-+++ dropbear-0.53.1/svr-authpubkey.c	2012-03-30 15:54:39.784745651 -0400
-@@ -222,7 +222,14 @@
+--- dropbear-0.53.1.orig/svr-authpubkey.c	2012-03-30 17:04:54.134793360 -0400
++++ dropbear-0.53.1/svr-authpubkey.c	2012-03-30 17:06:02.148603246 -0400
+@@ -64,6 +64,7 @@
+ #include "ssh.h"
+ #include "packet.h"
+ #include "algo.h"
++#include "runopts.h"
+ 
+ #ifdef ENABLE_SVR_PUBKEY_AUTH
+ 
+@@ -222,7 +223,14 @@
  		/* open the file */
  		authfile = fopen(filename, "r");
  	} else {
@@ -30,7 +38,7 @@ Index: dropbear-0.53.1/svr-authpubkey.c
  	}
  	if (authfile == NULL) {
  		goto out;
-@@ -377,11 +384,20 @@
+@@ -377,11 +385,20 @@
  	}
  
  	if (ses.authstate.pw_uid == 0) {
@@ -58,8 +66,8 @@ Index: dropbear-0.53.1/svr-authpubkey.c
  		/* allocate max required pathname storage,
 Index: dropbear-0.53.1/svr-runopts.c
 ===================================================================
---- dropbear-0.53.1.orig/svr-runopts.c	2012-03-30 15:57:44.165712884 -0400
-+++ dropbear-0.53.1/svr-runopts.c	2012-03-30 16:03:02.937985126 -0400
+--- dropbear-0.53.1.orig/svr-runopts.c	2012-03-30 17:04:54.158793998 -0400
++++ dropbear-0.53.1/svr-runopts.c	2012-03-30 17:05:00.858972360 -0400
 @@ -42,6 +42,8 @@
  					"-b bannerfile	Display the contents of bannerfile"
  					" before user login\n"
