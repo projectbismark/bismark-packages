@@ -21,32 +21,34 @@ PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/dropbear/Default
+define Package/dropbear-bismark/Default
   URL:=http://matt.ucc.asn.au/dropbear/
 endef
 
-define Package/dropbear
-  $(call Package/dropbear/Default)
+define Package/dropbear-bismark
+  $(call Package/dropbear-bismark/Default)
   SECTION:=net
   CATEGORY:=Base system
   TITLE:=Small SSH2 client/server
+  PROVIDES:=dropbear
 endef
 
-define Package/dropbear/description
+define Package/dropbear-bismark/description
  A small SSH2 server/client designed for small memory environments.
 endef
 
-define Package/dropbear/conffiles
+define Package/dropbear-bismark/conffiles
 /etc/dropbear/dropbear_rsa_host_key
 /etc/dropbear/dropbear_dss_host_key 
 /etc/config/dropbear 
 endef
 
-define Package/dropbearconvert
-  $(call Package/dropbear/Default)
+define Package/dropbearconvert-bismark
+  $(call Package/dropbear-bismark/Default)
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Utility for converting SSH keys
+  PROVIDES:=dropbearconvert
 endef
 
 CONFIGURE_ARGS += \
@@ -87,7 +89,7 @@ define Build/Compile
 		PROGRAMS="dropbearconvert"
 endef
 
-define Package/dropbear/install
+define Package/dropbear-bismark/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dropbearmulti $(1)/usr/sbin/dropbear
 	$(INSTALL_DIR) $(1)/usr/bin
@@ -105,10 +107,10 @@ define Package/dropbear/install
 	touch $(1)/etc/dropbear/dropbear_dss_host_key
 endef
 
-define Package/dropbearconvert/install
+define Package/dropbearconvert-bismark/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dropbearconvert $(1)/usr/bin/dropbearconvert
 endef
 
-$(eval $(call BuildPackage,dropbear))
-$(eval $(call BuildPackage,dropbearconvert))
+$(eval $(call BuildPackage,dropbear-bismark))
+$(eval $(call BuildPackage,dropbearconvert-bismark))
