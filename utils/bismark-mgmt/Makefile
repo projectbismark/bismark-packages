@@ -36,7 +36,7 @@ define Build/Prepare
 	[ -d files ] && ( cd files ; git pull ) \
 		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) 
 
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp,sshd} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
 	$(CP) -L files/device/OpenWrt_common/keys/{authorized_keys,bismark_key*,known_hosts} $(PKG_BUILD_DIR)/keys
