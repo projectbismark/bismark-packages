@@ -1,7 +1,9 @@
 #!/bin/sh
 
-. /usr/lib/bismark/functions.inc.sh
-sleep $(random 0 120)
+if [ "x$1" == "x-d" ]; then
+    . /usr/lib/bismark/functions.inc.sh
+    sleep $(random 0 120)
+fi
 
 node_id=`cat /etc/bismark/ID`
 timestamp=`date +%Y-%m-%d_%H-%M-%S`
