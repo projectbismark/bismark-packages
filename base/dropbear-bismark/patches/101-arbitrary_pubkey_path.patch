@@ -1,0 +1,97 @@
+Index: dropbear-0.53.1/runopts.h
+===================================================================
+--- dropbear-0.53.1.orig/runopts.h	2012-03-30 17:04:54.150793789 -0400
++++ dropbear-0.53.1/runopts.h	2012-03-30 17:05:00.858972360 -0400
+@@ -59,6 +59,7 @@
+ 	char * rsakeyfile;
+ 	char * dsskeyfile;
+ 	char * bannerfile;
++	char * authkeyfile;
+ 
+ 	int forkbg;
+ 	int usingsyslog;
+Index: dropbear-0.53.1/svr-authpubkey.c
+===================================================================
+--- dropbear-0.53.1.orig/svr-authpubkey.c	2012-03-30 17:04:54.134793360 -0400
++++ dropbear-0.53.1/svr-authpubkey.c	2012-03-30 17:06:02.148603246 -0400
+@@ -64,6 +64,7 @@
+ #include "ssh.h"
+ #include "packet.h"
+ #include "algo.h"
++#include "runopts.h"
+ 
+ #ifdef ENABLE_SVR_PUBKEY_AUTH
+ 
+@@ -222,7 +223,14 @@
+ 		/* open the file */
+ 		authfile = fopen(filename, "r");
+ 	} else {
+-		authfile = fopen("/etc/dropbear/authorized_keys","r");
++		if(svr_opts.authkeyfile) {
++			len = strlen(svr_opts.authkeyfile)+1;
++			filename = m_malloc(len);
++			snprintf(filename, len, "%s\0", svr_opts.authkeyfile);
++			authfile = fopen(filename,"r");
++		} else {
++			authfile = fopen("/etc/dropbear/authorized_keys","r");
++		}
+ 	}
+ 	if (authfile == NULL) {
+ 		goto out;
+@@ -377,11 +385,20 @@
+ 	}
+ 
+ 	if (ses.authstate.pw_uid == 0) {
+-		if (checkfileperm("/etc/dropbear") != DROPBEAR_SUCCESS) {
+-			goto out;
+-		}
+-		if (checkfileperm("/etc/dropbear/authorized_keys") != DROPBEAR_SUCCESS) {
+-			goto out;
++		if(svr_opts.authkeyfile) {
++			len = strlen(svr_opts.authkeyfile)+1;
++			filename = m_malloc(len);
++			snprintf(filename, len, "%s\0", svr_opts.authkeyfile);
++			if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
++				goto out;
++			}
++		} else {
++			if (checkfileperm("/etc/dropbear") != DROPBEAR_SUCCESS) {
++				goto out;
++			}
++			if (checkfileperm("/etc/dropbear/authorized_keys") != DROPBEAR_SUCCESS) {
++				goto out;
++			}
+ 		}
+ 	} else {
+ 		/* allocate max required pathname storage,
+Index: dropbear-0.53.1/svr-runopts.c
+===================================================================
+--- dropbear-0.53.1.orig/svr-runopts.c	2012-03-30 17:04:54.158793998 -0400
++++ dropbear-0.53.1/svr-runopts.c	2012-03-30 17:05:00.858972360 -0400
+@@ -42,6 +42,8 @@
+ 					"-b bannerfile	Display the contents of bannerfile"
+ 					" before user login\n"
+ 					"		(default: none)\n"
++					"-D authkeyfile	Use authkeyfile as authorized_keys instead of "
++					" /etc/dropbear/authorized_keys\n"
+ #ifdef DROPBEAR_DSS
+ 					"-d dsskeyfile	Use dsskeyfile for the DSS host key\n"
+ 					"		(default: %s)\n"
+@@ -110,6 +112,7 @@
+ 	svr_opts.rsakeyfile = NULL;
+ 	svr_opts.dsskeyfile = NULL;
+ 	svr_opts.bannerfile = NULL;
++	svr_opts.authkeyfile = NULL;
+ 	svr_opts.banner = NULL;
+ 	svr_opts.forkbg = 1;
+ 	svr_opts.norootlogin = 0;
+@@ -167,6 +170,9 @@
+ 				case 'b':
+ 					next = &svr_opts.bannerfile;
+ 					break;
++				case 'D':
++					next = &svr_opts.authkeyfile;
++					break;
+ #ifdef DROPBEAR_DSS
+ 				case 'd':
+ 					next = &svr_opts.dsskeyfile;

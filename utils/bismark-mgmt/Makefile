@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
 PKG_VERSION:=0.7
-PKG_RELEASE:=15
+PKG_RELEASE:=21
 #GIT_COMMIT:=1123704e593bddc4a9b4
 #GIT_COMMIT:=lite
 
@@ -36,11 +36,12 @@ define Build/Prepare
 	[ -d files ] && ( cd files ; git pull ) \
 		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) 
 
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp,sshd} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/functions.inc.sh $(PKG_BUILD_DIR)/lib
 	$(CP) -L files/device/OpenWrt_common/keys/{authorized_keys,bismark_key*,known_hosts} $(PKG_BUILD_DIR)/keys
 	$(CP) -L files/device/OpenWrt_common/keys/gd_*.crt $(PKG_BUILD_DIR)/keys
+	$(CP) -L files/device/OpenWrt_common/keys/projectbismark_*.crt $(PKG_BUILD_DIR)/keys
 
 	#VERSION=$(cd files ; git log --pretty=format:'' | wc -l)
 	sed -i -e "/^VERSION=/ s/=.*/=`cd files ; git log --pretty=format:'' | wc -l`/" $(PKG_BUILD_DIR)/etc/bismark.conf
@@ -78,12 +79,15 @@ endef
 
 define Package/bismark-mgmt/prerm
 $(call Package/bismark-mgmt/preinst)
+rm $${IPKG_INSTROOT}/etc/ssl/certs/219d9499.0
+rm $${IPKG_INSTROOT}/etc/ssl/certs/97552d04.0
+rm $${IPKG_INSTROOT}/etc/ssl/certs/1b3d9bdf.0
+rm $${IPKG_INSTROOT}/etc/ssl/certs/34e84591.0
 rm $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
 rm $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
-grep -sFvf $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear/authorized_keys | sort -u > $${IPKG_INSTROOT}/tmp/authkeys.nonbismark
+rm $${IPKG_INSTROOT}/etc/ssl/certs/275bb920.0
+rm $${IPKG_INSTROOT}/etc/ssl/certs/c2ea5431.0
 grep -sFvf $${IPKG_INSTROOT}/etc/bismark/known_hosts $${IPKG_INSTROOT}/root/.ssh/known_hosts | sort -u > $${IPKG_INSTROOT}/tmp/knownhosts.nonbismark
-cp $${IPKG_INSTROOT}/tmp/authkeys.nonbismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
-rm $${IPKG_INSTROOT}/tmp/authkeys.nonbismark
 cp $${IPKG_INSTROOT}/tmp/knownhosts.nonbismark $${IPKG_INSTROOT}/root/.ssh/known_hosts
 rm $${IPKG_INSTROOT}/tmp/knownhosts.nonbismark
 endef
@@ -91,15 +95,18 @@ endef
 define Package/bismark-mgmt/postinst
 #!/bin/sh
 # Bismark management post-install script
-ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+# openssl < 1.0.0 (MD5-based subject hash)
 ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/219d9499.0
-ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
 ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/97552d04.0
-cat $${IPKG_INSTROOT}/etc/bismark/authorized_keys $${IPKG_INSTROOT}/etc/dropbear/authorized_keys | sort -u > $${IPKG_INSTROOT}/tmp/authkeys.bismark
+ln -sf ${IPKG_INSTROOT}/etc/bismark/projectbismark_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/1b3d9bdf.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/projectbismark_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/34e84591.0
+# openssl >= 1.0.0 (SHA1-based subject hash)
+ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/f081611a.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/gd_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/598630ad.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/projectbismark_root.crt $${IPKG_INSTROOT}/etc/ssl/certs/275bb920.0
+ln -sf ${IPKG_INSTROOT}/etc/bismark/projectbismark_int.crt $${IPKG_INSTROOT}/etc/ssl/certs/c2ea5431.0
 cat $${IPKG_INSTROOT}/etc/bismark/known_hosts $${IPKG_INSTROOT}/root/.ssh/known_hosts | sort -u > $${IPKG_INSTROOT}/tmp/knownhosts.bismark
-cp $${IPKG_INSTROOT}/tmp/authkeys.bismark $${IPKG_INSTROOT}/etc/dropbear/authorized_keys 
 cp $${IPKG_INSTROOT}/tmp/knownhosts.bismark $${IPKG_INSTROOT}/root/.ssh/known_hosts 
-rm $${IPKG_INSTROOT}/tmp/authkeys.bismark
 rm $${IPKG_INSTROOT}/tmp/knownhosts.bismark
 if [ -z "$${IPKG_INSTROOT}" ]; then
     	$${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
