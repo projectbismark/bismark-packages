@@ -25,28 +25,28 @@ local get_managed_repositories = function()
     return repositories:intersection(opkg.get_package_lists())
 end
 
-local load_experiments = function(cursor, candidate_packages)
-    local installed_packages = set.Set()
-    local config = cursor:get_all(EXPERIMENTS_CONFIG)
-    if config ~= nil then
-        for _, section in pairs(config) do
-            if section[".type"] == "experiment"
-                    and (bmlua.uci.parse_bool(section.installed)
-                            or bmlua.uci.parse_bool(section.required))
-                    and section.package ~= nil then
-                installed_packages:update(set.from_array(section.package))
-            end
-        end
-    end
-    return installed_packages:intersection(candidate_packages)
-end
-
 local parse_bool = function(value)
     if value == nil then
         return false
     else
         return bmlua.uci.parse_bool(value)
     end
+end
+
+local load_experiments = function(cursor, candidate_packages)
+    local installed_packages = set.Set()
+    local config = cursor:get_all(EXPERIMENTS_CONFIG)
+    if config ~= nil then
+        for _, section in pairs(config) do
+            if section[".type"] == "experiment"
+                    and (parse_bool(section.installed)
+                            or parse_bool(section.required))
+                    and section.package ~= nil then
+                installed_packages:update(set.from_array(section.package))
+            end
+        end
+    end
+    return installed_packages:intersection(candidate_packages)
 end
 
 -- Check for conflicting experiments and remove one of
