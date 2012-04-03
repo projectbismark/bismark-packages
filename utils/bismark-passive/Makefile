@@ -53,7 +53,7 @@ define Build/Compile
 		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
 		HASHER_EXE=bismark-passive-hasher.bin \
 		BUILD_DIR=$(PKG_BUILD_DIR)/bismark-passive-hasher \
-		bismark-passive-hasher
+		hasher
 endef
 
 define InstallCommon
@@ -186,6 +186,7 @@ define Package/bismark-passive-hasher/description
 endef
 
 define Package/bismark-passive-hasher/install
+	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-passive-hasher.bin $(1)/usr/bin/bismark-passive-hasher
 endef
 
