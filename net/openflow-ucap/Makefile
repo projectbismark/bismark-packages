@@ -11,7 +11,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME_SHORT:=openflow-ucap
 PKG_NAME:=kmod-$(PKG_NAME_SHORT)
 PKG_RELEASE:=1
-PKG_VERSION:=quirm
+PKG_VERSION:=2012-04-04-quirm
 
 PKG_SOURCE:=$(PKG_NAME_SHORT)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/openflow-ucap.git
