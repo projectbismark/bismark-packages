@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ "$HTTP_HOST" = "myrouter.projectbismark.net" ]; then
+    echo 'Content-Type: text/html'
+    echo ''
+    echo '<meta http-equiv="refresh" content="0; url=http://myrouter.local/">'
+else
+    echo 'Content-Type: text/html'
+    echo ''
+    echo '<meta http-equiv="refresh" content="0; url=/bismark-chrome/">'
+fi
+
