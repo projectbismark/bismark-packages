@@ -32,9 +32,9 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib,keys}
 #	[ -d files ] && ( cd files ; git pull ) \#; git checkout $(GIT_COMMIT)) \
-#		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) #; git checkout $(GIT_COMMIT))
+#		     || ( git clone git://github.com/projectbismark/bismark.git files ; cd files ) #; git checkout $(GIT_COMMIT))
 	[ -d files ] && ( cd files ; git pull ) \
-		     || ( git clone git://github.com/bismark-devel/bismark.git files ; cd files ) 
+		     || ( git clone git://github.com/projectbismark/bismark.git files ; cd files ) 
 
 	$(CP) files/device/OpenWrt_common/scripts/bismark-{action,bootstrap,probe,rshell,scp,sshd} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark.{conf,initd},crontab} $(PKG_BUILD_DIR)/etc
