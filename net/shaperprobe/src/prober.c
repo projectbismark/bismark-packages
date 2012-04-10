@@ -371,7 +371,8 @@ int main(int argc, char *argv[])
   if(capacitydown < 80000) capacitydown = measdowncap;
   if(capacityup > 100000)
   {
-	  printf("Upstream: greater than 100 Mbps.\n");
+	  //printf("Upstream: greater than 100 Mbps.\n");
+	  printf("Upstream: %d Kbps.\n", (int)capacityup);
 	  capacityup = 95000;
   }
   else
@@ -382,7 +383,8 @@ int main(int argc, char *argv[])
   truecapup = capacityup;
   if(capacitydown > 100000)
   {
-	  printf("Downstream: greater than 100 Mbps.\n");
+	  //printf("Downstream: greater than 100 Mbps.\n");
+	  printf("Downstream: %d Kbps.\n", (int)capacitydown);
 	  capacitydown = 95000;
   }
   else
