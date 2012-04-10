@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
 PKG_VERSION:=0.2
-PKG_RELEASE:=11
+PKG_RELEASE:=12
 
 include $(INCLUDE_DIR)/package.mk
 

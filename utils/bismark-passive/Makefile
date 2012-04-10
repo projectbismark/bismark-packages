@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive
-PKG_RELEASE:=18
+PKG_RELEASE:=19
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_RELEASE).tar.gz
@@ -23,7 +23,8 @@ define Build/Compile
 	mkdir -p \
 		$(PKG_BUILD_DIR)/bismark-passive-tmpfs \
 		$(PKG_BUILD_DIR)/bismark-passive-http-url-tmpfs \
-		$(PKG_BUILD_DIR)/bismark-passive-ucap
+		$(PKG_BUILD_DIR)/bismark-passive-ucap \
+		$(PKG_BUILD_DIR)/bismark-passive-hasher-tmpfs
 	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
 		$(MAKE_FLAGS) \
 		UPDATE_INTERVAL=30 \
@@ -47,6 +48,12 @@ define Build/Compile
 		EXE=bismark-passive-ucap.bin \
 		BUILD_DIR=$(PKG_BUILD_DIR)/bismark-passive-ucap \
 		release
+	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" \
+		$(MAKE_FLAGS) \
+		BUILD_ID=$(BISMARK_PASSIVE_BUILDID) \
+		HASHER_EXE=bismark-passive-hasher.bin \
+		BUILD_DIR=$(PKG_BUILD_DIR)/bismark-passive-hasher-tmpfs \
+		hasher
 endef
 
 define InstallCommon
@@ -164,3 +171,23 @@ define Package/bismark-passive-ucap/prerm
 endef
 
 $(eval $(call BuildPackage,bismark-passive-ucap))
+
+
+define Package/bismark-passive-hasher-tmpfs
+	SECTION:=utils
+	CATEGORY:=Utilities
+	TITLE:=Utility for manually hashing MAC addresses for BISmark Passive.
+	URL:=http://www.projectbismark.net
+endef
+
+define Package/bismark-passive-hasher-tmpfs/description
+	This is a utility for manually hashing MAC addresses for BISmark Passive.
+	You should not install it unless you know what you're doing.
+endef
+
+define Package/bismark-passive-hasher-tmpfs/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bismark-passive-hasher.bin $(1)/usr/bin/bismark-passive-hasher
+endef
+
+$(eval $(call BuildPackage,bismark-passive-hasher-tmpfs))

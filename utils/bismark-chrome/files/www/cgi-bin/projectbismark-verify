@@ -1,0 +1,6 @@
+#!/usr/bin/env ash
+
+echo "Access-Control-Allow-Origin: http://myrouter.projectbismark.net"
+echo "Content-type: text/html"
+echo
+echo -n "Yes, this is a BISmark router."

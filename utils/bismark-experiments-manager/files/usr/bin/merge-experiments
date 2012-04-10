@@ -139,7 +139,11 @@ function merge_experiments(local_uci, remote_uci, remote_filename)
             available_experiments:add(ename)
             if local_experiments[ename] == nil then
                 local_uci:set(UCI_CONFIG, ename, 'experiment')
-                local_uci:set(UCI_CONFIG, ename, 'installed', UCI_FALSE)
+                if exp.installed ~= nil then
+                    local_uci:set(UCI_CONFIG, ename, 'installed', exp.installed)
+                else
+                    local_uci:set(UCI_CONFIG, ename, 'installed', UCI_FALSE)
+                end
                 pdebug("Experiment %q added to local experiment set.\n", ename)
             else
                 pdebug("Updating local experiment %q.\n", ename)
