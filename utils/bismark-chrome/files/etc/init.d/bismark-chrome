@@ -4,7 +4,8 @@ START=99
 STOP=1
 
 start() {
-    if $(grep -q UNSET_MAC /www/bismark-chrome/index.html) && [ -e /etc/bismark/ID ]; then
+    if $(grep -q UNSET_MAC /www/bismark-chrome/index.html) && \
+       [ -e /etc/bismark/ID ]; then
         sed -i "s/type=\"hidden\" name=\"device\" value=\".*\"/type=\"hidden\" name=\"device\" value=\"$(sed s/OW// /etc/bismark/ID)\"/" \
             /www/bismark-chrome/index.html
     fi

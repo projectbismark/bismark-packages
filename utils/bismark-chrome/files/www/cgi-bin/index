@@ -1,12 +1,19 @@
 #!/bin/sh
 
-if [ "$HTTP_HOST" = "myrouter.projectbismark.net" ]; then
+brlan_ip=$(/usr/sbin/ip addr show dev br-lan | \
+           awk -F '[ /]+' '/^ *inet.*br-lan$/ {print $3}')
+if [ $? -ne 0 ]; then
+    brlan_ip=''
+fi
+
+if [ ! -z "$brlan_ip" ] && \
+   ([ "$HTTP_HOST" = "myrouter.projectbismark.net" ] || \
+    [ "$HTTP_HOST" = "myrouter.local" ]); then
     echo 'Content-Type: text/html'
     echo ''
-    echo '<meta http-equiv="refresh" content="0; url=http://myrouter.local/">'
+    echo "<meta http-equiv='refresh' content='0; url=http://$brlan_ip/'>"
 else
     echo 'Content-Type: text/html'
     echo ''
-    echo '<meta http-equiv="refresh" content="0; url=/bismark-chrome/">'
+    echo "<meta http-equiv='refresh' content='0; url=/bismark-chrome/'>"
 fi
-
