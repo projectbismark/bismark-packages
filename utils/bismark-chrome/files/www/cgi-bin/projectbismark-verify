@@ -7,6 +7,7 @@ if [ $? -ne 0 ] || [ -z "$brlan_ip" ]; then
 fi
 
 echo "Access-Control-Allow-Origin: http://myrouter.projectbismark.net"
+echo "Cache-Control: no-store"
 echo "Content-type: text/html"
 echo
 echo -n "$brlan_ip"
