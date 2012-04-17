@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-chrome
 PKG_VERSION:=2.0.0
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -49,6 +49,7 @@ define Package/bismark-chrome/postinst
 if [[ -e /www/index.html ]] && [[ -e /www/index.htm ]]; then
     rm -f /www/index.html
 fi
+/etc/init.d/bismark-chrome restart
 endef
 
 $(eval $(call BuildPackage,bismark-chrome))
