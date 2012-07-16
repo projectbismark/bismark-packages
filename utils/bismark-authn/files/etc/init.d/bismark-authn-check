@@ -1,0 +1,8 @@
+#!/bin/sh /etc/rc.common
+
+START=66
+STOP=70
+
+start() {
+	. /usr/bin/bismark-authn-check
+}

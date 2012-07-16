@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ -f "/tmp/bismark/authn" ] ; then
+	cat /tmp/bismark/authn | xargs curl -s | grep -q "good token"
+	if [ $? == 0 ] ; then
+		/etc/init.d/nodogsplash stop &>/dev/null
+		exit 0
+	else
+		/etc/init.d/nodogsplash restart &>/dev/null
+		exit 1
+	fi
+fi
