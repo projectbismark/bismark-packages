@@ -14,36 +14,36 @@ PKG_RELEASE:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/bismark-auth
-SECTION:=utils
-CATEGORY:=Utilities
-TITLE:=BISmark registration utility
-URL:=http://www.projectbismark.net
-DEPENDS:=+bismark-lua +nodogsplash +libcurl
+	SECTION:=utils
+	CATEGORY:=Utilities
+	TITLE:=BISmark registration utility
+	URL:=http://www.projectbismark.net
+	DEPENDS:=+bismark-lua +nodogsplash +libcurl
 endef
 
 define Package/bismark-auth/description
-A set of tools to manage user registration and authorization of BISmark routers.
+	A set of tools to manage user registration and authorization of BISmark 	routers.
 endef
 
 define Build/Compile
 endef
 
 define Package/bismark-updater/install
-$(INSTALL_DIR) $(1)/usr/bin
-$(INSTALL_BIN) ./files/usr/bin/bismark-authn-check $(1)/usr/bin/bismark-authn-check
-$(INSTALL_DIR) $(1)/etc/init.d
-$(INSTALL_BIN) ./files/etc/init.d/bismark-authn-check $(1)/etc/init.d/bismark-authn-check
-$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/bismark-oauth
-$(INSTALL_BIN) ./files/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua $(1)/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua
-$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/bismark
-$(INSTALL_BIN) ./files/usr/lib/lua/luci/view/bismark/genkey.htm $(1)/usr/lib/lua/luci/view/bismark/genkey.htm
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./files/usr/bin/bismark-authn-check $(1)/usr/bin/bismark-authn-check
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/etc/init.d/bismark-authn-check $(1)/etc/init.d/bismark-authn-check
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/bismark-oauth
+	$(INSTALL_BIN) ./files/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua $(1)/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/bismark
+	$(INSTALL_BIN) ./files/usr/lib/lua/luci/view/bismark/genkey.htm $(1)/usr/lib/lua/luci/view/bismark/genkey.htm
 endef
 
 define Package/bismark-updater/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-/etc/init.d/bismark-authn-check enable
-/etc/init.d/bismark-authn-check restart
+	/etc/init.d/bismark-authn-check enable
+	/etc/init.d/bismark-authn-check restart
 fi
 endef
 
