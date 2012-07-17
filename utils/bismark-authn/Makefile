@@ -45,6 +45,13 @@ define Package/bismark-authn/install
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/bismark.gif $(1)/etc/nodogsplash/htdocs/images/bismark.gif
 endef
 
+define Package/bismark-authn/preinst
+#!/bin/sh
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	rm /etc/nodogsplash/htdocs/splash.html
+fi
+endef
+
 define Package/bismark-authn/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
