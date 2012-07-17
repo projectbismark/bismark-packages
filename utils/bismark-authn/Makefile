@@ -57,6 +57,7 @@ define Package/bismark-authn/postinst
 if [ -z "$${IPKG_INSTROOT}" ]; then
 	/etc/init.d/bismark-authn-check enable
 	/etc/init.d/bismark-authn-check restart
+	(crontab -l | grep -v bismark-updater; echo '0 0 * * 0 /usr/bin/bismark-authn-check') | crontab -
 fi
 endef
 
