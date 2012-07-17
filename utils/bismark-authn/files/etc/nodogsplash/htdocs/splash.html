@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Welcome to your BISmark home router</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link rel="stylesheet" href="$imagesdir/index.css" type="text/css" media="all" />
+</head>
+
+<body>
+<div id="container">
+  <div class="header">
+    <img id="logo" src="$imagesdir/bismark.gif" alt="BISmark logo" />
+    <div id="h1_container">
+      <h1>Welcome to your BISmark home router</h1>
+    </div>
+  </div>
+
+  <p>Welcome, and thank you for participating in Project BISmark.</p>
+
+  <p>BISmark is a project to measure the performance of residential broadband
+  Internet service from the home. BISmark will soon also study and measure
+  networks inside the home, and the way people use them. </p>
+
+  <p>This home router (also known as a <i>gateway</i>) is the key to your
+  participation in the BISmark project. The router contains software to measure
+  your Internet connection and report the results. You can use the BISmark
+  router like any other wireless home router.</p>
+
+  <p>Project BISmark needs your help to collect high-quality data. Please take
+  care of your BISmark router as described in the <a
+  href="http://projectbismark.net/participant/notices/">participation
+  agreement</a>.  Most importantly:</p>
+
+  <ul>
+    <li>Keep the BISmark router connected to the Internet and powered on at
+      all times.</li>
+    <li>Let us know if you move or change Internet providers or service
+    plans.</li>
+    <li>Use your Internet service as you normally would.</li>
+  </ul>
+
+  <div class="main">
+    <div class="main-left">
+      <form method = "GET" action ="$authaction">
+        <input type="hidden" name="tok" value="$tok" />
+        <input type="hidden" name="redir" value="http://projectbismark.net/accounts/register/" />
+        <h2><input class="h2" type="submit" value="Register your router." /></h2>
+      </form>
+      <p class="notes">The BISmark team needs more informration about your router.</p>
+    </div>
+    <div class="main-right">
+      <h2><a href="$authtarget">Remind me later...</a></h2>
+      <p class="notes">If you choose not to register now, you will be prompted again soon.</p>
+    </div>
+  </div>
+
+  <div class="main"></div>
+</div> <!-- container -->
+
+</body>
+</html>
