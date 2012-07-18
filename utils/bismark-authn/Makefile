@@ -37,21 +37,14 @@ define Package/bismark-authn/install
 	$(INSTALL_BIN) ./files/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua $(1)/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/bismark
 	$(INSTALL_BIN) ./files/usr/lib/lua/luci/view/bismark/genkey.htm $(1)/usr/lib/lua/luci/view/bismark/genkey.htm
-	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs
-	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/splash.html $(1)/etc/nodogsplash/htdocs/splash.html
+	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
+	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/splash.html $(1)/etc/nodogsplash/htdocs/images/splash.html
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/index.css $(1)/etc/nodogsplash/htdocs/images/index.css
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/bismark.gif $(1)/etc/nodogsplash/htdocs/images/bismark.gif
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-authn $(1)/etc/uci-defaults/bismark-authn
-endef
-
-define Package/bismark-authn/preinst
-#!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	rm /etc/nodogsplash/htdocs/splash.html
-fi
 endef
 
 define Package/bismark-authn/postinst
