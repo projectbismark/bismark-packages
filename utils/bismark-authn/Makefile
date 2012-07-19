@@ -33,8 +33,8 @@ define Package/bismark-authn/install
 	$(INSTALL_BIN) ./files/usr/bin/bismark-authn-check $(1)/usr/bin/bismark-authn-check
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/etc/init.d/bismark-authn-check $(1)/etc/init.d/bismark-authn-check
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/bismark-oauth
-	$(INSTALL_BIN) ./files/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua $(1)/usr/lib/lua/luci/controller/bismark-oauth/genkey.lua
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/bismark
+	$(INSTALL_BIN) ./files/usr/lib/lua/luci/controller/bismark/genkey.lua $(1)/usr/lib/lua/luci/controller/bismark/genkey.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/bismark
 	$(INSTALL_BIN) ./files/usr/lib/lua/luci/view/bismark/genkey.htm $(1)/usr/lib/lua/luci/view/bismark/genkey.htm
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
