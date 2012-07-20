@@ -9,4 +9,7 @@ if [ -f "/tmp/bismark/authn" ] ; then
 		/etc/init.d/nodogsplash restart &>/dev/null
 		exit 1
 	fi
+else
+	/etc/init.d/nodogsplash restart &>/dev/null
+	exit 1
 fi
