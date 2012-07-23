@@ -7,13 +7,13 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=bismark-authn
+PKG_NAME:=bismark-registration
 PKG_VERSION:=1
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/bismark-authn
+define Package/bismark-registration
 	SECTION:=utils
 	CATEGORY:=Utilities
 	TITLE:=BISmark registration utility
@@ -21,14 +21,14 @@ define Package/bismark-authn
 	DEPENDS:=+bismark-lua +nodogsplash +libcurl
 endef
 
-define Package/bismark-authn/description
+define Package/bismark-registration/description
 	A set of tools to manage user registration and authorization of BISmark 	routers.
 endef
 
 define Build/Compile
 endef
 
-define Package/bismark-authn/install
+define Package/bismark-registration/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/bismark-authn-check $(1)/usr/bin/bismark-authn-check
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -47,7 +47,7 @@ define Package/bismark-authn/install
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-authn $(1)/etc/uci-defaults/bismark-authn
 endef
 
-define Package/bismark-authn/postinst
+define Package/bismark-registration/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
 	/etc/uci-defaults/bismark-authn
@@ -55,11 +55,11 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 fi
 endef
 
-define Package/bismark-authn/prerm
+define Package/bismark-registration/prerm
 #!/bin/sh
 /etc/init.d/bismark-authn-check disable
 crontab -l | grep -v bismark-authn-check | crontab -
 endef
 
-$(eval $(call BuildPackage,bismark-authn))
+$(eval $(call BuildPackage,bismark-registration))
 
