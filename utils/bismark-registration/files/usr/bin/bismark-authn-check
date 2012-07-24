@@ -1,8 +1,10 @@
 #!/bin/sh
 
 if [ -f "/etc/bismark/authn" ] ; then
-    	. /usr/lib/bismark/functions.inc.sh
-    	sleep $(random 0 120)
+	if [ "x$1" == "x-d" ]; then
+    		. /usr/lib/bismark/functions.inc.sh
+    		sleep $(random 0 120)
+	fi
 	cat /etc/bismark/authn | xargs curl -s | grep -q "good token"
 	if [ $? == 0 ] ; then
 		/etc/init.d/nodogsplash stop &>/dev/null
@@ -12,6 +14,9 @@ if [ -f "/etc/bismark/authn" ] ; then
 		if [ $? == 0 ] ; then
 			/etc/init.d/nodogsplash restart &>/dev/null
 			exit 1
+		else
+			/etc/init.d/nodogsplash stop &>/dev/null
+			exit 0
 		fi
 	fi
 else

@@ -1,4 +1,4 @@
 #!/bin/sh
 /etc/init.d/bismark-authn-check enable
-(crontab -l | grep -v bismark-authn-check; echo '0 0 * * * /usr/bin/bismark-authn-check') | crontab -
+(crontab -l | grep -v bismark-authn-check; echo '0 0 * * * /usr/bin/bismark-authn-check -d') | crontab -
 mv /etc/nodogsplash/htdocs/images/splash.html /etc/nodogsplash/htdocs/
