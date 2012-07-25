@@ -43,6 +43,8 @@ define Package/bismark-registration/install
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/index.css $(1)/etc/nodogsplash/htdocs/images/index.css
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/bismark.gif $(1)/etc/nodogsplash/htdocs/images/bismark.gif
+	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
+	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/nodogsplash.conf $(1)/etc/nodogsplash/htdocs/images/nodogsplash.conf
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-authn $(1)/etc/uci-defaults/bismark-authn
 endef

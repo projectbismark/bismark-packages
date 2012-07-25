@@ -1,4 +1,8 @@
 #!/bin/sh
 /etc/init.d/bismark-authn-check enable
 (crontab -l | grep -v bismark-authn-check; echo '0 0 * * * /usr/bin/bismark-authn-check -d') | crontab -
+. /etc/bismark/bismark.conf
+sed s/"# GatewayName NoDogSplash"/"GatewayName $REGISTRATION_URL"/ /etc/nodogsplash/htdocs/images/nodogsplash.conf >/etc/nodogsplash/htdocs/images/nodogsplash2.conf
+rm /etc/nodogsplash/htdocs/images/nodogsplash.conf
+mv /etc/nodogsplash/htdocs/images/nodogsplash2.conf /etc/nodogsplash/
 mv /etc/nodogsplash/htdocs/images/splash.html /etc/nodogsplash/htdocs/

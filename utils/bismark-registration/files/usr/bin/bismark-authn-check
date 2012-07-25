@@ -1,9 +1,10 @@
 #!/bin/sh
 
+. /etc/bismark/bismark.conf
 if [ -f "/etc/bismark/authn" ] ; then
 	if [ "x$1" == "x-d" ]; then
     		. /usr/lib/bismark/functions.inc.sh
-    		sleep $(random 0 120)
+    		sleep $(random 0 $REGISTRATION_MAX_SPLAY)
 	fi
 	cat /etc/bismark/authn | xargs curl -s | grep -q "good token"
 	if [ $? == 0 ] ; then
