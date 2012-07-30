@@ -1,6 +1,11 @@
 #!/bin/sh
 
 . /etc/bismark/bismark.conf
+
+if [ ! $REGISTRATION_MAX_SPLAY ] ; then
+	REGISTRATION_MAX_SPLAY=60
+fi
+
 if [ -f "/etc/bismark/authn" ] ; then
 	if [ "x$1" == "x-d" ]; then
     		. /usr/lib/bismark/functions.inc.sh
