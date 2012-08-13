@@ -1,5 +1,7 @@
 module("luci.controller.bismark.genkey", package.seeall)
 
+--retrieves token from get/post request and saves check url in /etc/bismark/authn
+
 require("os")
 
 function index()

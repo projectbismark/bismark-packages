@@ -26,8 +26,9 @@
   <div class="main">
     <div class="main-left">
       <form method = "GET" action ="$authaction">
-        <input type="hidden" name="tok" value="$tok" />
-        <input type="hidden" name="redir" value="$gatewayname" />
+	<input type="hidden" name="tok" value="$tok" />
+	<!-- set $gatewayname in the configuration file to change link location -->
+        <input type="hidden" name="redir" value="$gatewayname" /> 
         <h2><input class="h2" type="submit" value="Register your router." /></h2>
       </form>
       <p class="notes">The BISmark team needs more informration about your router.</p>
