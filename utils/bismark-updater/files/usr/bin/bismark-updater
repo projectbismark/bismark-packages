@@ -7,7 +7,7 @@ fi
 
 node_id=`cat /etc/bismark/ID`
 timestamp=`date +%Y-%m-%d_%H-%M-%S`
-logfile=`mktemp`
+logfile=`mktemp /tmp/bismark-updater-tmp.XXXXXXXX`
 bismark-updater.lua 2>&1 | tee $logfile
 gzip $logfile
 mv ${logfile}.gz /tmp/bismark-uploads/bismark-updater/${node_id}_${timestamp}.gz
