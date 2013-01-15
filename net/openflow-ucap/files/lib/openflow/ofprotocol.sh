@@ -25,9 +25,9 @@ setup_ofprotocol() {
 		[ -z "$dp" -o -z "$ofctl" ] && echo "no controller specified" && return 1
 		if [[ "$mode" == "inband" ]]			
 		then
-			ofprotocol unix:/var/run/dp0.sock "$ofctl" --fail=open "-D" "--pidfile=$pidfile" --listen=ptcp: --log-file="/var/log/ofprotocol.log" &
+			ofprotocol unix:/var/run/dp0.sock "$ofctl" --fail=open "-D" "--pidfile=$pidfile" --listen=ptcp: &
 		else
-			ofprotocol unix:/var/run/dp0.sock "$ofctl" --fail=open "-D" "--pidfile=$pidfile" --out-of-band --listen=ptcp: --log-file="/var/log/ofprotocol.log" &
+			ofprotocol unix:/var/run/dp0.sock "$ofctl" --fail=open "-D" "--pidfile=$pidfile" --out-of-band --listen=ptcp: &
 		fi
 		lock -u "/var/lock/ofprotocol"
 	fi
