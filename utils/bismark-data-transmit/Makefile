@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
-PKG_RELEASE:=10
+PKG_RELEASE:=11
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -20,7 +20,7 @@ PKG_SOURCE_PROTO:=git
 include $(INCLUDE_DIR)/package.mk
 
 MAKE_FLAGS += BUILD_ID=$(BISMARK_DATA_TRANSMIT_BUILDID)
-MAKE_FLAGS += UPLOADS_URL="https://uploads.projectbismark.net:8081/upload/"
+MAKE_FLAGS += DEFAULT_UPLOADS_URL="https://uploads.projectbismark.net:8081/upload/"
 MAKE_FLAGS += RETRY_INTERVAL_MINUTES=3
 
 define Package/bismark-data-transmit
