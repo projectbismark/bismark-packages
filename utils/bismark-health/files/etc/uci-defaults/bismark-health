@@ -1,0 +1,2 @@
+#!/bin/sh
+(crontab -l | grep -v bismark-health; echo '0 * * * * /usr/bin/bismark-updater -d') | crontab -
