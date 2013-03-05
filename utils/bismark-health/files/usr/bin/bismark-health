@@ -22,6 +22,7 @@ cat /proc/uptime >> $log_dir/uptime
 df >> $log_dir/df
 top -b -n 1 >> $log_dir/top
 opkg list-installed >> $log_dir/opkg_list-installed
+cp /etc/opkg.conf $log_dir/opkg.conf
 
 # Tar the directory and upload it
 tar -C $staging_dir -czvf $staging_dir/${tar_name}.tar.gz $tar_name
