@@ -42,7 +42,8 @@ endef
 
 MAKE_PATH := src
 
-TARGET_CXX=$(STAGING_DIR)/host/bin/g++-uc
+#TARGET_CXX=$(STAGING_DIR)/host/bin/g++-uc
+TARGET_CXX=g++-uc
 
 MAKE_FLAGS += \
        CXXOPT="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS) -DARM"
