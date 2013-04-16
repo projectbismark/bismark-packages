@@ -178,6 +178,7 @@ define Package/bismark-passive-hasher-tmpfs
 	CATEGORY:=Utilities
 	TITLE:=Utility for manually hashing MAC addresses for BISmark Passive.
 	URL:=http://www.projectbismark.net
+	DEPENDS:=+libpcap +zlib
 endef
 
 define Package/bismark-passive-hasher-tmpfs/description
