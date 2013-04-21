@@ -133,7 +133,9 @@ function merge_experiments(local_uci, remote_uci, remote_filename)
     -- Insert and update experiments found in remote config file
     local available_experiments = set.Set()
     for ename, exp in pairs(remote_experiments) do
-        if exp.display_name ~= nil then
+        if exp.description ~= nil
+                and exp.display_name ~= nil
+                and exp.package ~= nil then
             available_experiments:add(ename)
             if local_experiments[ename] == nil then
                 local_uci:set(UCI_CONFIG, ename, 'experiment')
@@ -162,6 +164,9 @@ function merge_experiments(local_uci, remote_uci, remote_filename)
                 end
             else
                 local_uci:set(UCI_CONFIG, ename, 'required', UCI_FALSE)
+            end
+            if exp.revoked ~= nil then
+                local_uci:set(UCI_CONFIG, ename, 'installed', UCI_FALSE)
             end
         end
     end
