@@ -165,7 +165,7 @@ function merge_experiments(local_uci, remote_uci, remote_filename)
             else
                 local_uci:set(UCI_CONFIG, ename, 'required', UCI_FALSE)
             end
-            if exp.revoked ~= nil then
+            if exp.revoked ~= nil and exp.revoked == UCI_TRUE then
                 local_uci:set(UCI_CONFIG, ename, 'installed', UCI_FALSE)
             end
         end
