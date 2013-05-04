@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Please register your BISmark home router</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link rel="stylesheet" href="$imagesdir/index.css" type="text/css" media="all" />
+</head>
+
+<body>
+<div id="container">
+  <div class="header">
+    <img id="logo" src="$imagesdir/bismark.gif" alt="BISmark logo" />
+    <div id="h1_container">
+      <h1>Please register your BISmark home router</h1>
+    </div>
+  </div>
+
+  <p>Welcome, and thank you for participating in Project BISmark.</p>
+
+  <p>Project BISmark needs your help to collect high-quality data. Please register your device to make this possible. </p>
+
+  <p>Learn more Project BISmark at <a href="http://projectbismark.net/">http://projectbismark.net/</a>.</p>
+
+  <div class="main">
+    <div class="main-left">
+      <form method = "GET" action ="$authaction">
+	<input type="hidden" name="tok" value="$tok" />
+	<!-- set $gatewayname in the configuration file to change link location -->
+        <input type="hidden" name="redir" value="$gatewayname" /> 
+        <h2><input class="h2" type="submit" value="Register your router." /></h2>
+      </form>
+      <p class="notes">The BISmark team needs more informration about your router.</p>
+    </div>
+    <div class="main-right">
+      <h2><a href="$authtarget">Remind me later...</a></h2>
+      <p class="notes">If you choose not to register now, you will be prompted again in 24 hours.</p>
+    </div>
+  </div>
+
+  <div class="main"></div>
+</div> <!-- container -->
+
+</body>
+</html>
