@@ -1,0 +1,15 @@
+#!/bin/sh
+#enable init script
+/etc/init.d/bismark-authn-check enable
+
+#enable cron job
+(crontab -l | grep -v bismark-authn-check; echo '0 0 * * * /usr/bin/bismark-authn-check -d') | crontab -
+
+#sort files, start nodogsplash
+mv /etc/nodogsplash/htdocs/images/nodogsplash.conf /etc/nodogsplash/
+mv /etc/nodogsplash/htdocs/images/splash.html /etc/nodogsplash/htdocs/
+/etc/init.d/nodogsplash restart
+
+#create /www/cgi-bin/register-verify
+cat /www/cgi-bin/projectbismark-verify | sed 's/myrouter/register/' | sed 's/http/https/' >"/www/cgi-bin/register-verify"
+chmod a+x /www/cgi-bin/register-verify

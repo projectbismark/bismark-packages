@@ -1,0 +1,37 @@
+#!/bin/sh
+
+#turn off nodogsplash captive portal if valid authentication token exists
+
+. /etc/bismark/bismark.conf
+
+if [ ! $REGISTRATION_MAX_SPLAY ] ; then
+	REGISTRATION_MAX_SPLAY=60
+fi
+
+if [ -f "/etc/bismark/authn" ] ; then
+	if [ "x$1" == "x-d" ]; then
+    		. /usr/lib/bismark/functions.inc.sh
+    		sleep $(random 0 $REGISTRATION_MAX_SPLAY)
+	fi
+	cat /etc/bismark/authn | xargs curl -s | grep -q "good token"
+	if [ $? == 0 ] ; then
+		#good token
+		/etc/init.d/nodogsplash stop &>/dev/null
+		exit 0
+	else
+		cat /etc/bismark/authn | xargs curl -s | grep -q "authenticate"
+		if [ $? == 0 ] ; then
+			#bad token
+			/etc/init.d/nodogsplash restart &>/dev/null
+			exit 1
+		else
+			#invalid response
+			/etc/init.d/nodogsplash stop &>/dev/null
+			exit 0
+		fi
+	fi
+else
+	#no token
+	/etc/init.d/nodogsplash restart &>/dev/null
+	exit 1
+fi

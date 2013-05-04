@@ -1,0 +1,9 @@
+#!/bin/sh /etc/rc.common
+
+#checks for authentication token on startup
+
+START=98
+
+start() {
+	. /usr/bin/bismark-authn-check
+}
