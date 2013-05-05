@@ -7,7 +7,7 @@ fi
 
 node_id=`cat /etc/bismark/ID`
 timestamp=`date +%Y-%m-%d_%H-%M-%S`
-logfile=`mktemp`
+logfile=`mktemp /tmp/bismark-experiments-manager-tmp.XXXXXXXX`
 merge-experiments 2>&1 | tee $logfile
 gzip $logfile
 mv ${logfile}.gz /tmp/bismark-uploads/bismark-experiments-manager/${node_id}_${timestamp}.gz
