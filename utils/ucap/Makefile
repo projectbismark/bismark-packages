@@ -58,7 +58,7 @@ fi
 uci set openflow.@ofswitch[0].dp=dp0
 uci set openflow.@ofswitch[0].dpid=`cut -b 3- /etc/bismark/ID`
 uci set openflow.@ofswitch[0].ofports=wlan0,wlan1,eth0.1,veth0
-uci set openflow.@ofswitch[0].ofctl=tcp:143.215.131.178:6633
+uci set openflow.@ofswitch[0].ofctl=tcp:130.207.97.60:6633
 uci set openflow.@ofswitch[0].mode=outofband
 uci commit openflow
 /etc/init.d/openflow enable
