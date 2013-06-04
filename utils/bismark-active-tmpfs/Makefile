@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
 PKG_VERSION:=0.2
-PKG_RELEASE:=19
+PKG_RELEASE:=20
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -29,7 +29,7 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib}
 	[ -d files ] && ( cd files ; git pull ) || git clone git://github.com/projectbismark/bismark.git files
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,measure-wrapper,tr,rtr,ping,fping,netperf,dns,ditg,sp,mstats,sysctl} $(PKG_BUILD_DIR)/scripts
+	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,measure-wrapper,tr,rtr,ptr,rptr,ping,fping,netperf,dns,ditg,sp,mstats,sysctl} $(PKG_BUILD_DIR)/scripts
 	$(CP) files/device/OpenWrt_common/etc/{bismark-active.conf,crontab-active-tmpfs,sysctl.conf} $(PKG_BUILD_DIR)/etc
 	$(CP) files/device/OpenWrt_common/lib/*.list $(PKG_BUILD_DIR)/lib
 endef
