@@ -1,27 +1,20 @@
 
 CC=gcc
 
-CFLAGS=-c -Wall -O3 -m32
-LFLAGS=-m32
+CFLAGS=-c -Wall -O3 -fno-strict-aliasing -DOSX
+LFLAGS=-lm
 
-all: clean probeserver
+SOURCES=probeserver.c prober.c tcp_client.c tcpserver.c wrappers.c tbdetect.c measflow.c
+OBJECTS=$(SOURCES:.c=.o)
+EXECUTABLE=probeserver
 
-prober: prober.o 
-	$(CC) $(LFLAGS) prober.o wrappers.o tcp_client.o tcpserver.o tbdetect.o -o prober -lm
+all: clean $(SOURCES) $(EXECUTABLE)
 
-prober.o: prober.c
-	$(CC) $(CFLAGS) prober.c tcp_client.c tcpserver.c wrappers.c tbdetect.c -lm
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
-probeserver: probeserver.o
-	$(CC) $(LFLAGS) probeserver.o wrappers.o tcpserver.o tcp_client.o tbdetect.o measflow.o -o shaperprobeserver -lm
-
-probeserver.o: probeserver.c
-	$(CC) $(CFLAGS) -DDSERVER probeserver.c wrappers.c tcpserver.c tcp_client.c tbdetect.c measflow.c -lm
-tbtest: tbtest.o 
-	$(CC) $(LFLAGS) tbtest.o wrappers.o tcp_client.o tcpserver.o tbdetect.o -o tbtest -lm
-
-tbtest.o: prober.c
-	$(CC) $(CFLAGS) tbtest.c tcp_client.c tcpserver.c wrappers.c tbdetect.c -lm
+.c.o:
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -rf *.o prober probeserver shaperprobeserver
+	rm -rf *.o probeserver
