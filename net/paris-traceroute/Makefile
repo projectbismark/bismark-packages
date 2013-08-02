@@ -35,7 +35,7 @@ define Package/paris-traceroute/description
   initial implementation of traceroute.
 endef
 
-TARGET_CXX = $(STAGING_DIR)/host/bin/g++-uc
+# TARGET_CXX = $(STAGING_DIR)/host/bin/g++-uc
 TARGET_LDFLAGS += -lm
 
 define Package/paris-traceroute/install
