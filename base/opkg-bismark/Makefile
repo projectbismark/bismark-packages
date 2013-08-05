@@ -57,7 +57,7 @@ TARGET_CFLAGS += -ffunction-sections -fdata-sections
 EXTRA_CFLAGS += $(TARGET_CPPFLAGS)
 
 CONFIGURE_ARGS += \
-	- enable-curl \
+	--enable-curl \
 	--disable-gpg \
 	--with-opkgetcdir=/etc \
 	--with-opkglockfile=/var/lock/opkg.lock
