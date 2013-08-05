@@ -34,6 +34,7 @@ define Package/opkg-bismark
   TITLE:=opkg package management system
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
   URL:=http://wiki.openmoko.org/wiki/Opkg
+  DEPENDS:=+libcurl
   PROVIDES:=opkg
 endef
 
@@ -56,10 +57,19 @@ TARGET_CFLAGS += -ffunction-sections -fdata-sections
 EXTRA_CFLAGS += $(TARGET_CPPFLAGS)
 
 CONFIGURE_ARGS += \
-	--disable-curl \
+	- enable-curl \
 	--disable-gpg \
 	--with-opkgetcdir=/etc \
 	--with-opkglockfile=/var/lock/opkg.lock
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR) \
+	CC="$(TARGET_CC)" \
+	DESTDIR="$(PKG_INSTALL_DIR)" \
+	HOST_CPU="$(PKGARCH)" \
+	LIBS="$(LIBS) -lz -lcurl -lssl -lcrypto" \
+	all install
+endef
 
 MAKE_FLAGS = \
 		CC="$(TARGET_CC)" \
