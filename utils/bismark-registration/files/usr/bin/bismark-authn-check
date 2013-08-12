@@ -38,5 +38,6 @@ else
 		/etc/init.d/nodogsplash restart &>/dev/null
 	else
 		/etc/init.d/nodogsplash stop &>/dev/null
+	fi
 	exit 1
 fi
