@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-registration
 PKG_VERSION:=1
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -22,7 +22,7 @@ define Package/bismark-registration
 endef
 
 define Package/bismark-registration/description
-	A set of tools to manage user registration and authorization of BISmark 	routers.
+	A set of tools to manage user registration and authorization of BISmark routers.
 endef
 
 define Build/Compile
@@ -37,16 +37,16 @@ define Package/bismark-registration/install
 	$(INSTALL_BIN) ./files/usr/lib/lua/luci/controller/bismark/genkey.lua $(1)/usr/lib/lua/luci/controller/bismark/genkey.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/bismark
 	$(INSTALL_BIN) ./files/usr/lib/lua/luci/view/bismark/genkey.htm $(1)/usr/lib/lua/luci/view/bismark/genkey.htm
-	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
-	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/splash.html $(1)/etc/nodogsplash/htdocs/images/splash.html
+	$(INSTALL_DIR) $(1)/etc/nodogsplash
+	$(INSTALL_DATA) ./files/etc/nodogsplash/nodogsplash.conf $(1)/etc/nodogsplash/nodogsplash.conf.will-rename-in-uci-defaults
+	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs
+	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/splash.html $(1)/etc/nodogsplash/htdocs/splash.html.will-rename-in-uci-defaults
 	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/index.css $(1)/etc/nodogsplash/htdocs/images/index.css
-	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
 	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/bismark.gif $(1)/etc/nodogsplash/htdocs/images/bismark.gif
-	$(INSTALL_DIR) $(1)/etc/nodogsplash/htdocs/images
-	$(INSTALL_DATA) ./files/etc/nodogsplash/htdocs/images/nodogsplash.conf $(1)/etc/nodogsplash/htdocs/images/nodogsplash.conf
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-authn $(1)/etc/uci-defaults/bismark-authn
+	$(INSTALL_DIR) $(1)/www/cgi-bin
+	$(INSTALL_BIN) ./files/www/cgi-bin/register-verify $(1)/www/cgi-bin/register-verify
+	$(INSTALL_BIN) ./files/www/cgi-bin/register-macaddress $(1)/www/cgi-bin/register-macaddress
 endef
 
 define Package/bismark-registration/postinst

@@ -1,0 +1,7 @@
+#!/usr/bin/env ash
+
+echo "Access-Control-Allow-Origin: https://register.projectbismark.net"
+echo "Cache-Control: no-store"
+echo "Content-type: text/html"
+echo
+echo -n `cut -b 3- /etc/bismark/ID`
