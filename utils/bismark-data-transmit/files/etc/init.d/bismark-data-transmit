@@ -6,6 +6,7 @@ DIRECTORIES="
 active
 bismark-experiments-manager
 bismark-updater
+censorship-performance
 health
 mac-analyzer
 nazanin-traceroute
