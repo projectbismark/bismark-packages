@@ -4,7 +4,7 @@
 
 client=ashooni ; # Ash-based standalone script
 clientver=12 ; # optional logging to file and console if necessary
-clientnotes="pktest-dns" ; # WARN: underscore forbidden XXX
+clientnotes="pktest-bismark" ; # WARN: underscore forbidden XXX
 testname=webcontent
 testver=1.15 ; # fixed nslookup parsing
 # defaults
@@ -14,7 +14,6 @@ archive_stdout_stderr=1 ; # if 1 log (almost) everything in the archive
 show_stdout_stderr=1 ; # if archive_stdout_stderr is true, show the output anyway
 persistentdir=/tmp/ashooni
 configfile=${persistentdir}/ubica.conf
-scannedips=${persistentdir}/scannedips.txt
 clientcc="00"; # unknown client id, or default CC when shipped
 clientip="127.0.0.1"; # unknown client IP address
 maxtargets=100 ; # only random <maxtargets> will be considered
@@ -33,8 +32,6 @@ cleanthisdir=/tmp/ashooni/tempdir_${ts}
 
 mkdir -p $cleanthisdir; cd $cleanthisdir || exit 1; 
 
-#ftp="ftp://130.207.97.242:2021/upload/"
-#ftp="ftp://143.225.229.160/home/ubica/upload/"
 ftp="ftp://143.225.229.169/upload/"
 
 remote_inputfile_path="http://ubica.comics.unina.it/inputfiles/$clientnotes"
@@ -50,17 +47,11 @@ if [ -e $configfile ]; then
 	. $configfile ;
 fi
 
-# override configfile:
-[ "$clientnotes" = "plab" ] && DEVICE_ID=`uname -n`
-[ "$clientnotes" = "torproxy" ] && DEVICE_ID="${clientcc}-`uuidgen`"
-
 # no saved device_id
 if [ "$DEVICE_ID" = "" ]; then
-	# read DEVICE_ID (linux-dbus):
-	[ -e /var/lib/dbus/machine-id ] && DEVICE_ID=`cat /var/lib/dbus/machine-id`
 
 	# read DEVICE_ID (bismark):
-	[ -e /etc/bismark/bismark.conf ] && . /etc/bismark/bismark.conf
+	[ -e /etc/bismark/ID ] && DEVICE_ID=`cat /etc/bismark/ID` ;
 
 
 	if [ "$DEVICE_ID" = "" ]; then
@@ -68,7 +59,7 @@ if [ "$DEVICE_ID" = "" ]; then
 		echo "DEVICE_ID=$DEVICE_ID" >> $configfile
 	fi
 fi
-DEVICE_ID=${DEVICE_ID}-${clientnotes}
+pseudonym=${DEVICE_ID}-${clientnotes}
 
 # initialize or increment inputcounter
 if [ ! "$inputcounter" = "" ]; then
@@ -91,7 +82,7 @@ fi
 reportformat=3; # changes parsing rules (filenames and output data formats)
 
 # Prefix used for file names (and directories):
-common_prefix=${DEVICE_ID}_${ts}_${client}_${clientver}_${testname}_${testver}
+common_prefix=${pseudonym}_${ts}_${client}_${clientver}_${testname}_${testver}
 result_test_arch=${persistentdir}/${reportformat}_${common_prefix}.tar.gz
 
 resultspfx=$cleanthisdir/${common_prefix}
@@ -400,7 +391,6 @@ webcontent(){
 					dnsfirstip=`awk '/^Name:/{a=1} /^Address/ && a {if (match($2,":")){next};print $2; exit}' "$dnsfile"`
 				fi
 				printf "%s\tsubprocess %d\turl: %s : resolved as '%s'\n" "`date`" "$subshpid" "$url" "$dnsfirstip" >&2
-				[ "$clientnotes" = "plab" ] && echo $dnsfirstip >> $scannedips
 			else
 				dnsfirstip="";
 				printf "%s\tsubprocess %d\turl: %s : ERROR %d from nslookup.\n" "`date`" "$subshpid" "$url" "$resultdns" >&2
@@ -416,7 +406,6 @@ webcontent(){
 				# takes only IPv4 addresses
 				dnsfirstip="`awk '/^;; ANSWER SECTION/ {ans=1} /^$/ && ans {ans=0} ans && $4 == "A" {print $5; exit}' $dnsfile`"
 				printf "%s\tsubprocess %d\turl: %s : resolved as '%s'\n" "`date`" "$subshpid" "$url" "$dnsfirstip" >&2
-				[ "$clientnotes" = "plab" ] && echo $dnsfirstip >> $scannedips
 			else
 				dnsfirstip="";
 				printf "%s\tsubprocess %d\turl: %s : error %d and status '%s' returned by DIG\n" "`date`" "$subshpid" "$url" "$resultdns" "$digstatus" >&2
