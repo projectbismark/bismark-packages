@@ -150,6 +150,7 @@ function merge_experiments(local_uci, remote_uci, remote_filename)
             end
             local_uci:set(UCI_CONFIG, ename, 'description', exp.description)
             local_uci:set(UCI_CONFIG, ename, 'display_name', exp.display_name)
+            local_uci:delete(UCI_CONFIG, ename, 'package')
             local_uci:set(UCI_CONFIG, ename, 'package', exp.package)
             local_uci:set(UCI_CONFIG, ename, 'available', UCI_TRUE)
             if exp.conflicts ~= nil then
