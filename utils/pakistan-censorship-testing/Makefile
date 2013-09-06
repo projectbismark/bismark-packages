@@ -17,7 +17,7 @@ define Package/pakistan-censorship-testing-tmpfs
    SECTION:=utils
    CATEGORY:=Utilities
    TITLE:=Censorship testing in Pakistan
-   DEPENDS:=+bismark-mgmt +bismark-netexp
+   DEPENDS:=+bismark-mgmt +bismark-netexp +netcat
 endef
 
 define Package/pakistan-censorship-testing-tmpfs/description
