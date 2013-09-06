@@ -34,7 +34,7 @@ endef
 
 define Package/pakistan-censorship-testing-tmpfs/postinst
 #!/bin/sh
-(crontab -l | grep -v pakistan-censorship-testing; echo '*/10 * * * * /tmp/usr/bin/pakistan-censorship-testing') | crontab -
+(crontab -l | grep -v pakistan-censorship-testing; echo '*/10 3,9,15,21 * * * /tmp/usr/bin/pakistan-censorship-testing') | crontab -
 endef
 
 define Package/pakistan-censorship-testing-tmpfs/prerm
