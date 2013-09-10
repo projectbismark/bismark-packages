@@ -33,7 +33,6 @@ define Package/bismark-mgmt/install
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/authorized_keys $(1)/etc/bismark/authorized_keys
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark.conf $(1)/etc/bismark/bismark.conf
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark.initd $(1)/etc/bismark/bismark.initd
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/crontab $(1)/etc/bismark/crontab
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/known_hosts $(1)/etc/bismark/known_hosts
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark_key $(1)/etc/bismark/bismark_key
