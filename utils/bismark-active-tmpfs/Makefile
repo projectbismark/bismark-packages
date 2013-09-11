@@ -67,7 +67,14 @@ define Package/bismark-active-tmpfs/postinst
 # Bismark active-tmpfs post-install script
 
 if [ -z "$${IPKG_INSTROOT}" ]; then
-    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+	sort -u /etc/crontabs/root /tmp/etc/bismark/crontab-active-tmpfs > /tmp/bismark-crontab
+	if ! cmp -s /etc/crontabs/root /tmp/bismark-crontab; then
+		crontab /tmp/bismark-crontab
+	fi
+	rm /tmp/bismark-crontab
+	/etc/init.d/cron restart
+	bismark-action scriptupdate
+	#$${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
 fi
 endef
 
