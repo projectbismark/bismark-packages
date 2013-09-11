@@ -47,6 +47,8 @@ define Package/bismark-registration/install
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) ./files/www/cgi-bin/register-verify $(1)/www/cgi-bin/register-verify
 	$(INSTALL_BIN) ./files/www/cgi-bin/register-macaddress $(1)/www/cgi-bin/register-macaddress
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-authn $(1)/etc/uci-defaults/bismark-authn
 endef
 
 define Package/bismark-registration/postinst
