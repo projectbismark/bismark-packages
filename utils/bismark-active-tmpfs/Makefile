@@ -32,13 +32,9 @@ define Package/bismark-active-tmpfs/description
 	The bismark-active-tmpfs package runs active network measurements 
 endef
 
-# Specify where and how to install the program. Since we only have one file,
-# the helloworld executable, install it by copying it to the /bin directory on
-# the router. The $(1) variable represents the root directory on the router running
-# OpenWrt. The $(INSTALL_DIR) variable contains a command to prepare the install
-# directory if it does not already exist.  Likewise $(INSTALL_BIN) contains the
-# command to copy the binary file from its current location (in our case the build
-# directory) to the install directory.
+define Build/Compile
+endef
+
 define Package/bismark-active-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/lib/bismark
