@@ -48,9 +48,8 @@ define Package/bismark-active-tmpfs/preinst
 #!/bin/sh
 # Bismark active-tmpfs pre-install script: clear crontab
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	if [ -e /tmp/etc/bismark/crontab-active-tmpfs ]; then
-		grep -sFvf /tmp/etc/bismark/crontab-active-tmpfs /etc/crontabs/root | sort -u | crontab -
-	fi
+	crontab -l | grep -sv bismark-measure-wrapper | sort -u | crontab -
+	/etc/init.d/cron restart
 fi
 endef
 
@@ -63,7 +62,7 @@ define Package/bismark-active-tmpfs/postinst
 # Bismark active-tmpfs post-install script
 
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	sort -u /etc/crontabs/root /tmp/etc/bismark/crontab-active-tmpfs > /tmp/bismark-crontab
+	(crontab -l; echo "*/1  * * * * /tmp/usr/bin/bismark-measure-wrapper #tmpfs package") | sort -u > /tmp/bismark-crontab
 	if ! cmp -s /etc/crontabs/root /tmp/bismark-crontab; then
 		crontab /tmp/bismark-crontab
 	fi
