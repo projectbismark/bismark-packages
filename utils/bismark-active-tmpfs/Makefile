@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
 PKG_VERSION:=HEAD
-PKG_RELEASE:=24
+PKG_RELEASE:=25
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-active.git
