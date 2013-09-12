@@ -62,7 +62,7 @@ define Package/bismark-active-tmpfs/postinst
 # Bismark active-tmpfs post-install script
 
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	(crontab -l; echo "*/1  * * * * /tmp/usr/bin/bismark-measure-wrapper #tmpfs package") | sort -u > /tmp/bismark-crontab
+	(crontab -l; echo "*/1  * * * * /tmp/usr/bin/bismark-measure-wrapper  # remove on reboot") | sort -u > /tmp/bismark-crontab
 	if ! cmp -s /etc/crontabs/root /tmp/bismark-crontab; then
 		crontab /tmp/bismark-crontab
 	fi
