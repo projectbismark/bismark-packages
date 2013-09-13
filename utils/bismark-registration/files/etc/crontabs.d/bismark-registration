@@ -1,0 +1,1 @@
+0 0 * * * /usr/bin/bismark-authn-check -d

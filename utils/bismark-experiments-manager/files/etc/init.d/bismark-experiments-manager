@@ -1,11 +1,6 @@
 #!/bin/sh /etc/rc.common
 
 START=99
-start() {
-    [ -x /usr/bin/bismark-experiments-manager ] && \
-        /usr/bin/bismark-experiments-manager
-}
-
-stop() {
-    :
+boot() {
+    bismark-experiments-manager
 }

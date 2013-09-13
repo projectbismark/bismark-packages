@@ -33,6 +33,8 @@ define Package/bismark-updater/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/bismark-updater $(1)/usr/bin/bismark-updater
 	$(INSTALL_BIN) ./files/usr/bin/bismark-updater.lua $(1)/usr/bin/bismark-updater.lua
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-updater $(1)/etc/crontabs.d/bismark-updater
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/etc/init.d/bismark-updater $(1)/etc/init.d/bismark-updater
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
@@ -49,8 +51,8 @@ endef
 
 define Package/bismark-updater/prerm
 #!/bin/sh
+crontab -l | grep -sFv -f /etc/crontabs.d/bismark-updater | sort -u | crontab -
 /etc/init.d/bismark-updater disable
-crontab -l | grep -v bismark-updater | crontab -
 endef
 
 $(eval $(call BuildPackage,bismark-updater))
