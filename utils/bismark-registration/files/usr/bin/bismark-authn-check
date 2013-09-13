@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#turn off nodogsplash captive portal if valid authentication token exists
+# Turn off nodogsplash captive portal if valid authentication token exists.
 
 . /etc/bismark/bismark.conf
 
@@ -10,34 +10,33 @@ fi
 
 if [ -f "/etc/bismark/authn" ] ; then
 	if [ "x$1" == "x-d" ]; then
-    		. /usr/lib/bismark/functions.inc.sh
-    		sleep $(random 0 $REGISTRATION_MAX_SPLAY)
+		. /usr/lib/bismark/functions.inc.sh
+		sleep $(random 0 $REGISTRATION_MAX_SPLAY)
 	fi
-	cat /etc/bismark/authn | xargs curl -s -m 600 | grep -q "good token"
-	if [ $? == 0 ] ; then
-		#good token
-		/etc/init.d/nodogsplash stop &>/dev/null
+	if ! response=$(cat /etc/bismark/authn | xargs curl -s -m 600); then
+		# Cannot check status
+		/etc/init.d/nodogsplash stop
 		exit 0
+	elif [ "$response" == "good token" ]; then
+		# Good token
+		/etc/init.d/nodogsplash stop
+		exit 0
+	elif [ "$response" == "authenticate" ]; then
+		# Bad token
+		/etc/init.d/nodogsplash restart
+		exit 1
 	else
-		cat /etc/bismark/authn | xargs curl -s -m 600 | grep -q "authenticate"
-		if [ $? == 0 ] ; then
-			#bad token
-			/etc/init.d/nodogsplash restart &>/dev/null
-			exit 1
-		else
-			#invalid response
-			/etc/init.d/nodogsplash stop &>/dev/null
-			exit 0
-		fi
+		# Invalid response
+		/etc/init.d/nodogsplash stop
+		exit 0
 	fi
 else
 	#no token
-	url=`ndsctl status | grep Gateway | awk '{print $3}'`
-	curl -m 600 -f $url >/dev/null
-	if [ $? == 0 ] ; then
-		/etc/init.d/nodogsplash restart &>/dev/null
+	url=$(awk '$1 == "GatewayName" { print $2 }' /etc/nodogsplash/nodogsplash.conf)
+	if curl -f -m 600 -o /dev/null $url; then
+		/etc/init.d/nodogsplash restart
 	else
-		/etc/init.d/nodogsplash stop &>/dev/null
+		/etc/init.d/nodogsplash stop
 	fi
 	exit 1
 fi
