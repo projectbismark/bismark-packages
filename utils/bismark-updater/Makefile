@@ -33,7 +33,7 @@ define Package/bismark-updater/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/bismark-updater $(1)/usr/bin/bismark-updater
 	$(INSTALL_BIN) ./files/usr/bin/bismark-updater.lua $(1)/usr/bin/bismark-updater.lua
-	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DIR) $(1)/etc/crontabs.d
 	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-updater $(1)/etc/crontabs.d/bismark-updater
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/etc/init.d/bismark-updater $(1)/etc/init.d/bismark-updater

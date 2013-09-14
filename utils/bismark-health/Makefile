@@ -32,7 +32,7 @@ endef
 define Package/bismark-health/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/bismark-health $(1)/usr/bin/bismark-health
-	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DIR) $(1)/etc/crontabs.d
 	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-health $(1)/etc/crontabs.d/bismark-health
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-health $(1)/etc/uci-defaults/bismark-health
