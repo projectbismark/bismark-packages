@@ -1,1 +1,1 @@
-*/10 * * * /tmp/usr/bin/censorship-performance-measurements-http
+*/10 * * * * /tmp/usr/bin/censorship-performance-measurements-http
