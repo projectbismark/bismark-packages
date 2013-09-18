@@ -17,8 +17,8 @@ min_wait=1 #the minimum time to wait between web tests
 max_wait=2 #the maximum time to wait between web tests
 max_experiment_time=120 #experiment must be done in 120 seconds
 url_timeout=60 #after 60 seconds, timeout the url
-max_curl_filesize=$((400 * 1024)) # 400k
-iteration_dload_cap=`expr 15 \* 1024` #10k
+max_curl_filesize=$((500 * 1024)) # 400k
+iteration_dload_cap=`expr 10 \* 1024` #15k
 
 #FUNCTIONS
 #setup: this function will prepare the environment for the test
@@ -47,7 +47,7 @@ setup()
     if [ ! -e $index_file ]; then
 	touch $index_file
     fi
-
+    
     #if commands are different on busybox, then use a variable for their version
     mktemp='/bin/busybox mktemp'
     cat='/bin/busybox cat'
@@ -149,9 +149,9 @@ pick_random_url()
 upload_data()
 {
     #move to the output directory and gzip the tar archive
-    cd $output_dir
-    gzip $compressed_data_file
-    mv ${compressed_data_file}.gz $upload_dir
+    cd $persistentdir
+    tar -zcf ${output_dir_name}.tar.gz ${output_dir_name}
+    mv ${output_dir_name}.tar.gz $upload_dir
 }
 
 #measure_site: this function will perform the actual measurements.
@@ -168,15 +168,9 @@ measure_site()
 #syntax: compress_data $url, will take the header and 
 compress_data()
 {
+    cd $persistentdir
+    tar -zcf ${output_dir_name}.tar.gz ${output_dir_name}
     cd $output_dir
-    #if the compressed file does not exist, then create the archive with the new data
-    if [ ! -e $compressed_data_file ]; then
-	tar -cvf $compressed_data_file $output_file_rel_name ${1}.html ${1}.headers
-    else
-	#remove the old output file, add the new one in, then add the headers and html
-	tar --delete --file=$compressed_data_file $output_file_rel_name
-	tar --append --file=$compressed_data_file $output_file_rel_name ${1}.html ${1}.headers
-    fi
 }
 
 #run_measurements: will run the measurements for this test.
@@ -207,7 +201,8 @@ run_measurements()
 	compress_data $url
 	
 	#update our data usage numbers
-	data_usage=`stat --format="%s" $compressed_data_file`
+	data_usage=`ls -l ../${output_dir_name}.tar.gz | awk '{print $5}`
+	echo "Current data usage: " $data_usage " (Per iteration cap is " $iteration_dload_cap ")"
 
 	#if we are over time, then break
 	time_elapsed=$((`date +%s` - test_start_time))
