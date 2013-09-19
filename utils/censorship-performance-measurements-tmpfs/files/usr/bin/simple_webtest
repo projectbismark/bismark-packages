@@ -12,7 +12,7 @@ output_format="actual_url:\\t%{url_effective};speed:\\t%{speed_download};code:\\
 lookup_time:\\t%{time_namelookup};connect_time:\\t%{time_connect};total_time:\\t%{time_total};\\n\
 size:\\t%{size_download};"
 persistentdir="/tmp/censorship-performance-measurements"
-url_dload_address=ben.noise.gatech.edu/censorship-performance/simple-http
+url_dload_address=ben.noise.gatech.edu/external/censorship-performance/simple-http
 min_wait=1 #the minimum time to wait between web tests
 max_wait=2 #the maximum time to wait between web tests
 max_experiment_time=120 #experiment must be done in 120 seconds
