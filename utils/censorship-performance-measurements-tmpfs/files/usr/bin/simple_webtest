@@ -201,7 +201,7 @@ run_measurements()
 	compress_data $url
 	
 	#update our data usage numbers
-	data_usage=`ls -l ../${output_dir_name}.tar.gz | awk '{print $5}`
+	data_usage=`ls -l ../${output_dir_name}.tar.gz | awk '{print $5}'`
 	echo "Current data usage: " $data_usage " (Per iteration cap is " $iteration_dload_cap ")"
 
 	#if we are over time, then break
