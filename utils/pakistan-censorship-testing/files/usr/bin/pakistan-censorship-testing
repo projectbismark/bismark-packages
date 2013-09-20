@@ -17,6 +17,11 @@ configfile=${persistentdir}/ubica.conf
 clientcc="00"; # unknown client id, or default CC when shipped
 clientip="127.0.0.1"; # unknown client IP address
 maxtargets=100 ; # only random <maxtargets> will be considered
+# NOTE: mlock for active measurements defaults to 400 secs,
+#	then lock could be expired and
+#       measurement_utils (curl,nc,dig) are killed based on process NAME
+#	(possible collaterals)
+#	TODO: set parallel_rnd_wait_max_secs = min { mlock_max - upload_time , test_default }
 parallel_rnd_wait_max_secs=30 ; # initial random waiting before actual test
 maximum_experiment_duration_secs=220 ; # NOTE: INCLUDES parallel_rnd_wait_max_secs
 maximum_service_connections_time=$(( 5 * 60 )); # time to upload report
@@ -135,6 +140,9 @@ if [ $? -eq 1 ]; then
 	exit 1
 fi
 
+# list of utils that will be killed if active_measurement_lock is expired:
+# XXX possible collateral damage. TODO: hardlink in dedicated dir and call with full path
+active_measurement_utils_list="$CURL $NC nslookup" ; # DIG is not used for now.
 
 if [ $archive_stdout_stderr -eq 1 ]; then
 	## start logging:
@@ -239,6 +247,22 @@ Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.
 Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
 Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)"
 
+
+## bismark functions:
+if [ -e /usr/lib/bismark/functions.inc.sh ]; then
+	. /usr/lib/bismark/functions.inc.sh
+else
+	echo "mutual exclusion lock functions are missing!" >&2
+	exit 42 ; # -------------------------------------------------------------->>
+
+	# NOTE: if we tolerate some interference with other active measurements,
+	#       just go all green:
+	
+	#acquire_active_measurements_lock() { return 0; }
+	#release_active_measurements_lock() { return 0; }
+	#active_measurements_lock_creation_time() { return 1; }
+	#expire_active_measurements_lock() { return 0; }
+fi
 
 ## functions:
 
@@ -483,6 +507,11 @@ webcontent(){
 
 #START SCRIPT
 
+expire_active_measurements_lock ; # just in case
+if ! acquire_active_measurements_lock $active_measurement_utils_list ; then
+	exit 42 ; # ---------------------------------------------------------->>
+fi
+
 if ! [ "$inputfile" = "" ]; then
 	test_start_ts=`date +%s`; export test_start_ts
 	tmp_parameter_passing_file=$cleanthisdir/${PPID}_$$_`date +%s`.tmp
@@ -562,6 +591,8 @@ else
 	webcontent $url 2>&1 | tee ${resultspfx}_${url}.log
 fi
 
+# end of critical section. after this just an ftp upload is performed.
+release_active_measurements_lock
 
 if [ $archive_stdout_stderr -eq 1 ]; then
 	# close report files and restore redirected descriptors:
