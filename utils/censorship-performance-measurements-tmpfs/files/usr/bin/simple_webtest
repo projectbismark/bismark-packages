@@ -18,7 +18,7 @@ max_wait=2 #the maximum time to wait between web tests
 max_experiment_time=120 #experiment must be done in 120 seconds
 url_timeout=60 #after 60 seconds, timeout the url
 max_curl_filesize=$((500 * 1024)) # 400k
-iteration_dload_cap=`expr 10 \* 1024` #15k
+iteration_dload_cap=`expr 10 \* 1024` #10k
 
 #FUNCTIONS
 #setup: this function will prepare the environment for the test
@@ -29,6 +29,9 @@ setup()
     timestamp=`date +%s`
     test_start_time=$timestamp
     
+    . /etc/bismark/bismark.conf
+    . /usr/lib/bismark/functions.inc.sh
+
     #find the device ID, aka the mac address (since this is used in filenames, we replace the : with a -
     DEVICE_ID=`cat /etc/bismark/ID`
 
@@ -39,6 +42,7 @@ setup()
     output_file_rel_name=http_results_${DEVICE_ID}_${timestamp}.txt
     output_file=${output_dir}/${output_file_rel_name}
     upload_dir=/tmp/bismark-uploads/censorship-performance/
+    input_file=${persistentdir}/cur_url_list
 
     compressed_data_file=${output_dir}/${output_dir_name}.tar #this is the archive which we will be storing output in
 
@@ -53,6 +57,7 @@ setup()
     cat='/bin/busybox cat'
 }
 
+#dload_url_list: sets url_file and download_url, then writes the new urls to url_file
 dload_url_list()
 {
     #and download the file of urls
@@ -101,10 +106,11 @@ pick_elem()
 #Note: will overwrite input_file if it exists
 create_random_url_list()
 {
-    if [ ! "$input_file" = "" ]; then #if the old file exists, delete it
+    if [ -e "$input_file" ]; then #if the old file exists, delete it
 	rm -f $input_file
     fi
 	
+    #note, dload_url_list should have been called by now so that there is a url file to read
     if [ ! -e "$url_file" ]; then #if the url file does not exist, then print an error message and exit
 	echo "No URL file detected. Exiting"
 	#perform any cleanup necessary
@@ -115,17 +121,14 @@ create_random_url_list()
     echo "Randomizing the url order"
     #create a file to hold the url list
     cd $persistentdir
-#    input_file=`mktemp`
-    input_file=`pwd`/`$mktemp` #this still won't work on debian, but necessary on routers
     #randomize the url list and write it out
     $cat $url_file | pick_elem > $input_file
-    echo $input_file
 }
 
 #pick_random_urls: will select the $index through $index + $urls_to_test urls and print them to stdout
+#Sets: index
 pick_random_url()
 {
-    . $index_file #this is necessary to keep consistent values of index. I think it might be a variable scope issue, but this works
     cur_loc=0
     endoflist=`expr $index + 1`
 
@@ -138,11 +141,6 @@ pick_random_url()
 	fi
 	cur_loc=`expr $cur_loc + 1`
     done < $input_file
-
-    #export the index variable to disk and the name of the input file
-    index=`expr $index + 1`
-    echo index="$index" > $index_file
-    echo input_file="$input_file" >> $index_file
 }
 
 #upload_data: upload the data to the BISmark servers
@@ -175,6 +173,7 @@ compress_data()
 
 #run_measurements: will run the measurements for this test.
 # syntax: run_measurements
+#Sets: index, url, 
 run_measurements()
 {
     echo "Measuring"
@@ -192,30 +191,48 @@ run_measurements()
 	create_random_url_list
     fi
 
-    #here we get a url, tar the output, check the upload size, and if the size is larger than our cap, we end the script
-    data_usage=0
-    while [ $data_usage -lt $iteration_dload_cap ]; do
-	url=`pick_random_url`
-	echo $url
-	measure_site $url
-	compress_data $url
-	
-	#update our data usage numbers
-	data_usage=`ls -l ../${output_dir_name}.tar.gz | awk '{print $5}'`
-	echo "Current data usage: " $data_usage " (Per iteration cap is " $iteration_dload_cap ")"
+    #acquire the measurements lock so we are the only script running
+    if acquire_active_measurements_lock simple_webtest; then
+        #here we get a url, tar the output, check the upload size, and if the size is larger than our cap, we end the script
+	local data_usage=0
+	while [ $data_usage -lt $iteration_dload_cap ] || [ $index -gt 99 ]; do
+	    local url=`pick_random_url`
+	    index=`expr $index + 1` #this must be set here so that we get the next url when we run through again
+	    echo $url
+	    measure_site $url
+	    compress_data $url
+	    
+            #update our data usage numbers
+	    data_usage=`ls -l ../${output_dir_name}.tar.gz | awk '{print $5}'`
+	    echo "Current data usage: " $data_usage " (Per iteration cap is " $iteration_dload_cap ")"
 
-	#if we are over time, then break
-	time_elapsed=$((`date +%s` - test_start_time))
-	if [ $time_elapsed -gt $max_experiment_time ]; then
-	    echo "Overtime. Stopping test"
-	    echo "Could not test other urls- experiment is out of time" >>  $output_file
-	    break #break out of the loop and cleanup
-	fi
-    done
+	    #if we are over time, then break
+	    local time_elapsed=$((`date +%s` - test_start_time))
+	    if [ $time_elapsed -gt $max_experiment_time ]; then
+		echo "Overtime. Stopping test"
+		echo "Could not test other urls- experiment is out of time" >>  $output_file
+		break #break out of the loop and cleanup
+	    fi
+	done
+	release_active_measurments_lock
+
+	#write out our changes so that we keep our state on the next run
+	echo index="$index" > $index_file
+	upload_data
+
+    else
+	#if we don't acquire, then just quit
+	expire_active_measurements_lock
+    fi
+
 }
 
-#MAIN- START- here is where the code is actually 
-setup
-run_measurements
-upload_data
-cleanup
+#MAIN- START- here is where the code is actually run
+main()
+{
+    setup
+    run_measurements
+    cleanup
+}
+
+main
