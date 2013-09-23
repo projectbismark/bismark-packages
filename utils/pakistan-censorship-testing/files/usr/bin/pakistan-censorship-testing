@@ -142,7 +142,7 @@ fi
 
 # list of utils that will be killed if active_measurement_lock is expired:
 # XXX possible collateral damage. TODO: hardlink in dedicated dir and call with full path
-active_measurement_utils_list="$CURL $NC nslookup" ; # DIG is not used for now.
+active_measurement_utils_list="" ; # no processes will be killed
 
 if [ $archive_stdout_stderr -eq 1 ]; then
 	## start logging:
