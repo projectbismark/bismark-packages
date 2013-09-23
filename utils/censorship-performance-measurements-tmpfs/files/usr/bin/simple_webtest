@@ -195,7 +195,7 @@ run_measurements()
     if acquire_active_measurements_lock simple_webtest; then
         #here we get a url, tar the output, check the upload size, and if the size is larger than our cap, we end the script
 	local data_usage=0
-	while [ $data_usage -lt $iteration_dload_cap ] || [ $index -gt 99 ]; do
+	while [ $data_usage -lt $iteration_dload_cap ] && [ $index -le 100 ]; do
 	    local url=`pick_random_url`
 	    index=`expr $index + 1` #this must be set here so that we get the next url when we run through again
 	    echo $url
