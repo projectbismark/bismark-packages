@@ -1,0 +1,275 @@
+#!/bin/ash
+#simple_webtest.sh
+#Ben Jones
+#Sep 2013
+#simple_webtest.sh: this script is designed to run on the bismark platform. The script will fetch a number of urls and determine the
+#    the performance of these webpages. The performance data will allow us to see performance difference inside and outside of countries
+# Note: awk is used for computation in a lot of places because it is the only way I can do floating point arithmetic
+
+#configuration parameters
+user_agent='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)'
+#num_redirects=5 the initial version will not be using redirects so that we just get the first http page and don't have to do HTTPS validation
+output_format="actual_url:\\t%{url_effective};speed:\\t%{speed_download};code:\\t%{http_code}\\n\
+lookup_time:\\t%{time_namelookup};connect_time:\\t%{time_connect};total_time:\\t%{time_total};\\n\
+size:\\t%{size_download};"
+persistent_dir="/tmp/censorship-performance-measurements"
+url_dload_address=ben.noise.gatech.edu/external/censorship-performance/simple-http
+max_experiment_time_secs=120 #experiment must be done in 120 seconds
+url_timeout_secs=60 #after 60 seconds, timeout the url
+max_curl_filesize_bytes=$((750 * 1024)) # 750k
+dload_usage_target_bytes=$(expr 10 \* 1024) #10k
+alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which weights how important the old data usage was
+
+. /etc/bismark/bismark.conf
+. /usr/lib/bismark/functions.inc.sh
+
+#FUNCTIONS
+#setup: this function will prepare the environment for the test
+# expected syntax: setup
+# Imports: persistent_dir
+# Exports: will set timestamp, test_start_time, DEVICE_ID, output_dir_name, output_dir,
+#   output_file, upload_dir, input_file, compressed_data_file, and index_file
+# Files: reads in /etc/bismark/ID, creates the output_file and the index_file, removes any files or dirs starting with http
+# Directories: creates the output_dir directory (deleted after script completes), removes any dirs starting with http
+setup()
+{
+        echo "Setting up"
+        timestamp=$(date +%s)
+        test_start_time=$timestamp
+    
+    #find the device ID, aka the mac address (since this is used in filenames, we replace the : with a -
+    if [ -e /etc/bismark/ID ]; then
+        DEVICE_ID=$(cat /etc/bismark/ID)
+    else
+        DEVICE_ID=$( /sbin/ifconfig | awk '{if(NR == 1){print $5}}' | awk 'BEGIN {RS = ":"; ORS="";} {print $1}')
+    fi
+
+    #check if there is anything left from the old script, if so, then delete it
+    cleanup
+
+    #and persistent files (eventually deleted after uploads)
+    output_dir_name=http_${DEVICE_ID}_${timestamp}
+    output_dir=${persistent_dir}/${output_dir_name}
+    mkdir -p $output_dir; cd $output_dir || exit 1
+    output_file_rel_name=http_results_${DEVICE_ID}_${timestamp}.txt
+    output_file=${output_dir}/${output_file_rel_name}
+    upload_dir=/tmp/bismark-uploads/censorship-performance/
+#    upload_dir=/tmp/censorship-performance-measurements/
+    input_file=${persistent_dir}/cur_url_list
+
+    compressed_data_file=${output_dir}/${output_dir_name}.tar #this is the archive which we will be storing output in
+
+    #create a file for the variable index if it does not exist
+    index_file=${persistent_dir}/index.var
+    if [ ! -e $index_file ]; then
+        touch $index_file
+    fi
+}
+
+#dload_url_list: sets url_file and download_url, then writes the new urls to url_file
+# Imports: persistentdir, url_dload_address, DEVICE_ID, url_timeout_secs
+# Exports: url_file
+# Files: will write the downloaded urls to the filename stored in url_file
+dload_url_list()
+{
+    #and download the file of urls
+    url_file=${persistent_dir}/urllist.txt
+    local download_url=${url_dload_address}/${DEVICE_ID}.txt
+    echo $download_url
+    #silently download the file, limiting the download to 
+    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time $url_timeout_secs || (cleanup && exit 1)
+}
+
+
+#cleanup: this function will delete all temporary files and do cleanup before the script exits
+# Files: will remove output_dir
+# Context: moves the working directory to persistent_dir
+cleanup()
+{
+    echo "Cleaning up"
+    #delete any file or directory which has http in the name
+    cd $persistent_dir
+    local old_files=$(ls -l | awk '{if($9 ~ /http/){print $9}}')
+    rm -rf $old_files
+}
+
+#randomize_list: this function will randomly select n elements from a list. If all elements are selected, the list order will be randomized
+# The expected syntax is randomize_list and the list is stored in url_file
+#Note: this function is copied from Giuseppe's measurement script because it seems to be an efficient way to randomize lists
+# Imports: timestamp, url_file, input_file
+# Exports: none
+# Files: uses url_file as input, will write the results out to input_file
+randomize_list()
+{
+    n="NR" #use the number of lines read in as the length
+
+    #seed the random number generator- necessary to randomize the order of the list
+    rnd_seed=$(($timestamp + $(cut -d" " -f1 /proc/self/stat)))
+
+    #use awk to read the list in, then sort it or return a random element
+    awk 'BEGIN {srand('$rnd_seed')}
+               {l[NR]=$0;}
+         END   {if (FNR==0){exit};
+                 for (i=1;(i<='$n' && i<=NR);i++){
+                     n=int(rand()*(NR-i+1))+i;
+                     print l[n];l[n]=l[i];
+                 }
+               }' $url_file > $input_file
+}
+
+#create_random_url_list: take the url list, put it in random order, and write it out as a new file
+#Note: will overwrite input_file if it exists
+# Imports: persistent_dir, input_file, url_file
+# Exports: none
+# Files: uses url_file for input, writes the randomized order to input_file
+create_random_url_list()
+{
+    #if the old file exists, delete it
+    rm -f $input_file
+        
+    #note, dload_url_list should have been called by now so that there is a url file to read
+    if [ ! -e "$url_file" ]; then #if the url file does not exist, then print an error message and exit
+        echo "No URL file detected. Exiting"
+        #perform any cleanup necessary
+        cleanup
+        exit 1
+    fi
+        
+    echo "Randomizing the url order"
+    #create a file to hold the url list
+    cd $persistent_dir
+    #randomize the url list and write it out
+    randomize_list
+}
+
+#upload_data: upload the data to the BISmark servers
+# Imports: persistentdir, output_dir_name, upload_dir
+# Exports: none
+# Files: creates the archive if necessary and moves it to the Bismark uploads directory
+upload_data()
+{
+    #move to the output directory and gzip the tar archive
+    cd $persistent_dir
+    if [ ! -e ${output_dir_name}.tar.gz ]; then
+        tar -zcf ${output_dir_name}.tar.gz ${output_dir_name}
+    fi
+
+    mv ${output_dir_name}.tar.gz $upload_dir
+}
+
+#measure_site: this function will perform the actual measurements.
+# expected syntax: measure_site url filename
+# Imports: output_dir (the url to measure and output filename are given as arguments)
+# Exports: none
+# Files: writes output to output_file, html to ${2}.html, and headers to ${2}.headers
+measure_site()
+{
+    #create a filename to store the html and headers in- just the name of the website
+    local pageoutput=${output_dir}/${1}
+    printf "site:\t%s;time:\t%s\n" "$1" $(date +%s)>> $output_file
+    curl $1 -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w $output_format -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
+    printf "return_code:\t%s;file_name:\t%s\n" "$?" "$2" >> $output_file
+}
+
+#syntax: compress_data
+# Imports: persistent_dir, output_dir_name, output_dir
+# Exports: none
+# Files: compress output_dir into output_dir_name.tar.gz
+compress_data()
+{
+    cd $persistent_dir
+    tar -zcf ${output_dir_name}.tar.gz ${output_dir_name}
+    cd $output_dir
+}
+
+#run_measurements: will run the measurements for this test.
+# syntax: run_measurements
+# Imports: index and data_usage from index_file, dload_usage_target_bytes, alpha, input_file, max_experiment_time_secs
+# Exports: index, url
+# Files: may replace input_file or url_list depending on conditions, will call functions that create html and header files for each url,
+#   will also call functions which modify output_file and create a tar archive of output_dir in persisent_dir
+run_measurements()
+{
+    echo "Measuring"
+    #we store the variable index to disc so we have persistent data between reboots-> the file just stores the file
+    . $index_file
+
+    #randomize the order of the urls if we haven't already
+    #we test whether or not to create the new url list by checking if the index exists or if it is >=100
+    
+    if [ -z "$index" -o "$index" -gt "$max_index_size" ]; then
+        #set index to 0 and create the randomized url list
+        index=1
+        dload_url_list
+        create_random_url_list
+        #set the max index size to the length of the list
+        max_index_size=$(awk 'END{print NR}' $input_file)
+        echo "Number of urls in list: " $max_index_size
+    fi
+    
+    #if data_usage does not exist, then reset it to 0
+    if [ "$data_usage" = "" ]; then
+        data_usage=0
+    fi
+
+    #if data usage is too high, then we reduce it by 1-alpha and preempt
+    if [ $data_usage -gt $dload_usage_target_bytes ]; then
+        echo "Current data usage average of " $data_usage " is over target average of " $dload_usage_target_bytes
+        data_usage=$(echo "meaningless" | awk '{printf("%d", ((1 - '$alpha') * '$data_usage'))}')
+        echo "Therefore, we are preempting and setting data_usage to its new value of " $data_usage
+        echo index="$index" > $index_file
+        echo data_usage="$data_usage" >> $index_file
+        echo max_index_size="$max_index_size" >> $index_file
+    else
+        #acquire the measurements lock so we are the only script running
+        if acquire_active_measurements_lock censorship-performance-measurements-http; then
+            #here we get a url, tar the output, check the upload size, and if the size is larger than our cap, we end the script
+            echo "data: " $data_usage
+            while [ "$data_usage" -lt "$dload_usage_target_bytes" ] && [ "$index" -le "$max_index_size" ]; do
+                local url=$(awk 'NR == '$index'' $input_file) #get the appropriate url for this measurement
+                index=$(($index + 1)) #set index up for the next url
+                echo $url
+                measure_site $url
+                compress_data
+            
+                #update our data usage numbers
+                local last_run_usage=$(ls -l ../${output_dir_name}.tar.gz | awk '{print $5}')
+                data_average=$(echo meaningless | awk '{printf("%d", (('$alpha' * '$last_run_usage') + ((1 - '$alpha')*'$data_usage')))}')
+                echo "Current data average: " $data_average " last run: " $last_run_usage " (Target is " $dload_usage_target_bytes ")"
+                #this is done so that we don't reduce the total every time and dload too much data
+                if [ $data_average -ge $dload_usage_target_bytes ]; then
+                    data_usage=$data_average
+                fi
+
+                #if we are over time, then break
+                local time_elapsed=$(($(date +%s) - test_start_time))
+                if [ $time_elapsed -gt $max_experiment_time_secs ]; then
+                    echo "Overtime. Stopping test"
+                    break #break out of the loop and cleanup
+                fi
+            done
+            release_active_measurments_lock
+
+            #write out our changes so that we keep our state on the next run
+            echo index="$index" > $index_file
+            echo data_usage="$data_usage" >> $index_file
+            echo max_index_size="$max_index_size" >> $index_file
+            upload_data
+
+        else
+            #if we don't acquire, then just quit
+            expire_active_measurements_lock
+        fi
+    fi
+
+}
+
+#MAIN- START- here is where the code is actually run
+main()
+{
+    setup
+    run_measurements
+    cleanup
+}
+
+main
