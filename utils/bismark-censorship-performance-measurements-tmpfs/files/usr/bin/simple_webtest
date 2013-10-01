@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/ash -eu
 #simple_webtest.sh
 #Ben Jones
 #Sep 2013
@@ -37,7 +37,7 @@ setup()
         timestamp=$(date +%s)
         test_start_time=$timestamp
     
-    #find the device ID, aka the mac address (since this is used in filenames, we replace the : with a -
+    #find the device ID, aka the mac address
     if [ -e /etc/bismark/ID ]; then
         DEVICE_ID=$(cat /etc/bismark/ID)
     else
@@ -89,8 +89,7 @@ cleanup()
     echo "Cleaning up"
     #delete any file or directory which has http in the name
     cd $persistent_dir
-    local old_files=$(ls -l | awk '{if($9 ~ /http/){print $9}}')
-    rm -rf $old_files
+    [ -n "$persistent_dir" ]&& rm -rf ${persistent_dir}/*http*
 }
 
 #randomize_list: this function will randomly select n elements from a list. If all elements are selected, the list order will be randomized
@@ -128,7 +127,7 @@ create_random_url_list()
     rm -f $input_file
         
     #note, dload_url_list should have been called by now so that there is a url file to read
-    if [ ! -e "$url_file" ]; then #if the url file does not exist, then print an error message and exit
+    if [ ! -e $url_file ]; then #if the url file does not exist, then print an error message and exit
         echo "No URL file detected. Exiting"
         #perform any cleanup necessary
         cleanup
@@ -165,7 +164,7 @@ upload_data()
 measure_site()
 {
     #create a filename to store the html and headers in- just the name of the website
-    local pageoutput=${output_dir}/${1}
+    local pageoutput=${output_dir}/${2}
     printf "site:\t%s;time:\t%s\n" "$1" $(date +%s)>> $output_file
     curl $1 -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w $output_format -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
     printf "return_code:\t%s;file_name:\t%s\n" "$?" "$2" >> $output_file
@@ -229,7 +228,7 @@ run_measurements()
                 local url=$(awk 'NR == '$index'' $input_file) #get the appropriate url for this measurement
                 index=$(($index + 1)) #set index up for the next url
                 echo $url
-                measure_site $url
+                measure_site $url $index
                 compress_data
             
                 #update our data usage numbers
@@ -242,7 +241,7 @@ run_measurements()
                 fi
 
                 #if we are over time, then break
-                local time_elapsed=$(($(date +%s) - test_start_time))
+                local time_elapsed=$(($(date +%s) - $test_start_time))
                 if [ $time_elapsed -gt $max_experiment_time_secs ]; then
                     echo "Overtime. Stopping test"
                     break #break out of the loop and cleanup
