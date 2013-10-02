@@ -190,6 +190,11 @@ compress_data()
 run_measurements()
 {
     echo "Measuring"
+    # initialize the variables that may be nonexistant to a null string so that the script does not exit when we
+    #  test an unset variable
+    index=""
+    max_index_size=""
+    data_usage=""
     #we store the variable index to disc so we have persistent data between reboots-> the file just stores the file
     . $index_file
 
