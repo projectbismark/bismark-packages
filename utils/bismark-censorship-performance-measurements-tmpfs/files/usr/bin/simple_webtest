@@ -28,7 +28,7 @@ alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which we
 # expected syntax: setup
 # Imports: persistent_dir
 # Exports: will set timestamp, test_start_time, DEVICE_ID, output_dir_name, output_dir,
-#   output_file, upload_dir, input_file, compressed_data_file, and index_file
+#   output_file, upload_dir, input_file, and index_file
 # Files: reads in /etc/bismark/ID, creates the output_file and the index_file, removes any files or dirs starting with http
 # Directories: creates the output_dir directory (deleted after script completes), removes any dirs starting with http
 setup()
@@ -57,8 +57,6 @@ setup()
 #    upload_dir=/tmp/censorship-performance-measurements/
     input_file=${persistent_dir}/cur_url_list
 
-    compressed_data_file=${output_dir}/${output_dir_name}.tar #this is the archive which we will be storing output in
-
     #create a file for the variable index if it does not exist
     index_file=${persistent_dir}/index.var
     if [ ! -e $index_file ]; then
@@ -77,7 +75,7 @@ dload_url_list()
     local download_url=${url_dload_address}/${DEVICE_ID}.txt
     echo $download_url
     #silently download the file, limiting the download to 
-    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time $url_timeout_secs || (cleanup && exit 1)
+    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time $url_timeout_secs || (cleanup; exit 1)
 }
 
 
