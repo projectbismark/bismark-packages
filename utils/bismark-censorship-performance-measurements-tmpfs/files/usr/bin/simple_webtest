@@ -62,6 +62,8 @@ setup()
     if [ ! -e $index_file ]; then
         touch $index_file
     fi
+
+    new_curl='/tmp/curl2'
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
@@ -163,8 +165,11 @@ measure_site()
 {
     #create a filename to store the html and headers in- just the name of the website
     local pageoutput=${output_dir}/${2}
+    #get the first IPv4 address for the url
+    ipAddress=$(nslookup $1 | awk '{if($1 == "Name:"){inAddressSection=1} if($1 == "Address" && inAddressSection){if(!match($3, ":")){print $3; exit}}}')
     printf "site:\t%s;time:\t%s\n" "$1" $(date +%s)>> $output_file
-    curl $1 -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w $output_format -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
+    curl $ipAddress:80 -H "Host: $url" -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w $output_format -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
+    printf "remote_ip:\t%s\n" "$ipAddress" >> $output_file
     printf "return_code:\t%s;file_name:\t%s\n" "$?" "$2" >> $output_file
 }
 
