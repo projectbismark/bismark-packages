@@ -6,7 +6,11 @@
 # Enable cron job
 crontab -l | cat - /etc/crontabs.d/bismark-registration | sort -u | crontab -
 
-# Sort files, start nodogsplash
+# Replace splash page. Must do here because this file is managed by
+# nodogsplash's package.
 mv /etc/nodogsplash/nodogsplash.conf.will-rename-in-uci-defaults /etc/nodogsplash/nodogsplash.conf
 mv /etc/nodogsplash/htdocs/splash.html.will-rename-in-uci-defaults /etc/nodogsplash/htdocs/splash.html
-/etc/init.d/nodogsplash restart
+
+/etc/init.d/nodogsplash stop
+/etc/init.d/nodogsplash disable
+/usr/bin/bismark-authn-check
