@@ -4,39 +4,18 @@
 
 . /etc/bismark/bismark.conf
 
-if [ ! $REGISTRATION_MAX_SPLAY ] ; then
+if [ ! $REGISTRATION_MAX_SPLAY ]; then
 	REGISTRATION_MAX_SPLAY=60
 fi
 
-if [ -f "/etc/bismark/authn" ] ; then
-	if [ "x$1" == "x-d" ]; then
-		. /usr/lib/bismark/functions.inc.sh
-		sleep $(random 0 $REGISTRATION_MAX_SPLAY)
-	fi
-	if ! response=$(cat /etc/bismark/authn | xargs curl -s -m 600); then
-		# Cannot check status
-		/etc/init.d/nodogsplash stop
-		exit 0
-	elif [ "$response" == "good token" ]; then
-		# Good token
-		/etc/init.d/nodogsplash stop
-		exit 0
-	elif [ "$response" == "authenticate" ]; then
-		# Bad token
-		/etc/init.d/nodogsplash restart
-		exit 1
-	else
-		# Invalid response
-		/etc/init.d/nodogsplash stop
-		exit 0
-	fi
+if [ -f /etc/bismark/authn ]; then
+	/etc/init.d/nodogsplash stop
 else
-	#no token
+	# No token
 	url=$(awk '$1 == "GatewayName" { print $2 }' /etc/nodogsplash/nodogsplash.conf)
 	if curl -f -m 600 -o /dev/null $url; then
 		/etc/init.d/nodogsplash restart
 	else
 		/etc/init.d/nodogsplash stop
 	fi
-	exit 1
 fi
