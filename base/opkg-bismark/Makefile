@@ -29,7 +29,7 @@ define Package/opkg-bismark
   TITLE:=opkg package management system
   MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
   URL:=http://wiki.openmoko.org/wiki/Opkg
-  DEPENDS:=+libcurl
+  DEPENDS:=+libcurl +libopenssl
   PROVIDES:=opkg
 endef
 
@@ -53,6 +53,7 @@ EXTRA_CFLAGS += $(TARGET_CPPFLAGS)
 CONFIGURE_ARGS += \
 	--enable-curl \
 	--disable-gpg \
+	--enable-openssl \
 	--with-opkgetcdir=/etc \
 	--with-opkglockfile=/var/lock/opkg.lock
 

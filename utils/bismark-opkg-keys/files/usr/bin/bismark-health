@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# When running as a cron job, pass -d to sleep for a random amount of time so
+# that all routers don't simulteously hammer the server with updates.
+if [ "x$1" == "x-d" ]; then
+    . /usr/lib/bismark/functions.inc.sh
+    sleep $(random 0 120)
+fi
+
+node_id=$(cat /etc/bismark/ID)
+timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+
+# Stage all health checks in a temporary directory which we tar and upload.
+staging_dir=$(mktemp -d -t)
+tar_name=health_${node_id}_${timestamp}
+log_dir=$staging_dir/$tar_name
+mkdir -p $log_dir
+
+# Put the health checks here
+uptime >> $log_dir/uptime
+cat /proc/uptime >> $log_dir/uptime
+df >> $log_dir/df
+top -b -n 1 >> $log_dir/top
+opkg list-installed >> $log_dir/opkg_list-installed
+cp /etc/opkg.conf $log_dir/opkg.conf
+for p in 0 1 2 3; do
+    swconfig dev rtl8366s port $p get link
+done >> $log_dir/swconfig_ports
+for dev in wlan0 wlan1; do
+    echo -n "$dev: "
+    iw dev $dev station dump | grep -c Station
+done >> $log_dir/iw_station_count
+
+# Tar the directory and upload it
+tar -C $staging_dir -czvf $staging_dir/${tar_name}.tar.gz $tar_name
+mv $staging_dir/${tar_name}.tar.gz /tmp/bismark-uploads/health/
+
+# Clean up the log files
+rm -r $staging_dir
