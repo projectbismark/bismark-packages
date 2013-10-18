@@ -37,9 +37,9 @@ define Package/bismark-opkg-keys/postinst
 #!/bin/sh                                                                                                                          
 
 if [ -z "$${IPKG_INSTROOT}" ]; then                                                                                                                                   
-    sed -i '$aoption check_signature 1'  /etc/opkg.conf                                                                                      
-    sed -i '$aoption signature_ca_file /etc/ssl/serverCA.pem'  /etc/opkg.conf
-    sed -i '$aoption signature_ca_path /etc/ssl/'  /etc/opkg.conf
+    sed -i '$$aoption check_signature 1'  /etc/opkg.conf                                                                                      
+    sed -i '$$aoption signature_ca_file /etc/ssl/serverCA.pem'  /etc/opkg.conf
+    sed -i '$$aoption signature_ca_path /etc/ssl/'  /etc/opkg.conf
 fi
 endef
 
