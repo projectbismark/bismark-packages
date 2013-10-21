@@ -30,7 +30,7 @@ max_experiment_time_secs=120 #experiment must be done in 120 seconds
 url_timeout_secs=60 #after 60 seconds, timeout the url
 max_curl_filesize_bytes=$((750 * 1024)) # 750k
 dload_usage_target_bytes=$(expr 10 \* 1024) #10k
-us_router_list="/tmp/censorship-performance-measurements/usRouters.txt"
+us_router_list="/tmp/etc/censorship-performance-measurements/usRouters.txt"
 alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which weights how important the old data usage was
 
 . /etc/bismark/bismark.conf
