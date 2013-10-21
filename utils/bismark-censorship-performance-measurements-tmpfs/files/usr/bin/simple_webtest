@@ -9,15 +9,28 @@
 #configuration parameters
 user_agent='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)'
 #num_redirects=5 the initial version will not be using redirects so that we just get the first http page and don't have to do HTTPS validation
-output_format="actual_url:\\t%{url_effective};speed:\\t%{speed_download};code:\\t%{http_code}\\n\
-lookup_time:\\t%{time_namelookup};connect_time:\\t%{time_connect};total_time:\\t%{time_total};\\n\
-size:\\t%{size_download};"
+output_format="<actual_url>%{url_effective}</actual_url>\\n\
+<redirect_url>%{redirect_url}</redirect_url>\\n\
+<content_type>%{content_type}</content_type>\\n\
+<speed_download>%{speed_download}</speed_download>\\n\
+<speed_upload>%{speed_upload}</speed_upload>\\n\
+<http_code>%{http_code}</http_code>\\n\
+<connect_time>%{time_connect}</connect_time>\\n\
+<time_pretransfer>%{time_pretransfer}</time_pretransfer>\\n\
+<time_starttransfer>%{time_starttransfer}</time_starttransfer>\\n\
+<time_total>%{time_total}</time_total>\\n\
+<size_download>%{size_download}</size_download>\\n\
+<size_upload>%{size_upload}</size_upload>\\n\
+<size_request>%{size_request}</size_request>\\n\
+<size_header>%{size_header}</size_header>\\n\
+<num_connects>%{num_connects}</num_connects>\\n"
 persistent_dir="/tmp/censorship-performance-measurements"
 url_dload_address=ben.noise.gatech.edu/external/censorship-performance/simple-http
 max_experiment_time_secs=120 #experiment must be done in 120 seconds
 url_timeout_secs=60 #after 60 seconds, timeout the url
 max_curl_filesize_bytes=$((750 * 1024)) # 750k
 dload_usage_target_bytes=$(expr 10 \* 1024) #10k
+us_router_list="/tmp/censorship-performance-measurements/usRouters.txt"
 alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which weights how important the old data usage was
 
 . /etc/bismark/bismark.conf
@@ -53,8 +66,11 @@ setup()
     mkdir -p $output_dir; cd $output_dir || exit 1
     output_file_rel_name=http_results_${DEVICE_ID}_${timestamp}.txt
     output_file=${output_dir}/${output_file_rel_name}
+    echo "<?xml version="3.0" encoding="UTF-8" standalone="yes"?>" > $output_file
+    echo "<censorship-performance-measurements version='1.0'>"  >> $output_file
+    echo "  <info deviceid=$DEVICE_ID/>" >> $output_file
+
     upload_dir=/tmp/bismark-uploads/censorship-performance/
-#    upload_dir=/tmp/censorship-performance-measurements/
     input_file=${persistent_dir}/cur_url_list
 
     #create a file for the variable index if it does not exist
@@ -63,7 +79,24 @@ setup()
         touch $index_file
     fi
 
-    new_curl='/tmp/curl2'
+    #if the router is in the us, then increase the data cap
+    if [ is_us_router ]; then
+	dload_usage_target_bytes=$(expr 30 \* 1024) #30k
+    fi
+}
+
+#is_us_router: return true if the router's mac address matches the original list from the us
+# Imports: us_router_list, DEVICE_ID
+# Exports: none
+# Files: reads file referred to by us_router_list
+is_us_router()
+{
+    while read $router; do
+	if [ "$router" == "$DEVICE_ID" ]; then
+	    return 0
+	fi
+    done < $us_router_list
+    return 1
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
@@ -156,7 +189,7 @@ upload_data()
     mv ${output_dir_name}.tar.gz $upload_dir
 }
 
-#measure_site: this function will perform the actual measurements.
+#measure_site: this function will form the actual measurements.
 # expected syntax: measure_site url filename
 # Imports: output_dir (the url to measure and output filename are given as arguments)
 # Exports: none
@@ -165,12 +198,24 @@ measure_site()
 {
     #create a filename to store the html and headers in- just the name of the website
     local pageoutput=${output_dir}/${2}
-    #get the first IPv4 address for the url
-    local ipAddress=$(nslookup $1 | awk '{if($1 == "Name:"){inAddressSection=1} if($1 == "Address" && inAddressSection){if(!match($3, ":")){print $3; exit}}}')
-    printf "site:\t%s;time:\t%s\n" "$1" $(date +%s)>> $output_file
-    curl $ipAddress:80 -H "Host: $1" -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w $output_format -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
-    printf "remote_ip:\t%s\n" "$ipAddress" >> $output_file
-    printf "return_code:\t%s;file_name:\t%s\n" "$?" "$2" >> $output_file
+    # get the first IPv4 address for the url and record the lookup time
+    local timeFile=$(mktemp)
+    local addressFile=$(mktemp)
+    time -f %E nslookup $1 > $addressFile 2&> $timeFile
+    local lookupTime=$(cat $timeFile)
+    local ipAddress=$(cat $addressFile | awk '{if($1 == "Name:"){inAddressSection=1} if($1 == "Address" && inAddressSection){if(!match($3, ":")){print $3; exit}}}')
+    rm -f $timeFile $addressFile
+    echo "  <site url=$1>" >> $output_file
+    echo "    <timestamp>$(date +%s)</timestamp>" >> $output_file
+    echo "    <lookup_time>$lookupTime</lookup_time>" >> $output_file
+    # Note: curl would not accept my output format directly on the
+    # command line (thought it was additional urls for testing, so the
+    # output format is being piped into curl
+    curl $ipAddress:80 -H "Host: $1" --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w "$output_format" -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
+    echo "    <curl_return_code>$?</curl_return_code>" >> $output_file
+    echo "    <remote_ip>$ipAddress</remote_ip>" >> $output_file
+    echo "    <file_name>$2</file_name>" >> $output_file
+    echo "  </site>" >> $output_file
 }
 
 #syntax: compress_data
@@ -261,6 +306,8 @@ run_measurements()
             echo index="$index" > $index_file
             echo data_usage="$data_usage" >> $index_file
             echo max_index_size="$max_index_size" >> $index_file
+	    #finalize the xml page
+	    echo "</censorship-performance-measuremets>" >> $output_file
             upload_data
 
         else
