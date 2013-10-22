@@ -71,6 +71,7 @@ setup()
     echo "  <info deviceid=$DEVICE_ID/>" >> $output_file
 
     upload_dir=/tmp/bismark-uploads/censorship-performance/
+#    upload_dir=/tmp/censorship-performance-measurements/output/
     input_file=${persistent_dir}/cur_url_list
 
     #create a file for the variable index if it does not exist
@@ -180,12 +181,12 @@ create_random_url_list()
 # Files: creates the archive if necessary and moves it to the Bismark uploads directory
 upload_data()
 {
-    #move to the output directory and gzip the tar archive
+    #move to the output directory and gzip the tar archive Note:
+    # previously we were testing if the archive existed and if it did,
+    # we just used it, but we can no longer do this since we need to
+    # write a closing tag to the xml
     cd $persistent_dir
-    if [ ! -e ${output_dir_name}.tar.gz ]; then
-        tar -zcf ${output_dir_name}.tar.gz ${output_dir_name}
-    fi
-
+    tar -zcf ${output_dir_name}.tar.gz ${output_dir_name}
     mv ${output_dir_name}.tar.gz $upload_dir
 }
 
@@ -201,21 +202,23 @@ measure_site()
     # get the first IPv4 address for the url and record the lookup time
     local timeFile=$(mktemp)
     local addressFile=$(mktemp)
-    time -f %E nslookup $1 > $addressFile 2&> $timeFile
+    #if the lookup fails, write out what we know and quit
+    time -f %E nslookup $1 > $addressFile 2&> $timeFile || (echo "<site url=$1>\n<timestamp>$(date +%s)</timestamp>\n<lookup_time>500000</lookup_time>\n<nslookup_response>$(cat $addressFile)</nslookup_response>\n" >> $output_file ; echo "Non-zero nslookup return value"; rm -f $timeFile $addressFile; return 0)
+    #otherwise, continue as normal
     local lookupTime=$(cat $timeFile)
     local ipAddress=$(cat $addressFile | awk '{if($1 == "Name:"){inAddressSection=1} if($1 == "Address" && inAddressSection){if(!match($3, ":")){print $3; exit}}}')
     rm -f $timeFile $addressFile
-    echo "  <site url=$1>" >> $output_file
-    echo "    <timestamp>$(date +%s)</timestamp>" >> $output_file
-    echo "    <lookup_time>$lookupTime</lookup_time>" >> $output_file
+    echo "<site url=$1>" >> $output_file
+    echo "<timestamp>$(date +%s)</timestamp>" >> $output_file
+    echo "<lookup_time>$lookupTime</lookup_time>" >> $output_file
     # Note: curl would not accept my output format directly on the
     # command line (thought it was additional urls for testing, so the
     # output format is being piped into curl
-    curl $ipAddress:80 -H "Host: $1" --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w "$output_format" -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file
-    echo "    <curl_return_code>$?</curl_return_code>" >> $output_file
-    echo "    <remote_ip>$ipAddress</remote_ip>" >> $output_file
-    echo "    <file_name>$2</file_name>" >> $output_file
-    echo "  </site>" >> $output_file
+    curl $ipAddress:80 -H "Host: $1" -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w "$output_format" -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file || echo "Non-zero curl return value"
+    echo "<curl_return_code>$?</curl_return_code>" >> $output_file
+    echo "<remote_ip>$ipAddress</remote_ip>" >> $output_file
+    echo "<file_name>$2</file_name>" >> $output_file
+    echo "</site>" >> $output_file
 }
 
 #syntax: compress_data
@@ -307,7 +310,7 @@ run_measurements()
             echo data_usage="$data_usage" >> $index_file
             echo max_index_size="$max_index_size" >> $index_file
 	    #finalize the xml page
-	    echo "</censorship-performance-measuremets>" >> $output_file
+	    echo "</censorship-performance-measurements>" >> $output_file
             upload_data
 
         else
