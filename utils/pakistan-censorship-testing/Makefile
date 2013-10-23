@@ -7,10 +7,11 @@ PKG_RELEASE:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/pakistan-censorship-testing-tmpfs
-   SECTION:=utils
-   CATEGORY:=Utilities
-   TITLE:=Censorship testing in Pakistan
-   DEPENDS:=+bismark-mgmt +bismark-netexp +netcat
+	SECTION:=utils
+	CATEGORY:=Utilities
+	TITLE:=Censorship testing in Pakistan
+	URL:=http://www.projectbismark.net
+	DEPENDS:=+bismark-netexp +bismark-mgmt
 endef
 
 define Package/pakistan-censorship-testing-tmpfs/description
