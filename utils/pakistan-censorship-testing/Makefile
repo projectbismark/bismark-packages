@@ -24,6 +24,7 @@ endef
 define Package/pakistan-censorship-testing-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/pakistan-censorship-testing $(1)/usr/bin/pakistan-censorship-testing
+	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/pakistan-censorship-testing.crontab $(1)/etc/pakistan-censorship-testing.crontab
 endef
 
