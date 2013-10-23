@@ -215,8 +215,6 @@ fi
 	else
 		echo INFO inputfile $inputfile downloaded. >&2
 	fi
-fi
-
 
 #from OONI: https://github.com/TheTorProject/ooni-spec/blob/master/test-specs/ts-003-http-requests.md
 listofuseargents="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
