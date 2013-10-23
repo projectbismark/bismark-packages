@@ -2,8 +2,8 @@
 ### (c) Giuseppe Aceto 2013
 ### giuseppe.aceto@unina.it
 
-client=ashooni ; # Ash-based standalone script
-clientver=12 ; # optional logging to file and console if necessary
+client=booid ; # Ash-based BISmark script
+clientver=12 ; # based on ashooni ver 12
 clientnotes="pktest-bismark" ; # WARN: underscore forbidden XXX
 testname=webcontent
 testver=1.15 ; # fixed nslookup parsing
