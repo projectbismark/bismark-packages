@@ -12,7 +12,7 @@ testver=1.15 ; # fixed nslookup parsing
 # NOTE: on error, temp files are NOT deleted
 archive_stdout_stderr=1 ; # if 1 log (almost) everything in the archive
 show_stdout_stderr=1 ; # if archive_stdout_stderr is true, show the output anyway
-persistentdir=/tmp/ashooni
+persistentdir=/tmp/$client
 configfile=${persistentdir}/ubica.conf
 clientcc="00"; # unknown client id, or default CC when shipped
 clientip="127.0.0.1"; # unknown client IP address
@@ -32,8 +32,7 @@ deleteifuploaded=1 ; # 1: delete successfully uploaded results
 ts=`date +%s` ; # experiment-start TimeStamp used all over the tests
 
 #settings:
-#cleanthisdir=/tmp/booid
-cleanthisdir=/tmp/booid/tempdir_${ts}
+cleanthisdir=/tmp/$client/tempdir_${ts}
 
 mkdir -p $cleanthisdir; cd $cleanthisdir || exit 1; 
 
