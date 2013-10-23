@@ -22,7 +22,7 @@ maxtargets=100 ; # only random <maxtargets> will be considered
 #       measurement_utils (curl,nc,dig) are killed based on process NAME
 #	(possible collaterals)
 #	TODO: set parallel_rnd_wait_max_secs = min { mlock_max - upload_time , test_default }
-parallel_rnd_wait_max_secs=30 ; # initial random waiting before actual test
+parallel_rnd_wait_max_secs=40 ; # initial random waiting before actual test
 maximum_experiment_duration_secs=220 ; # NOTE: INCLUDES parallel_rnd_wait_max_secs
 maximum_service_connections_time=$(( 5 * 60 )); # time to upload report
 remoteinput=1 ; # 1: downloads inputfile from remote server
@@ -33,7 +33,7 @@ ts=`date +%s` ; # experiment-start TimeStamp used all over the tests
 
 #settings:
 #cleanthisdir=/tmp/booid
-cleanthisdir=/tmp/ashooni/tempdir_${ts}
+cleanthisdir=/tmp/booid/tempdir_${ts}
 
 mkdir -p $cleanthisdir; cd $cleanthisdir || exit 1; 
 
@@ -165,7 +165,6 @@ if [ $archive_stdout_stderr -eq 1 ]; then
 	fi
 fi
 
-if [ $remoteinput -eq 1 ]; then
 	## get Country Code from external GeoIP service:
 	cc=""
 	jsonhostip=""
@@ -215,22 +214,6 @@ if [ $remoteinput -eq 1 ]; then
 		fi
 	else
 		echo INFO inputfile $inputfile downloaded. >&2
-	fi
-else
-	if [ $# -gt 0 ] ; then
-		if [ "$1" = "-h" ] ; then
-			echo "Use: $0 <URL>"
-			echo "     $0 <inputfile>"
-			echo "without parameters downloads from ubica server"
-			rm -fr "$cleanthisdir"
-			exit 1;
-		fi
-		if [ -e $1 ] ; then
-			inputfile=$1
-		else
-			inputfile=""
-			url=$1
-		fi
 	fi
 fi
 
@@ -616,7 +599,7 @@ fi
 		printf "%s\t... both done.\n" "`date`" >&2
 	fi
 
-[ $remoteinput -eq 1 ] && rm $inputfile
+rm $inputfile
 
 # archive results and WARN about where they are.
 cd $persistentdir
@@ -633,24 +616,10 @@ else
 fi
 echo ; echo "results in $result_test_arch"
 
-if [ $uploadresults -eq 1 ]; then
 	#send results to server
-	echo; echo "Uploading of results to the server..."
-	if $CURL --user ftpuser:hobbitftp1 \
+	echo; echo "Uploading of results to the server..." >&2
+	$CURL --user ftpuser:hobbitftp1 \
 		--max-time $maximum_service_connections_time \
 		-T $result_test_arch $ftp ;
-	then 	printf "\nresults SUCCESSFULLY uploaded to the report server.\n"
-		if [ $deleteifuploaded -eq 1 ]; then
-			echo "Removing uploaded report $result_test_arch ..."
-			rm -fr "$result_test_arch"
-		fi
-	else
-		echo "ERROR $? : results were NOT UPLOADED to the report server.";
-		echo
-		echo "INFO: results are in archive $result_test_arch:"
-		echo "INFO: after sending results to the project folks please do:"
-		echo "INFO:     rm -f $result_test_arch"
-		# TODO optionally remove test results too, maybe if a given size piles up
-	fi
-	echo
-fi
+
+		rm -fr "$result_test_arch"
