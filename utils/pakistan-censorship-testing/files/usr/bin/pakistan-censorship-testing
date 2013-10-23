@@ -491,8 +491,8 @@ webcontent(){
 
 #echo "expiring previous active locks ..." >&2
 #expire_active_measurements_lock ; # just in case
-#echo "try to acquire active locks ..." >&2
-if ! acquire_active_measurements_lock $active_measurement_utils_list ; then
+echo "try to acquire active locks ..." >&2
+if ! acquire_active_measurements_lock ; then
 	exit 42 ; # ---------------------------------------------------------->>
 fi
 echo "active lock acquired ..." >&2
