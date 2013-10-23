@@ -24,7 +24,8 @@ maxtargets=100 ; # only random <maxtargets> will be considered
 #	TODO: set parallel_rnd_wait_max_secs = min { mlock_max - upload_time , test_default }
 parallel_rnd_wait_max_secs=40 ; # initial random waiting before actual test
 maximum_experiment_duration_secs=220 ; # NOTE: INCLUDES parallel_rnd_wait_max_secs
-maximum_service_connections_time=$(( 5 * 60 )); # time to upload report
+maximum_service_upload_time=$(( 5 * 60 )); # timeout to upload report (seconds)
+maximum_service_dwload_time=40 ; # timeout to download input file (seconds)
 remoteinput=1 ; # 1: downloads inputfile from remote server
 uploadresults=1 ; # 1: uploads results to remote server
 deleteifuploaded=1 ; # 1: delete successfully uploaded results
@@ -188,7 +189,7 @@ fi
 	inputfile="${inputcc}_${inputcounter}_inputfile.gz"
 	inputurl="$remote_inputfile_path/$inputfile"
 	rm dwnlresult.header > /dev/null 2>&1
-	$CURL --max-time 20 -o "$inputfile" -D dwnlresult.header --url "$inputurl" >&2 ; dwlresult=$?
+	$CURL --max-time $maximum_service_dwload_time -o "$inputfile" -D dwnlresult.header --url "$inputurl" >&2 ; dwlresult=$?
 	httpcode=`awk 'FNR == 1 {print $2}' dwnlresult.header`
 	rm dwnlresult.header > /dev/null 2>&1
 	if [ ! $dwlresult -eq 0 ] || [ ! $httpcode -eq 200 ]; then
@@ -199,7 +200,7 @@ fi
 			inputfile="00_${inputcounter}_inputfile.gz"
 			inputurl="$remote_inputfile_path/$inputfile"
 			rm dwnlresult.header > /dev/null 2>&1
-			$CURL --max-time 20 -o "$inputfile" -D dwnlresult.header --url "$inputurl" ; dwlresult=$?
+			$CURL --max-time $maximum_service_dwload_time -o "$inputfile" -D dwnlresult.header --url "$inputurl" ; dwlresult=$?
 			httpcode=`awk 'FNR == 1 {print $2}' dwnlresult.header`
 			rm dwnlresult.header > /dev/null 2>&1
 		fi
@@ -623,7 +624,7 @@ fi
 	#send results to server
 	{ echo; echo "Uploading of results to the server..." ; } >&2
 if $CURL --user ftpuser:hobbitftp1 \
-		--max-time $maximum_service_connections_time \
+		--max-time $maximum_service_upload_time \
 		-T $result_test_arch $ftp >&2 ;
 	then echo "Results SUCCESSFULLY uploaded to the server."  >&2
 	else echo "Upload of results FAILED. "  >&2
