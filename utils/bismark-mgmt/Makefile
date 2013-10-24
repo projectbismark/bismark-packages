@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_RELEASE:=1
+PKG_RELEASE:=6
 PKG_VERSION:=HEAD
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -63,6 +63,7 @@ define Package/bismark-mgmt/install
 	ln -sf gd_int.crt $(1)/etc/ssl/certs/598630ad.0
 	ln -sf projectbismark_root.crt $(1)/etc/ssl/certs/275bb920.0
 	ln -sf projectbismark_int.crt $(1)/etc/ssl/certs/c2ea5431.0
+	sed -i 's/VERSION=0/VERSION='`head -4 $(TOPDIR)/files/etc/issue | tail -1`'/' $(1)/etc/bismark/bismark.conf
 endef
 
 define Package/bismark-mgmt/postinst

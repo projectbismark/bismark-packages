@@ -4,6 +4,6 @@
 
 START=98
 
-start() {
-	. /usr/bin/bismark-authn-check
+boot() {
+    bismark-authn-check
 }

@@ -1,3 +1,3 @@
 #!/bin/sh
 /etc/init.d/bismark-experiments-manager enable
-(crontab -l | grep -v bismark-experiments-manager; echo '0 5,17 * * * /usr/bin/bismark-experiments-manager -d') | crontab -
+crontab -l | cat - /etc/crontabs.d/bismark-experiments-manager | sort -u | crontab -

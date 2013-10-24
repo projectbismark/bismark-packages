@@ -7,10 +7,11 @@ PKG_RELEASE:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/pakistan-censorship-testing-tmpfs
-   SECTION:=utils
-   CATEGORY:=Utilities
-   TITLE:=Censorship testing in Pakistan
-   DEPENDS:=+bismark-mgmt +bismark-netexp +netcat
+	SECTION:=utils
+	CATEGORY:=Utilities
+	TITLE:=Censorship testing in Pakistan
+	URL:=http://www.projectbismark.net
+	DEPENDS:=+bismark-netexp +bismark-mgmt
 endef
 
 define Package/pakistan-censorship-testing-tmpfs/description
@@ -23,6 +24,7 @@ endef
 define Package/pakistan-censorship-testing-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/pakistan-censorship-testing $(1)/usr/bin/pakistan-censorship-testing
+	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/pakistan-censorship-testing.crontab $(1)/etc/pakistan-censorship-testing.crontab
 endef
 

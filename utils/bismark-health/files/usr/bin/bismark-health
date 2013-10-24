@@ -30,6 +30,8 @@ for dev in wlan0 wlan1; do
     echo -n "$dev: "
     iw dev $dev station dump | grep -c Station
 done >> $log_dir/iw_station_count
+ip addr >> $log_dir/ipaddr
+ip route >> $log_dir/iproute
 
 # Tar the directory and upload it
 tar -C $staging_dir -czvf $staging_dir/${tar_name}.tar.gz $tar_name

@@ -1,0 +1,1 @@
+0 5,17 * * * /usr/bin/bismark-experiments-manager -d
