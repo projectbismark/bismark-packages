@@ -488,16 +488,29 @@ webcontent(){
 
 #START SCRIPT
 
-#echo "expiring previous active locks ..." >&2
-#expire_active_measurements_lock ; # just in case
-echo "try to acquire active locks ..." >&2
-acquire_active_measurements_lock `basename $0`
-
-if [ $? -ne 0 ]; then exit 42 ; fi
-if ! acquire_active_measurements_lock ; then
-	exit 42 ; # ---------------------------------------------------------->>
+waitlock=10
+maxlocktries=100
+tries=1
+while [ $tries -lt $maxlocktries ]; do
+	date >&2
+	echo "expiring previous active locks ..." >&2
+	expire_active_measurements_lock ; # just in case
+	echo "try to acquire active lock ..." >&2
+	if acquire_active_measurements_lock ; then
+		echo "active lock acquired ..." >&2
+		break
+	else
+		echo "FAILING to acquire active lock ..." >&2
+		echo "waiting $waitlock seconds" >&2
+		tries=$(( tries + 1 ))
+		sleep $waitlock
+	fi
+done
+if [ $tries -eq $maxlocktries ]; then
+	echo "WARNING could not acquire Active lock in $maxlocktries tries ( $(( waitlock * maxlocktries )) s)." >&2
+	echo "ABORTING test." >&2
+	exit 42
 fi
-echo "active lock acquired ..." >&2
 
 if ! [ "$inputfile" = "" ]; then
 	test_start_ts=`date +%s`; export test_start_ts
