@@ -23,6 +23,8 @@ maxtargets=100 ; # only random <maxtargets> will be considered
 #       measurement_utils (curl,nc,dig) are killed based on process NAME
 #	(possible collaterals)
 #	TODO: set parallel_rnd_wait_max_secs = min { mlock_max - upload_time , test_default }
+maxlocktries=5 ; # maximum times we'll try to acquire mlock
+waitlock=10 ; # seconds waited after failing lock acquisition
 parallel_rnd_wait_max_secs=40 ; # initial random waiting before actual test
 maximum_experiment_duration_secs=220 ; # NOTE: INCLUDES parallel_rnd_wait_max_secs
 maximum_service_upload_time=$(( 5 * 60 )); # timeout to upload report (seconds)
@@ -233,7 +235,7 @@ if [ -e /usr/lib/bismark/functions.inc.sh ]; then
 	. /usr/lib/bismark/functions.inc.sh
 	echo "BISmark functions loaded" >&2
 else
-	echo "mutual exclusion lock functions are missing!" >&2
+	echo "FATAL: mutual exclusion lock functions are missing!" >&2
 	exit 42 ; # -------------------------------------------------------------->>
 
 	# NOTE: if we tolerate some interference with other active measurements,
@@ -486,10 +488,7 @@ webcontent(){
 	printf "%s\tsubprocess %d\turl: %s : terminated normally (duration: %d secs).\n" "`date`" "$subshpid" "$url" "$(( tsend - tstry ))" >&2
 }; # webcontent()
 
-#START SCRIPT
 
-waitlock=10
-maxlocktries=100
 tries=1
 while [ $tries -lt $maxlocktries ]; do
 	date >&2
@@ -511,6 +510,8 @@ if [ $tries -eq $maxlocktries ]; then
 	echo "ABORTING test." >&2
 	exit 42
 fi
+
+#START SCRIPT
 
 if ! [ "$inputfile" = "" ]; then
 	test_start_ts=`date +%s`; export test_start_ts
@@ -593,8 +594,12 @@ fi
 
 # end of critical section. after this just an ftp upload is performed.
 echo "releasing active lock ..." >&2
-release_active_measurements_lock
-echo "lock released." >&2
+if release_active_measurements_lock; then
+	echo "lock released." >&2
+else
+	echo "ERROR $? releasing lock" >&2
+	# so what, now?
+fi
 
 if [ $archive_stdout_stderr -eq 1 ]; then
 	# close report files and restore redirected descriptors:
