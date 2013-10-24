@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-opkg-keys
 PKG_VERSION:=1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,7 +18,8 @@ define Package/bismark-opkg-keys
 	CATEGORY:=Utilities
 	TITLE:=Opkg package signing.
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+opkg-bismark
+	MAINTAINER:=Bismark Development List <bismark-devel@projectbismark.net>
+	DEPENDS:=+opkg-bismark +opkg
 endef
 
 define Package/bismark-opkg-keys/description
@@ -37,9 +38,11 @@ define Package/bismark-opkg-keys/postinst
 #!/bin/sh                                                                                                                          
 
 if [ -z "$${IPKG_INSTROOT}" ]; then                                                                                                                                   
-    sed -i '$$aoption check_signature 1'  /etc/opkg.conf                                                                                      
-    sed -i '$$aoption signature_ca_file /etc/ssl/serverCA.pem'  /etc/opkg.conf
-    sed -i '$$aoption signature_ca_path /etc/ssl/'  /etc/opkg.conf
+    if  ! grep -Fs "signature" /etc/opkg.conf >/dev/null ; then
+        sed -i '$$aoption check_signature 1'  /etc/opkg.conf
+        sed -i '$$aoption signature_ca_file /etc/ssl/serverCA.pem'  /etc/opkg.conf
+        sed -i '$$aoption signature_ca_path /etc/ssl/'  /etc/opkg.conf
+    fi
 fi
 endef
 
