@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-data-transmit
-PKG_RELEASE:=15
-PKG_VERSION:=v1
+PKG_VERSION:=v15
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-data-transmit.git
-PKG_SOURCE_VERSION:=$(PKG_VERSION).$(PKG_RELEASE)
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_PROTO:=git
 

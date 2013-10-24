@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_RELEASE:=10
-PKG_VERSION:=v1
+PKG_VERSION:=v10
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-management-client.git
-PKG_SOURCE_VERSION:=$(PKG_VERSION).$(PKG_RELEASE)
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_PROTO:=git
 
