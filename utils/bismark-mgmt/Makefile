@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_RELEASE:=7
+PKG_RELEASE:=10
 PKG_VERSION:=v1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
