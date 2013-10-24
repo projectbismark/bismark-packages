@@ -14,6 +14,7 @@ archive_stdout_stderr=1 ; # if 1 log (almost) everything in the archive
 show_stdout_stderr=1 ; # if archive_stdout_stderr is true, show the output anyway
 persistentdir=/tmp/$client
 configfile=${persistentdir}/ubica.conf
+bismarkconf=/etc/bismark/bismark.conf
 clientcc="00"; # unknown client id, or default CC when shipped
 clientip="127.0.0.1"; # unknown client IP address
 maxtargets=100 ; # only random <maxtargets> will be considered
@@ -47,23 +48,20 @@ inputchunks=6 ; # number of different input chunks (1 chunk each run)
 
 DEVICE_ID=""
 
+# read bismark config file
+if [ -e $bismarkconf ]; then
+	. $bismarkconf;
+else
+	echo "FATAL: BISmark config file $bismarkconf is missing." >&2
+	echo "ABORT." >&2
+	exit 10
+fi
+
 # read config (ubica)
 if [ -e $configfile ]; then
 	. $configfile ;
 fi
 
-# no saved device_id
-if [ "$DEVICE_ID" = "" ]; then
-
-	# read DEVICE_ID (bismark):
-	[ -e /etc/bismark/ID ] && DEVICE_ID=`cat /etc/bismark/ID` ;
-
-
-	if [ "$DEVICE_ID" = "" ]; then
-		DEVICE_ID=`uuidgen`;
-		echo "DEVICE_ID=$DEVICE_ID" >> $configfile
-	fi
-fi
 pseudonym=${DEVICE_ID}-${clientnotes}
 
 # initialize or increment inputcounter
@@ -493,6 +491,9 @@ webcontent(){
 #echo "expiring previous active locks ..." >&2
 #expire_active_measurements_lock ; # just in case
 echo "try to acquire active locks ..." >&2
+acquire_active_measurements_lock `basename $0`
+
+if [ $? -ne 0 ]; then exit 42 ; fi
 if ! acquire_active_measurements_lock ; then
 	exit 42 ; # ---------------------------------------------------------->>
 fi
@@ -616,7 +617,7 @@ if tar -czf $result_test_arch tempdir_${ts} ; then
 else
 	echo "ERROR $? in creating the archive of results in $cleanthisdir" >&2 ;
 	# TODO optionally remove everything to avoid piling-up garbage
-	echo "WARNING temporary files and results are still in $cleanthisdir" >&2 ;
+	rm -fr "$cleanthisdir" && echo "... done." >&2 || echo "ERROR $? removing temp files in $cleanthisdir" >&2
 	echo "ABORT." >&2 ; exit 111;
 fi
 { echo ; echo "results in $result_test_arch"; } >&2
