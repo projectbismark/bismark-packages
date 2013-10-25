@@ -32,7 +32,7 @@ fi
 
 # Append lines from crontab directories to the new cron.
 find /etc/cron.d /var/cron.d -type f |
-        xargs awk "{ print \$0, \" # ${suffix}\"" |
+        xargs awk "{ print \$0, \" # ${suffix}\" }" |
         sort -u >> $new_crontab
 
 # If the old and new crontabs are identical then there's no reason to continue.
