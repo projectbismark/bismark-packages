@@ -242,7 +242,7 @@ else
 	#       just go all green:
 	
 	#acquire_active_measurements_lock() { return 0; }
-	#release_active_measurments_lock() { return 0; }  ; # NOTICE spelling error measurments
+	#release_active_measurements_lock() { return 0; }
 	#active_measurements_lock_creation_time() { return 1; }
 	#expire_active_measurements_lock() { return 0; }
 fi
@@ -594,7 +594,7 @@ fi
 
 # end of critical section. after this just an ftp upload is performed.
 echo "releasing active lock ..." >&2
-if release_active_measurments_lock; then
+if release_active_measurements_lock; then
 	echo "lock released." >&2
 else
 	echo "ERROR $? releasing lock" >&2
