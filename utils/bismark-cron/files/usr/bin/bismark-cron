@@ -7,48 +7,54 @@
 # generate a new crontab when there are changes.
 
 # Append this suffix to all crontab lines managed by bismark-cron.
+# Do not change this line unless you know what you're doing.
 suffix='Managed by bismark-cron'
 
 # Use these two files for temporary storage.
 old_crontab=$(mktemp -p /tmp)
 new_crontab=$(mktemp -p /tmp)
 
-# Get the existing crontab and strip out lines belonging to bismark-cron.
-crontab -l > $old_crontab
+# Remove temporary files at exit.
+trap "rm -f $old_crontab $new_crontab" EXIT
+
+# Get the existing crontab
+if ! crontab -l > $old_crontab; then
+    echo 'Error listing existing crontab'
+    exit 1
+fi
+
+# Remove lines belonging to bismark-cron.
 grep -v "# ${suffix}\$" $old_crontab > $new_crontab
 
 # Sanity check: bismark-cron itself should be in the crontab.
 if [ "$(wc -l < ${old_crontab})" -eq '0' ]; then
     echo 'There must be at least one line in the old crontab.' >&2
     echo '(For bismark-cron itself.)' >&2
-    rm -f $old_crontab $new_crontab
     exit 1
 elif [ "$(wc -l < ${new_crontab})" -eq '0' ]; then
     echo 'There must be at least one line in the new crontab.' >&2
     echo '(For bismark-cron itself.)' >&2
-    rm -f $old_crontab $new_crontab
     exit 1
 fi
 
 # Append lines from crontab directories to the new cron.
-find /etc/cron.d /var/cron.d -type f |
-        xargs awk "{ print \$0, \" # ${suffix}\" }" |
-        sort -u >> $new_crontab
+find /etc/cron.d /var/cron.d -type f |                  # Find all crontabs.
+        xargs awk "{ print \$0, \" # ${suffix}\" }" |   # Add comment on each line.
+        sort -u >> $new_crontab                         # Sort all lines for predictability.
 
 # If the old and new crontabs are identical then there's no reason to continue.
 if diff -q $old_crontab $new_crontab; then
-    rm -f $old_crontab $new_crontab
     exit 0
 fi
 
 # Sanity check: make sure bismark-cron will run again.
 if ! grep -q 'bismark-cron' $new_crontab; then
     echo 'bismark-cron not found in new crontab!' >&2
-    rm -f $old_crontab $new_crontab
     exit 1
 fi
 
 # Install the new crontab.
-crontab $new_crontab
-
-rm -f $old_crontab $new_crontab
+if ! crontab $new_crontab; then
+    echo 'Error installing new crontab!'
+    exit 1
+fi
