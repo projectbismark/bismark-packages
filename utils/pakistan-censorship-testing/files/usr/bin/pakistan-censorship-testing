@@ -2,8 +2,8 @@
 ### (c) Giuseppe Aceto 2013
 ### giuseppe.aceto@unina.it
 
-client=ashooni ; # Ash-based standalone script
-clientver=12 ; # optional logging to file and console if necessary
+client=booid ; # Ash-based BISmark script
+clientver=13 ; # now with more debugging info!
 clientnotes="pktest-bismark" ; # WARN: underscore forbidden XXX
 testname=webcontent
 testver=1.15 ; # fixed nslookup parsing
@@ -12,8 +12,9 @@ testver=1.15 ; # fixed nslookup parsing
 # NOTE: on error, temp files are NOT deleted
 archive_stdout_stderr=1 ; # if 1 log (almost) everything in the archive
 show_stdout_stderr=1 ; # if archive_stdout_stderr is true, show the output anyway
-persistentdir=/tmp/ashooni
+persistentdir=/tmp/$client
 configfile=${persistentdir}/ubica.conf
+bismarkconf=/etc/bismark/bismark.conf
 clientcc="00"; # unknown client id, or default CC when shipped
 clientip="127.0.0.1"; # unknown client IP address
 maxtargets=100 ; # only random <maxtargets> will be considered
@@ -22,9 +23,12 @@ maxtargets=100 ; # only random <maxtargets> will be considered
 #       measurement_utils (curl,nc,dig) are killed based on process NAME
 #	(possible collaterals)
 #	TODO: set parallel_rnd_wait_max_secs = min { mlock_max - upload_time , test_default }
-parallel_rnd_wait_max_secs=30 ; # initial random waiting before actual test
+maxlocktries=5 ; # maximum times we'll try to acquire mlock
+waitlock=10 ; # seconds waited after failing lock acquisition
+parallel_rnd_wait_max_secs=40 ; # initial random waiting before actual test
 maximum_experiment_duration_secs=220 ; # NOTE: INCLUDES parallel_rnd_wait_max_secs
-maximum_service_connections_time=$(( 5 * 60 )); # time to upload report
+maximum_service_upload_time=$(( 5 * 60 )); # timeout to upload report (seconds)
+maximum_service_dwload_time=40 ; # timeout to download input file (seconds)
 remoteinput=1 ; # 1: downloads inputfile from remote server
 uploadresults=1 ; # 1: uploads results to remote server
 deleteifuploaded=1 ; # 1: delete successfully uploaded results
@@ -32,8 +36,7 @@ deleteifuploaded=1 ; # 1: delete successfully uploaded results
 ts=`date +%s` ; # experiment-start TimeStamp used all over the tests
 
 #settings:
-#cleanthisdir=/tmp/booid
-cleanthisdir=/tmp/ashooni/tempdir_${ts}
+cleanthisdir=/tmp/$client/tempdir_${ts}
 
 mkdir -p $cleanthisdir; cd $cleanthisdir || exit 1; 
 
@@ -47,23 +50,20 @@ inputchunks=6 ; # number of different input chunks (1 chunk each run)
 
 DEVICE_ID=""
 
+# read bismark config file
+if [ -e $bismarkconf ]; then
+	. $bismarkconf;
+else
+	echo "FATAL: BISmark config file $bismarkconf is missing." >&2
+	echo "ABORT." >&2
+	exit 10
+fi
+
 # read config (ubica)
 if [ -e $configfile ]; then
 	. $configfile ;
 fi
 
-# no saved device_id
-if [ "$DEVICE_ID" = "" ]; then
-
-	# read DEVICE_ID (bismark):
-	[ -e /etc/bismark/ID ] && DEVICE_ID=`cat /etc/bismark/ID` ;
-
-
-	if [ "$DEVICE_ID" = "" ]; then
-		DEVICE_ID=`uuidgen`;
-		echo "DEVICE_ID=$DEVICE_ID" >> $configfile
-	fi
-fi
 pseudonym=${DEVICE_ID}-${clientnotes}
 
 # initialize or increment inputcounter
@@ -165,7 +165,6 @@ if [ $archive_stdout_stderr -eq 1 ]; then
 	fi
 fi
 
-if [ $remoteinput -eq 1 ]; then
 	## get Country Code from external GeoIP service:
 	cc=""
 	jsonhostip=""
@@ -190,7 +189,7 @@ if [ $remoteinput -eq 1 ]; then
 	inputfile="${inputcc}_${inputcounter}_inputfile.gz"
 	inputurl="$remote_inputfile_path/$inputfile"
 	rm dwnlresult.header > /dev/null 2>&1
-	$CURL --max-time 20 -o "$inputfile" -D dwnlresult.header --url "$inputurl" ; dwlresult=$?
+	$CURL --max-time $maximum_service_dwload_time -o "$inputfile" -D dwnlresult.header --url "$inputurl" >&2 ; dwlresult=$?
 	httpcode=`awk 'FNR == 1 {print $2}' dwnlresult.header`
 	rm dwnlresult.header > /dev/null 2>&1
 	if [ ! $dwlresult -eq 0 ] || [ ! $httpcode -eq 200 ]; then
@@ -201,7 +200,7 @@ if [ $remoteinput -eq 1 ]; then
 			inputfile="00_${inputcounter}_inputfile.gz"
 			inputurl="$remote_inputfile_path/$inputfile"
 			rm dwnlresult.header > /dev/null 2>&1
-			$CURL --max-time 20 -o "$inputfile" -D dwnlresult.header --url "$inputurl" ; dwlresult=$?
+			$CURL --max-time $maximum_service_dwload_time -o "$inputfile" -D dwnlresult.header --url "$inputurl" ; dwlresult=$?
 			httpcode=`awk 'FNR == 1 {print $2}' dwnlresult.header`
 			rm dwnlresult.header > /dev/null 2>&1
 		fi
@@ -216,24 +215,6 @@ if [ $remoteinput -eq 1 ]; then
 	else
 		echo INFO inputfile $inputfile downloaded. >&2
 	fi
-else
-	if [ $# -gt 0 ] ; then
-		if [ "$1" = "-h" ] ; then
-			echo "Use: $0 <URL>"
-			echo "     $0 <inputfile>"
-			echo "without parameters downloads from ubica server"
-			rm -fr "$cleanthisdir"
-			exit 1;
-		fi
-		if [ -e $1 ] ; then
-			inputfile=$1
-		else
-			inputfile=""
-			url=$1
-		fi
-	fi
-fi
-
 
 #from OONI: https://github.com/TheTorProject/ooni-spec/blob/master/test-specs/ts-003-http-requests.md
 listofuseargents="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
@@ -250,9 +231,11 @@ Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/
 
 ## bismark functions:
 if [ -e /usr/lib/bismark/functions.inc.sh ]; then
+	echo "loading BISmark functions" >&2
 	. /usr/lib/bismark/functions.inc.sh
+	echo "BISmark functions loaded" >&2
 else
-	echo "mutual exclusion lock functions are missing!" >&2
+	echo "FATAL: mutual exclusion lock functions are missing!" >&2
 	exit 42 ; # -------------------------------------------------------------->>
 
 	# NOTE: if we tolerate some interference with other active measurements,
@@ -505,12 +488,30 @@ webcontent(){
 	printf "%s\tsubprocess %d\turl: %s : terminated normally (duration: %d secs).\n" "`date`" "$subshpid" "$url" "$(( tsend - tstry ))" >&2
 }; # webcontent()
 
-#START SCRIPT
 
-expire_active_measurements_lock ; # just in case
-if ! acquire_active_measurements_lock $active_measurement_utils_list ; then
-	exit 42 ; # ---------------------------------------------------------->>
+tries=1
+while [ $tries -lt $maxlocktries ]; do
+	date >&2
+	echo "expiring previous active locks ..." >&2
+	expire_active_measurements_lock ; # just in case
+	echo "try to acquire active lock ..." >&2
+	if acquire_active_measurements_lock ; then
+		echo "active lock acquired ..." >&2
+		break
+	else
+		echo "FAILING to acquire active lock ..." >&2
+		echo "waiting $waitlock seconds" >&2
+		tries=$(( tries + 1 ))
+		sleep $waitlock
+	fi
+done
+if [ $tries -eq $maxlocktries ]; then
+	echo "WARNING could not acquire Active lock in $maxlocktries tries ( $(( waitlock * maxlocktries )) s)." >&2
+	echo "ABORTING test." >&2
+	exit 42
 fi
+
+#START SCRIPT
 
 if ! [ "$inputfile" = "" ]; then
 	test_start_ts=`date +%s`; export test_start_ts
@@ -592,7 +593,13 @@ else
 fi
 
 # end of critical section. after this just an ftp upload is performed.
-release_active_measurements_lock
+echo "releasing active lock ..." >&2
+if release_active_measurements_lock; then
+	echo "lock released." >&2
+else
+	echo "ERROR $? releasing lock" >&2
+	# weird. let's pretend it never happened.
+fi
 
 if [ $archive_stdout_stderr -eq 1 ]; then
 	# close report files and restore redirected descriptors:
@@ -616,41 +623,34 @@ fi
 		printf "%s\t... both done.\n" "`date`" >&2
 	fi
 
-[ $remoteinput -eq 1 ] && rm $inputfile
+rm $inputfile
 
 # archive results and WARN about where they are.
 cd $persistentdir
-echo "compressing results in `pwd` ..."
+echo "compressing results in `pwd` ..." >&2
 
 if tar -czf $result_test_arch tempdir_${ts} ; then
-	echo "Removing all temporary files and results in $cleanthisdir ..."
-	rm -fr "$cleanthisdir" && echo "... done." || echo "ERROR $? removing temp files in $cleanthisdir";
+	echo "Removing all temporary files and results in $cleanthisdir ..." >&2
+	rm -fr "$cleanthisdir" && echo "... done." >&2 || echo "ERROR $? removing temp files in $cleanthisdir" >&2
 else
-	echo "ERROR $? in creating the archive of results in $cleanthisdir";
+	echo "ERROR $? in creating the archive of results in $cleanthisdir" >&2 ;
 	# TODO optionally remove everything to avoid piling-up garbage
-	echo "WARNING temporary files and results are still in $cleanthisdir";
-	echo "ABORT."; exit 111;
+	rm -fr "$cleanthisdir" && echo "... done." >&2 || echo "ERROR $? removing temp files in $cleanthisdir" >&2
+	echo "ABORT." >&2 ; exit 111;
 fi
-echo ; echo "results in $result_test_arch"
+{ echo ; echo "results in $result_test_arch"; } >&2
 
-if [ $uploadresults -eq 1 ]; then
 	#send results to server
-	echo; echo "Uploading of results to the server..."
-	if $CURL --user ftpuser:hobbitftp1 \
-		--max-time $maximum_service_connections_time \
-		-T $result_test_arch $ftp ;
-	then 	printf "\nresults SUCCESSFULLY uploaded to the report server.\n"
-		if [ $deleteifuploaded -eq 1 ]; then
-			echo "Removing uploaded report $result_test_arch ..."
-			rm -fr "$result_test_arch"
-		fi
-	else
-		echo "ERROR $? : results were NOT UPLOADED to the report server.";
-		echo
-		echo "INFO: results are in archive $result_test_arch:"
-		echo "INFO: after sending results to the project folks please do:"
-		echo "INFO:     rm -f $result_test_arch"
-		# TODO optionally remove test results too, maybe if a given size piles up
-	fi
-	echo
+	{ echo; echo "Uploading of results to the server..." ; } >&2
+if $CURL --user ftpuser:hobbitftp1 \
+		--max-time $maximum_service_upload_time \
+		-T $result_test_arch $ftp >&2 ;
+	then echo "Results SUCCESSFULLY uploaded to the server."  >&2
+	else echo "Upload of results FAILED. "  >&2
+fi
+
+echo "Removing result file $result_test_arch ..." >&2
+if rm -fr "$result_test_arch" >&2
+	then echo "removed." >&2
+	else echo "Error $? removing result file. This may be BAD." >&2
 fi
