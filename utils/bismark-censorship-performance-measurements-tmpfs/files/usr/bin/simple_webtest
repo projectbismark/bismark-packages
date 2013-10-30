@@ -1,4 +1,4 @@
-#!/bin/ash -eu
+#!/bin/ash -eux
 #simple_webtest.sh
 #Ben Jones
 #Sep 2013
@@ -7,30 +7,13 @@
 # Note: awk is used for computation in a lot of places because it is the only way I can do floating point arithmetic
 
 #configuration parameters
-user_agent='Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)'
-#num_redirects=5 the initial version will not be using redirects so that we just get the first http page and don't have to do HTTPS validation
-output_format="<actual_url>%{url_effective}</actual_url>\\n\
-<redirect_url>%{redirect_url}</redirect_url>\\n\
-<content_type>%{content_type}</content_type>\\n\
-<speed_download>%{speed_download}</speed_download>\\n\
-<speed_upload>%{speed_upload}</speed_upload>\\n\
-<http_code>%{http_code}</http_code>\\n\
-<connect_time>%{time_connect}</connect_time>\\n\
-<time_pretransfer>%{time_pretransfer}</time_pretransfer>\\n\
-<time_starttransfer>%{time_starttransfer}</time_starttransfer>\\n\
-<time_total>%{time_total}</time_total>\\n\
-<size_download>%{size_download}</size_download>\\n\
-<size_upload>%{size_upload}</size_upload>\\n\
-<size_request>%{size_request}</size_request>\\n\
-<size_header>%{size_header}</size_header>\\n\
-<num_connects>%{num_connects}</num_connects>\\n"
 persistent_dir="/tmp/censorship-performance-measurements"
 url_dload_address=ben.noise.gatech.edu/external/censorship-performance/simple-http
 max_experiment_time_secs=120 #experiment must be done in 120 seconds
-url_timeout_secs=60 #after 60 seconds, timeout the url
 max_curl_filesize_bytes=$((750 * 1024)) # 750k
-dload_usage_target_bytes=$(expr 10 \* 1024) #10k
+dload_usage_target_bytes=$(expr 15 \* 1024) #15k
 us_router_list="/tmp/etc/censorship-performance-measurements/usRouters.txt"
+measure_web_performance="/tmp/usr/bin/measure-web-performance"
 alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which weights how important the old data usage was
 
 . /etc/bismark/bismark.conf
@@ -46,9 +29,9 @@ alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which we
 # Directories: creates the output_dir directory (deleted after script completes), removes any dirs starting with http
 setup()
 {
-        echo "Setting up"
-        timestamp=$(date +%s)
-        test_start_time=$timestamp
+    echo "Setting up"
+    timestamp=$(date +%s)
+    test_start_time=$timestamp
     
     #find the device ID, aka the mac address
     if [ -e /etc/bismark/ID ]; then
@@ -68,7 +51,7 @@ setup()
     output_file=${output_dir}/${output_file_rel_name}
     echo "<?xml version="3.0" encoding="UTF-8" standalone="yes"?>" > $output_file
     echo "<censorship-performance-measurements version='1.0'>"  >> $output_file
-    echo "  <info deviceid=$DEVICE_ID/>" >> $output_file
+    echo "<info deviceid=$DEVICE_ID/>" >> $output_file
 
     upload_dir=/tmp/bismark-uploads/censorship-performance/
 #    upload_dir=/tmp/censorship-performance-measurements/output/
@@ -111,7 +94,7 @@ dload_url_list()
     local download_url=${url_dload_address}/${DEVICE_ID}.txt
     echo $download_url
     #silently download the file, limiting the download to 
-    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time $url_timeout_secs || (cleanup; exit 1)
+    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time 60 || (cleanup; exit 1)
 }
 
 
@@ -121,9 +104,12 @@ dload_url_list()
 cleanup()
 {
     echo "Cleaning up"
+    #make sure that we kill tcpdump
+    killID=$(pgrep tcpdump) && kill -SIGINT $killID
+
     #delete any file or directory which has http in the name
     cd $persistent_dir
-    [ -n "$persistent_dir" ]&& rm -rf ${persistent_dir}/*http*
+    [ -n "$persistent_dir" ] && rm -rf ${persistent_dir}/*http*
 }
 
 #randomize_list: this function will randomly select n elements from a list. If all elements are selected, the list order will be randomized
@@ -197,26 +183,24 @@ upload_data()
 # Files: writes output to output_file, html to ${2}.html, and headers to ${2}.headers
 measure_site()
 {
+    cd $output_dir
     #create a filename to store the html and headers in- just the name of the website
     local pageoutput=${output_dir}/${2}
-    # get the first IPv4 address for the url and record the lookup time
-    local timeFile=$(mktemp)
-    local addressFile=$(mktemp)
-    #if the lookup fails, write out what we know and quit
-    time -f %E nslookup $1 > $addressFile 2&> $timeFile || (echo "<site url=$1>\n<timestamp>$(date +%s)</timestamp>\n<lookup_time>500000</lookup_time>\n<nslookup_response>$(cat $addressFile)</nslookup_response>\n" >> $output_file ; echo "Non-zero nslookup return value"; rm -f $timeFile $addressFile; return 0)
-    #otherwise, continue as normal
-    local lookupTime=$(cat $timeFile)
-    local ipAddress=$(cat $addressFile | awk '{if($1 == "Name:"){inAddressSection=1} if($1 == "Address" && inAddressSection){if(!match($3, ":")){print $3; exit}}}')
-    rm -f $timeFile $addressFile
     echo "<site url=$1>" >> $output_file
     echo "<timestamp>$(date +%s)</timestamp>" >> $output_file
-    echo "<lookup_time>$lookupTime</lookup_time>" >> $output_file
+    echo "<tcpdump_file>$2.pcap</tcpdump_file>" >> $output_file
+    # start capturing packets- limit to a single 1mb file at worst
+    tcpdump -nS -s96 -W1 -C1 -w "temp.pcap" -i eth1 port 80 &
+    local tcpdumpID=$!
     # Note: curl would not accept my output format directly on the
     # command line (thought it was additional urls for testing, so the
     # output format is being piped into curl
-    curl $ipAddress:80 -H "Host: $1" -f -s --max-filesize $max_curl_filesize_bytes -A "$user_agent" -w "$output_format" -o ${pageoutput}.html -D ${pageoutput}.headers --max-time $url_timeout_secs >> $output_file || echo "Non-zero curl return value"
-    echo "<curl_return_code>$?</curl_return_code>" >> $output_file
-    echo "<remote_ip>$ipAddress</remote_ip>" >> $output_file
+    tcpdumpRemoteIPLocalPort=$($measure_web_performance $1 $output_file ${pageoutput}.html ${pageoutput}.headers)
+    #kill tcpdump, then run a second pass on the collected data
+    kill -2 $tcpdumpID
+    wait $tcpdumpID
+    tcpdump -nS -s96 -W1 -C1 -w "$2.pcap" -r "temp.pcap" $tcpdumpRemoteIPLocalPort
+    rm -f temp.pcap
     echo "<file_name>$2</file_name>" >> $output_file
     echo "</site>" >> $output_file
 }
@@ -252,7 +236,7 @@ run_measurements()
     #randomize the order of the urls if we haven't already
     #we test whether or not to create the new url list by checking if the index exists or if it is >=100
     
-    if [ -z "$index" -o "$index" -gt "$max_index_size" ]; then
+    if [ -z "$index" ]; then
         #set index to 0 and create the randomized url list
         index=1
         dload_url_list
@@ -260,8 +244,16 @@ run_measurements()
         #set the max index size to the length of the list
         max_index_size=$(awk 'END{print NR}' $input_file)
         echo "Number of urls in list: " $max_index_size
+    else
+	if [ "$index" -gt "$max_index_size" ]; then
+            #set index to 0 and create the randomized url list
+            index=1
+            dload_url_list
+            create_random_url_list
+            #set the max index size to the length of the list
+            max_index_size=$(awk 'END{print NR}' $input_file)
+	fi
     fi
-    
     #if data_usage does not exist, then reset it to 0
     if [ "$data_usage" = "" ]; then
         data_usage=0
@@ -277,7 +269,7 @@ run_measurements()
         echo max_index_size="$max_index_size" >> $index_file
     else
         #acquire the measurements lock so we are the only script running
-        if acquire_active_measurements_lock censorship-performance-measurements-http; then
+       if acquire_active_measurements_lock censorship-performance-measurements-http; then
             #here we get a url, tar the output, check the upload size, and if the size is larger than our cap, we end the script
             echo "data: " $data_usage
             while [ "$data_usage" -lt "$dload_usage_target_bytes" ] && [ "$index" -le "$max_index_size" ]; do
@@ -300,7 +292,7 @@ run_measurements()
                 local time_elapsed=$(($(date +%s) - $test_start_time))
                 if [ $time_elapsed -gt $max_experiment_time_secs ]; then
                     echo "Overtime. Stopping test"
-                    break #break out of the loop and cleanup
+p                    break #break out of the loop and cleanup
                 fi
             done
             release_active_measurments_lock
