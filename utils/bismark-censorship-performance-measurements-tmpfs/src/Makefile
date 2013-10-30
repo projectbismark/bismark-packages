@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS += -c -Wall -03 -fno-strict-aliasing
+CFLAGS += -c -Wall -O3 -fno-strict-aliasing
 LDFLAGS += -lcurl
 
 SRCS = web-performance-measurements.c

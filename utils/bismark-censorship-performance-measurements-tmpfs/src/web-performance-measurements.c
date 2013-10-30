@@ -100,7 +100,7 @@ int close_socket_func(void * clientP, curl_socket_t item){
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
     socklen_t addrSize = sizeof(addr);
-    uint localPort;
+    uint localPort = 0;
     char remoteIP[INET6_ADDRSTRLEN] = "\0";
     //    if(getsockopt(item, SOL_TCP, TCP_INFO, (void *)&(data->stats), &(data->stats_len)) == 0){
     //	fprintf(stdout, "lost: %u retrans: %u retransmit: %u total_retrans: %u\n", data->stats.tcpi_lost, data->stats.tcpi_retrans, data->stats.tcpi_retransmits, data->stats.tcpi_total_retrans);
@@ -172,10 +172,10 @@ int get_measurement_data(CURL * handle, FILE * xmlFile){
     fprintf(xmlFile, "<size_upload>%f</size_upload>\n", statDouble);
     curl_easy_getinfo(handle, CURLINFO_SIZE_DOWNLOAD, &statDouble);
     fprintf(xmlFile, "<size_download>%f</size_download>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_REQUEST_SIZE, &statDouble);
-    fprintf(xmlFile, "<size_request>%f</size_request>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_HEADER_SIZE, &statDouble);
-    fprintf(xmlFile, "<size_header>%f</size_header>\n", statDouble);
+    curl_easy_getinfo(handle, CURLINFO_REQUEST_SIZE, &statLong);
+    fprintf(xmlFile, "<size_request>%d</size_request>\n", (int)statLong);
+    curl_easy_getinfo(handle, CURLINFO_HEADER_SIZE, &statLong);
+    fprintf(xmlFile, "<size_header>%d</size_header>\n", (int)statLong);
 
     curl_easy_getinfo(handle, CURLINFO_NUM_CONNECTS, &statLong);
     fprintf(xmlFile, "<num_connects>%d</num_connects>\n", (int)statLong);
