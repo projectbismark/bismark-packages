@@ -18,13 +18,13 @@ define Package/bismark-censorship-performance-measurements-tmpfs/description
 endef
 
 define Build/Compile
-gcc -Wall $(pkg-config --cflags libcurl) ./src/web-performance-measurements.c $(pkg-config --libs libcurl) -o ./files/usr/bin/measure-web-performance
+$(MAKE_VARS) $(MAKE) -C ./src
 endef
 
 define Package/bismark-censorship-performance-measurements-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/simple_webtest $(1)/usr/bin/censorship-performance-measurements-http
-	$(INSTALL_BIN) ./files/usr/bin/measure-web-performance $(1)/usr/bin/measure-web-performance
+	$(INSTALL_BIN) ./src/measure-web-performance $(1)/usr/bin/measure-web-performance
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements.crontab $(1)/etc/censorship-performance-measurements.crontab
 	$(INSTALL_DIR) $(1)/etc/censorship-performance-measurements
