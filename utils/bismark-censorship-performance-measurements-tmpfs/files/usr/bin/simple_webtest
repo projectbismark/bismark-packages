@@ -295,7 +295,7 @@ run_measurements()
                     break #break out of the loop and cleanup
                 fi
             done
-            release_active_measurments_lock
+            release_active_measurements_lock
 
             #write out our changes so that we keep our state on the next run
             echo index="$index" > $index_file
