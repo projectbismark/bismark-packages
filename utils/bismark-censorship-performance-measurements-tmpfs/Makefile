@@ -18,7 +18,7 @@ define Package/bismark-censorship-performance-measurements-tmpfs/description
 endef
 
 define Build/Compile
-$(MAKE_VARS) $(MAKE) -C ./src
+$(MAKE_VARS) $(MAKE) -C ./src $(MAKE_FLAGS)
 endef
 
 define Package/bismark-censorship-performance-measurements-tmpfs/install
