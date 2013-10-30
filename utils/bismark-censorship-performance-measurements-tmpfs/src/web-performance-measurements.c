@@ -18,7 +18,7 @@ struct passed_data{
     struct tcp_info stats;
     socklen_t stats_len;
     FILE * xmlFile;
-    int socketsSeen;
+    int printedData;
 };
 
 curl_socket_t open_socket_func(void *clientp, curlsocktype purpose, struct curl_sockaddr *address);
@@ -128,16 +128,15 @@ int close_socket_func(void * clientP, curl_socket_t item){
 	}
     }
     fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
-    //deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
-    if(data->printedData ==1){
-	printf("and ");
-    }
     if(localPort != 0 && strcmp(remoteIP, "") != 0){
+	//deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
+	if(data->printedData ==1){
+	    printf("and ");
+	}
 	printf("port %u and host %s\n", localPort, remoteIP);
 	data->printedData = 1;
     }
     shutdown((int) item, 2);
-    data->socketsSeen++;
     return 0;
 }
 
