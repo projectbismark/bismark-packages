@@ -29,7 +29,7 @@ int get_measurement_data(CURL * handle, FILE * xmlFile);
 int main(int argc, char * argv[]){
     struct passed_data data;
     data.stats_len = sizeof(data.stats);
-    data.socketsSeen = 0;
+    data.printedData = 0;
     CURL * handle;
     FILE * xmlFile, *htmlFile, *headerFile;
     char site[100] = "http://\0";
@@ -129,11 +129,12 @@ int close_socket_func(void * clientP, curl_socket_t item){
     }
     fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
     //deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
-    if(data->socketsSeen > 0){
+    if(data->printedData ==1){
 	printf("and ");
     }
     if(localPort != 0 && strcmp(remoteIP, "") != 0){
 	printf("port %u and host %s\n", localPort, remoteIP);
+	data->printedData = 1;
     }
     shutdown((int) item, 2);
     data->socketsSeen++;

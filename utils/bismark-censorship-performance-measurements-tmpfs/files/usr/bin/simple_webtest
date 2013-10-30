@@ -292,7 +292,7 @@ run_measurements()
                 local time_elapsed=$(($(date +%s) - $test_start_time))
                 if [ $time_elapsed -gt $max_experiment_time_secs ]; then
                     echo "Overtime. Stopping test"
-p                    break #break out of the loop and cleanup
+                    break #break out of the loop and cleanup
                 fi
             done
             release_active_measurments_lock
