@@ -129,7 +129,7 @@ int close_socket_func(void * clientP, curl_socket_t item){
     }
     fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
     //deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
-    if(data->socketsSeen > 1){
+    if(data->socketsSeen > 0){
 	printf("and ");
     }
     printf("port %u and host %s\n", localPort, remoteIP);
