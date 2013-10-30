@@ -1,4 +1,4 @@
-#!/bin/ash -eux
+#!/bin/ash -eu
 #simple_webtest.sh
 #Ben Jones
 #Sep 2013
