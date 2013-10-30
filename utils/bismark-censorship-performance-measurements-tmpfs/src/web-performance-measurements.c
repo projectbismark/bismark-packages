@@ -132,7 +132,9 @@ int close_socket_func(void * clientP, curl_socket_t item){
     if(data->socketsSeen > 0){
 	printf("and ");
     }
-    printf("port %u and host %s\n", localPort, remoteIP);
+    if(localPort != 0 and strcmp(remoteIP, "") != 0){
+	printf("port %u and host %s\n", localPort, remoteIP);
+    }
     shutdown((int) item, 2);
     data->socketsSeen++;
     return 0;
