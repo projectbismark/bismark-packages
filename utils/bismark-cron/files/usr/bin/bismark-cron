@@ -3,7 +3,7 @@
 # bismark-cron gives BISmark support for multiple crontab files. Instead of
 # requiring packages to add entries directly to the crontab, which is an
 # error-prone and very dangerous process, this script lets packages put files in
-# /etc/cron.d or /var/cron.d. We will periodically read those directories and
+# /etc/cron.d or /tmp/etc/cron.d. We will periodically read those directories and
 # generate a new crontab when there are changes.
 
 # Append this suffix to all crontab lines managed by bismark-cron.
@@ -38,7 +38,7 @@ elif [ "$(wc -l < ${new_crontab})" -eq '0' ]; then
 fi
 
 # Append lines from crontab directories to the new cron.
-find /etc/cron.d /var/cron.d -type f |                  # Find all crontabs.
+find /etc/cron.d /tmp/etc/cron.d -type f |              # Find all crontabs.
         xargs awk "{ print \$0, \" # ${suffix}\" }" |   # Add comment on each line.
         sort -u >> $new_crontab                         # Sort all lines for predictability.
 
