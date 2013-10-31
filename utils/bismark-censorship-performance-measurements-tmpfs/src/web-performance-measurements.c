@@ -4,7 +4,7 @@
  * Curl test script to get data
  */
 
-//includes
+// includes
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/tcp.h>
@@ -35,36 +35,39 @@ int main(int argc, char * argv[]){
     char site[100] = "http://\0";
     int curlReturnValue = -1;
 
-    //curl constants
+    // curl constants
     char * USER_AGENT = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)";
     long MAX_FILE_SIZE = 750*1024;
     long TIMEOUT = 60;
 
-    //get command line arguments and print out errors
+    // get command line arguments and print out errors
     if(argc != 5){
-	printf("Error: improper syntax\n");
-	printf("Expected syntax: <executable name> <site> <xml output file> <html output file> <headers output file>\n");
-	return 1;
+        printf("Error: improper syntax\n");
+        printf("Expected syntax: <executable name> <site> <xml output file> <html output file> <headers output file>\n");
+        return 1;
     }
     strncat(site, argv[1], 90);
     if((xmlFile = fopen(argv[2], "a")) == NULL){
-	printf("Error: bad xml filename");
-	return 1;}
+        printf("Error: bad xml filename");
+        return 1;
+    }
     data.xmlFile = xmlFile;
     if((htmlFile = fopen(argv[3], "w")) == NULL){
-	printf("Error: bad html filename");
-	return 1;}
+        printf("Error: bad html filename");
+        return 1;
+    }
     if((headerFile = fopen(argv[4], "w")) == NULL){
-	printf("Error: bad headers filename");
-	return 1;}
+        printf("Error: bad headers filename");
+        return 1;
+    }
 
-    //initialize
+    // initialize
     curl_global_init(CURL_GLOBAL_DEFAULT);
     handle = curl_easy_init();
     curl_easy_setopt(handle, CURLOPT_URL, site);
     curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 5);
-    curl_easy_setopt(handle, CURLOPT_MAXFILESIZE, MAX_FILE_SIZE);
+    curl_easy_setopt(hpandle, CURLOPT_MAXFILESIZE, MAX_FILE_SIZE);
     curl_easy_setopt(handle, CURLOPT_USERAGENT,USER_AGENT);
     curl_easy_setopt(handle, CURLOPT_TIMEOUT,TIMEOUT);
 
@@ -73,24 +76,27 @@ int main(int argc, char * argv[]){
     curl_easy_setopt(handle, CURLOPT_CLOSESOCKETFUNCTION, close_socket_func);
     curl_easy_setopt(handle, CURLOPT_CLOSESOCKETDATA, (void*) &data);
 
-    //do the measurement
+    // do the measurement
     curlReturnValue = curl_easy_perform(handle);
     fprintf(xmlFile, "<curl_return_value>%d</curl_return_value>\n", curlReturnValue);
 
-    //get the results
+    // get the results
     get_measurement_data(handle, xmlFile);
 
-    //cleanup
+    // cleanup
     curl_easy_cleanup(handle);
     curl_global_cleanup();
     fclose(xmlFile);
     fclose(htmlFile);
     fclose(headerFile);
+    
+    // print a trailing newline to finish the tcpdump command
+    printf("\n");
     return 0;
 }
 
 curl_socket_t open_socket_func(void *clientp, curlsocktype purpose, struct curl_sockaddr *address){
-    //force the connection to use IPv4
+    // force the connection to use IPv4
     return socket(AF_INET, address->socktype, address->protocol);
 }
 
@@ -102,39 +108,35 @@ int close_socket_func(void * clientP, curl_socket_t item){
     socklen_t addrSize = sizeof(addr);
     uint localPort = 0;
     char remoteIP[INET6_ADDRSTRLEN] = "\0";
-    //    if(getsockopt(item, SOL_TCP, TCP_INFO, (void *)&(data->stats), &(data->stats_len)) == 0){
-    //	fprintf(stdout, "lost: %u retrans: %u retransmit: %u total_retrans: %u\n", data->stats.tcpi_lost, data->stats.tcpi_retrans, data->stats.tcpi_retransmits, data->stats.tcpi_total_retrans);
-    //	fprintf(stdout, "rtt: %u reordering: %u unacked: %u sacked: %u\n", data->stats.tcpi_rtt, data->stats.tcpi_reordering, data->stats.tcpi_unacked, data->stats.tcpi_sacked);
-    //    }
 
-    //get the local port
+    // get the local port
     if(getsockname((int)item, (struct sockaddr *)&addr, &addrSize) == 0){
-	if(addr.ss_family == AF_INET){
-	    addr4 = (struct sockaddr_in *) &addr;
-	    localPort = ntohs(addr4->sin_port);
-	}else{
-	    addr6 = (struct sockaddr_in6 *) &addr;
-	    localPort = ntohs(addr6->sin6_port);
-	}
+        if(addr.ss_family == AF_INET){
+            addr4 = (struct sockaddr_in *) &addr;
+            localPort = ntohs(addr4->sin_port);
+        }else{
+            addr6 = (struct sockaddr_in6 *) &addr;
+            localPort = ntohs(addr6->sin6_port);
+        }
     }
-    //get the remote ip
+    // get the remote ip
     if(getpeername((int)item, (struct sockaddr *)&addr, &addrSize) == 0){
-	if(addr.ss_family == AF_INET){
-	    addr4 = (struct sockaddr_in *) &addr;
-	    inet_ntop(AF_INET,(void *) &(addr4->sin_addr), remoteIP, sizeof(remoteIP));
-	}else{
-	    addr6 = (struct sockaddr_in6 *) &addr;
-	    inet_ntop(AF_INET6,(void *) &(addr6->sin6_addr), remoteIP, sizeof(remoteIP));	    
-	}
+        if(addr.ss_family == AF_INET){
+            addr4 = (struct sockaddr_in *) &addr;
+            inet_ntop(AF_INET,(void *) &(addr4->sin_addr), remoteIP, sizeof(remoteIP));
+        }else{
+            addr6 = (struct sockaddr_in6 *) &addr;
+            inet_ntop(AF_INET6,(void *) &(addr6->sin6_addr), remoteIP, sizeof(remoteIP));           
+        }
     }
     fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
     if(localPort != 0 && strcmp(remoteIP, "") != 0){
-	//deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
-	if(data->printedData ==1){
-	    printf("and ");
-	}
-	printf("port %u and host %s\n", localPort, remoteIP);
-	data->printedData = 1;
+        // deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
+        if(data->printedData ==1){
+            printf("or ");
+        }
+        printf("(src port %u and dst host %s) ", localPort, remoteIP);
+        data->printedData = 1;
     }
     shutdown((int) item, 2);
     return 0;

@@ -1,4 +1,4 @@
-#!/bin/ash -eu
+#!/bin/ash -eux
 #simple_webtest.sh
 #Ben Jones
 #Sep 2013
@@ -11,10 +11,10 @@ persistent_dir="/tmp/censorship-performance-measurements"
 url_dload_address=ben.noise.gatech.edu/external/censorship-performance/simple-http
 max_experiment_time_secs=120 #experiment must be done in 120 seconds
 max_curl_filesize_bytes=$((750 * 1024)) # 750k
-dload_usage_target_bytes=$(expr 15 \* 1024) #15k
+dload_usage_target_bytes=$(expr 10 \* 1024) #10k
 us_router_list="/tmp/etc/censorship-performance-measurements/usRouters.txt"
 measure_web_performance="/tmp/usr/bin/measure-web-performance"
-alpha=$(echo "meaningless" | awk '{ print 1 / 6}') # this is a constant which weights how important the old data usage was
+alpha=$(awk 'END { print 1 / 6 }' </dev/null) # this is a constant which weights how important the old data usage was
 
 . /etc/bismark/bismark.conf
 . /usr/lib/bismark/functions.inc.sh
@@ -54,7 +54,6 @@ setup()
     echo "<info deviceid=$DEVICE_ID/>" >> $output_file
 
     upload_dir=/tmp/bismark-uploads/censorship-performance/
-#    upload_dir=/tmp/censorship-performance-measurements/output/
     input_file=${persistent_dir}/cur_url_list
 
     #create a file for the variable index if it does not exist
@@ -64,23 +63,9 @@ setup()
     fi
 
     #if the router is in the us, then increase the data cap
-    if [ is_us_router ]; then
+    if [ grep -qF $DEVICE_ID $us_router_list ]; then
 	dload_usage_target_bytes=$(expr 30 \* 1024) #30k
     fi
-}
-
-#is_us_router: return true if the router's mac address matches the original list from the us
-# Imports: us_router_list, DEVICE_ID
-# Exports: none
-# Files: reads file referred to by us_router_list
-is_us_router()
-{
-    while read $router; do
-	if [ "$router" == "$DEVICE_ID" ]; then
-	    return 0
-	fi
-    done < $us_router_list
-    return 1
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
@@ -190,7 +175,7 @@ measure_site()
     echo "<timestamp>$(date +%s)</timestamp>" >> $output_file
     echo "<tcpdump_file>$2.pcap</tcpdump_file>" >> $output_file
     # start capturing packets- limit to a single 1mb file at worst
-    tcpdump -nS -s96 -W1 -C1 -w "temp.pcap" -i eth1 port 80 &
+    tcpdump -nS -s96 -W1 -C1 -w "temp.pcap" -i eth1 dst port 80 &
     local tcpdumpID=$!
     # Note: curl would not accept my output format directly on the
     # command line (thought it was additional urls for testing, so the
@@ -269,7 +254,7 @@ run_measurements()
         echo max_index_size="$max_index_size" >> $index_file
     else
         #acquire the measurements lock so we are the only script running
-       if acquire_active_measurements_lock censorship-performance-measurements-http; then
+        if acquire_active_measurements_lock censorship-performance-measurements-http measure-web-performance; then
             #here we get a url, tar the output, check the upload size, and if the size is larger than our cap, we end the script
             echo "data: " $data_usage
             while [ "$data_usage" -lt "$dload_usage_target_bytes" ] && [ "$index" -le "$max_index_size" ]; do
