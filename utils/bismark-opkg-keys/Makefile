@@ -19,7 +19,7 @@ define Package/bismark-opkg-keys
 	TITLE:=Opkg package signing.
 	URL:=http://www.projectbismark.net
 	MAINTAINER:=Bismark Development List <bismark-devel@projectbismark.net>
-	DEPENDS:=+opkg-bismark +opkg
+	DEPENDS:=+opkg-bismark 
 endef
 
 define Package/bismark-opkg-keys/description
