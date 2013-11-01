@@ -65,10 +65,10 @@ int main(int argc, char * argv[]){
     handle = create_curl_handle(site, (void *) &data, htmlFile, headerFile);
     // if the handle is not properly initialized, then exit with error
     if(handle == NULL){
-	fclose(xmlFile);
-	fclose(htmlFile);
-	fclose(headerFile);
-	return 1;
+        fclose(xmlFile);
+        fclose(htmlFile);
+        fclose(headerFile);
+        return 1;
     }
 
     // do the measurement
@@ -84,7 +84,7 @@ int main(int argc, char * argv[]){
     fclose(xmlFile);
     fclose(htmlFile);
     fclose(headerFile);
-    
+
     // print a trailing newline to finish the tcpdump command
     printf("\n");
     return 0;
@@ -121,7 +121,7 @@ int close_socket_func(void * clientP, curl_socket_t item){
             inet_ntop(AF_INET,(void *) &(addr4->sin_addr), remoteIP, sizeof(remoteIP));
         }else if (addr.ss_family == AF_INET6){
             addr6 = (struct sockaddr_in6 *) &addr;
-            inet_ntop(AF_INET6,(void *) &(addr6->sin6_addr), remoteIP, sizeof(remoteIP));           
+            inet_ntop(AF_INET6,(void *) &(addr6->sin6_addr), remoteIP, sizeof(remoteIP));
         }
     }
     fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
@@ -143,56 +143,56 @@ int get_measurement_data(CURL * handle, FILE * xmlFile){
     double statDouble;
 
     if(curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &statString) == CURLE_OK){
-	fprintf(xmlFile, "<actual_url>%s</actual_url>\n", statString);
+        fprintf(xmlFile, "<actual_url>%s</actual_url>\n", statString);
     }
     if(curl_easy_getinfo(handle, CURLINFO_REDIRECT_URL, &statString) == CURLE_OK){
-	fprintf(xmlFile, "<redirect_url>%s</redirect_url>\n", statString);
+        fprintf(xmlFile, "<redirect_url>%s</redirect_url>\n", statString);
     }
     if(curl_easy_getinfo(handle, CURLINFO_CONTENT_TYPE, &statString) == CURLE_OK){
-	fprintf(xmlFile, "<content_type>%s</content_type>\n", statString);
+        fprintf(xmlFile, "<content_type>%s</content_type>\n", statString);
     }
     if(curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &statLong) == CURLE_OK){
-	fprintf(xmlFile, "<http_code>%ld</http_code>\n", statLong);
+        fprintf(xmlFile, "<http_code>%ld</http_code>\n", statLong);
     }
 
     if(curl_easy_getinfo(handle, CURLINFO_SPEED_DOWNLOAD, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<speed_download>%f</speed_download>\n", statDouble);
+        fprintf(xmlFile, "<speed_download>%f</speed_download>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_SPEED_UPLOAD, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<speed_upload>%f</speed_upload>\n", statDouble);
+        fprintf(xmlFile, "<speed_upload>%f</speed_upload>\n", statDouble);
     }
 
     if(curl_easy_getinfo(handle, CURLINFO_TOTAL_TIME, &statDouble)  == CURLE_OK){
-	fprintf(xmlFile, "<time_total>%f</time_total>\n", statDouble);
+        fprintf(xmlFile, "<time_total>%f</time_total>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_NAMELOOKUP_TIME, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<time_lookup>%f</time_lookup>\n", statDouble);
+        fprintf(xmlFile, "<time_lookup>%f</time_lookup>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_CONNECT_TIME, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<time_connect>%f</time_connect>\n", statDouble);
+        fprintf(xmlFile, "<time_connect>%f</time_connect>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_PRETRANSFER_TIME, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<time_pretransfer>%f</time_pretransfer>\n", statDouble);
+        fprintf(xmlFile, "<time_pretransfer>%f</time_pretransfer>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_STARTTRANSFER_TIME, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<time_starttransfer>%f</time_starttransfer>\n", statDouble);
+        fprintf(xmlFile, "<time_starttransfer>%f</time_starttransfer>\n", statDouble);
     }
 
     if(curl_easy_getinfo(handle, CURLINFO_SIZE_UPLOAD, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<size_upload>%f</size_upload>\n", statDouble);
+        fprintf(xmlFile, "<size_upload>%f</size_upload>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_SIZE_DOWNLOAD, &statDouble) == CURLE_OK){
-	fprintf(xmlFile, "<size_download>%f</size_download>\n", statDouble);
+        fprintf(xmlFile, "<size_download>%f</size_download>\n", statDouble);
     }
     if(curl_easy_getinfo(handle, CURLINFO_REQUEST_SIZE, &statLong) == CURLE_OK){
-	fprintf(xmlFile, "<size_request>%ld</size_request>\n", statLong);
+        fprintf(xmlFile, "<size_request>%ld</size_request>\n", statLong);
     }
     if(curl_easy_getinfo(handle, CURLINFO_HEADER_SIZE, &statLong) == CURLE_OK){
-	fprintf(xmlFile, "<size_header>%ld</size_header>\n", statLong);
+        fprintf(xmlFile, "<size_header>%ld</size_header>\n", statLong);
     }
 
     if(curl_easy_getinfo(handle, CURLINFO_NUM_CONNECTS, &statLong) == CURLE_OK){
-	fprintf(xmlFile, "<num_connects>%ld</num_connects>\n", statLong);
+        fprintf(xmlFile, "<num_connects>%ld</num_connects>\n", statLong);
     }
 
     return 0;
@@ -206,34 +206,34 @@ CURL * create_curl_handle(char * site, void * data, FILE * htmlFile, FILE * head
     CURL * handle;
     handle = curl_easy_init();
     if(curl_easy_setopt(handle, CURLOPT_URL, site) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 5) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_MAXFILESIZE, MAX_FILE_SIZE) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_USERAGENT,USER_AGENT) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_TIMEOUT,TIMEOUT) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_WRITEDATA, htmlFile) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_WRITEHEADER, headerFile) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_CLOSESOCKETFUNCTION, close_socket_func) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
     if(curl_easy_setopt(handle, CURLOPT_CLOSESOCKETDATA, data) != CURLE_OK){
-	return NULL;
+        return NULL;
     }
 
     return handle;

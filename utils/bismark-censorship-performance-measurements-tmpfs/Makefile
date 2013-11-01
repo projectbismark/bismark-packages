@@ -24,7 +24,8 @@ endef
 define Package/bismark-censorship-performance-measurements-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/simple_webtest $(1)/usr/bin/censorship-performance-measurements-http
-	$(INSTALL_BIN) ./src/measure-web-performance $(1)/usr/bin/measure-web-performance
+	$(INSTALL_BIN) ./curl/measure-web-performance $(1)/usr/bin/measure-web-performance
+	$(INSTALL_BIN) ./web100/get-web100-stats $(1)/usr/bin/get-web100-stats
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements.crontab $(1)/etc/censorship-performance-measurements.crontab
 	$(INSTALL_DIR) $(1)/etc/censorship-performance-measurements

@@ -33,7 +33,7 @@ setup()
     echo "Setting up"
     timestamp=$(date +%s)
     test_start_time=$timestamp
-    
+
     #find the device ID, aka the mac address
     if [ -e /etc/bismark/ID ]; then
         DEVICE_ID=$(cat /etc/bismark/ID)
@@ -129,7 +129,7 @@ create_random_url_list()
 {
     #if the old file exists, delete it
     rm -f $input_file
-        
+
     #note, dload_url_list should have been called by now so that there is a url file to read
     if [ ! -e $url_file ]; then #if the url file does not exist, then print an error message and exit
         echo "No URL file detected. Exiting"
@@ -137,7 +137,7 @@ create_random_url_list()
         cleanup
         exit 1
     fi
-        
+
     echo "Randomizing the url order"
     #create a file to hold the url list
     cd $persistent_dir
@@ -214,7 +214,7 @@ run_measurements()
 
     #randomize the order of the urls if we haven't already
     #we test whether or not to create the new url list by checking if the index exists or if it is >=100
-    
+
     if [ -z "$index" ]; then
         #set index to 0 and create the randomized url list
         index=1
@@ -231,7 +231,7 @@ run_measurements()
             create_random_url_list
             #set the max index size to the length of the list
             max_index_size=$(awk 'END{print NR}' $input_file)
-	fi
+        fi
     fi
     #if data_usage does not exist, then reset it to 0
     if [ "$data_usage" = "" ]; then
@@ -257,7 +257,7 @@ run_measurements()
                 echo $url
                 measure_site $url $index
                 compress_data
-            
+
                 #update our data usage numbers
                 local last_run_usage=$(ls -l ../${output_dir_name}.tar.gz | awk '{print $5}')
                 data_average=$(echo meaningless | awk '{printf("%d", (('$alpha' * '$last_run_usage') + ((1 - '$alpha')*'$data_usage')))}')
@@ -280,8 +280,8 @@ run_measurements()
             echo index="$index" > $index_file
             echo data_usage="$data_usage" >> $index_file
             echo max_index_size="$max_index_size" >> $index_file
-	    #finalize the xml page
-	    echo "</censorship-performance-measurements>" >> $output_file
+            #finalize the xml page
+            echo "</censorship-performance-measurements>" >> $output_file
             upload_data
 
         else
