@@ -1,0 +1,9 @@
+#!/usr/bin/env ash
+
+echo "Access-Control-Allow-Origin: https://register.projectbismark.net"
+echo "Cache-Control: no-store"
+echo "Content-type: text/html"
+echo
+echo "<h1>nodogsplash output:</h1>"
+
+/etc/init.d/nodogsplash stop
