@@ -1,4 +1,4 @@
-#!/bin/ash -eux
+#!/bin/ash -eu
 #simple_webtest.sh
 #Ben Jones
 #Sep 2013
@@ -63,9 +63,7 @@ setup()
     fi
 
     #if the router is in the us, then increase the data cap
-    if [ grep -qF $DEVICE_ID $us_router_list ]; then
-        dload_usage_target_bytes=$(expr 30 \* 1024) #30k
-    fi
+    grep -qF $DEVICE_ID $us_router_list dload_usage_target_bytes=$(expr 30 \* 1024) #30k
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
