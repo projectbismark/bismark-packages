@@ -14,9 +14,13 @@
 #include <stdio.h>
 #include <curl/curl.h>
 
+// curl constants
+#define USER_AGENT "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)"
+#define MAX_FILE_SIZE  768000
+#define TIMEOUT  60
+
+// declarations
 struct passed_data{
-    struct tcp_info stats;
-    socklen_t stats_len;
     FILE * xmlFile;
     int printedData;
 };
@@ -24,21 +28,16 @@ struct passed_data{
 curl_socket_t open_socket_func(void *clientp, curlsocktype purpose, struct curl_sockaddr *address);
 int close_socket_func(void *clientP, curl_socket_t item);
 int get_measurement_data(CURL * handle, FILE * xmlFile);
+CURL * create_curl_handle(char * site, void * data, FILE * htmlFile, FILE * headerFile);
 
 /* expected syntax: <executable-name> <site> <xml output file> <html-output-file> <headers-output-file> */
 int main(int argc, char * argv[]){
     struct passed_data data;
-    data.stats_len = sizeof(data.stats);
     data.printedData = 0;
     CURL * handle;
     FILE * xmlFile, *htmlFile, *headerFile;
     char site[100] = "http://\0";
-    int curlReturnValue = -1;
-
-    // curl constants
-    char * USER_AGENT = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)";
-    long MAX_FILE_SIZE = 750*1024;
-    long TIMEOUT = 60;
+    int curlReturnValue;
 
     // get command line arguments and print out errors
     if(argc != 5){
@@ -63,18 +62,14 @@ int main(int argc, char * argv[]){
 
     // initialize
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    handle = curl_easy_init();
-    curl_easy_setopt(handle, CURLOPT_URL, site);
-    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
-    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 5);
-    curl_easy_setopt(hpandle, CURLOPT_MAXFILESIZE, MAX_FILE_SIZE);
-    curl_easy_setopt(handle, CURLOPT_USERAGENT,USER_AGENT);
-    curl_easy_setopt(handle, CURLOPT_TIMEOUT,TIMEOUT);
-
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, htmlFile);
-    curl_easy_setopt(handle, CURLOPT_WRITEHEADER, headerFile);
-    curl_easy_setopt(handle, CURLOPT_CLOSESOCKETFUNCTION, close_socket_func);
-    curl_easy_setopt(handle, CURLOPT_CLOSESOCKETDATA, (void*) &data);
+    handle = create_curl_handle(site, (void *) &data, htmlFile, headerFile);
+    // if the handle is not properly initialized, then exit with error
+    if(handle == NULL){
+	fclose(xmlFile);
+	fclose(htmlFile);
+	fclose(headerFile);
+	return 1;
+    }
 
     // do the measurement
     curlReturnValue = curl_easy_perform(handle);
@@ -110,7 +105,7 @@ int close_socket_func(void * clientP, curl_socket_t item){
     char remoteIP[INET6_ADDRSTRLEN] = "\0";
 
     // get the local port
-    if(getsockname((int)item, (struct sockaddr *)&addr, &addrSize) == 0){
+    if(getsockname(item, (struct sockaddr *)&addr, &addrSize) == 0){
         if(addr.ss_family == AF_INET){
             addr4 = (struct sockaddr_in *) &addr;
             localPort = ntohs(addr4->sin_port);
@@ -120,11 +115,11 @@ int close_socket_func(void * clientP, curl_socket_t item){
         }
     }
     // get the remote ip
-    if(getpeername((int)item, (struct sockaddr *)&addr, &addrSize) == 0){
+    if(getpeername(item, (struct sockaddr *)&addr, &addrSize) == 0){
         if(addr.ss_family == AF_INET){
             addr4 = (struct sockaddr_in *) &addr;
             inet_ntop(AF_INET,(void *) &(addr4->sin_addr), remoteIP, sizeof(remoteIP));
-        }else{
+        }else if (addr.ss_family == AF_INET6){
             addr6 = (struct sockaddr_in6 *) &addr;
             inet_ntop(AF_INET6,(void *) &(addr6->sin6_addr), remoteIP, sizeof(remoteIP));           
         }
@@ -138,7 +133,7 @@ int close_socket_func(void * clientP, curl_socket_t item){
         printf("(src port %u and dst host %s) ", localPort, remoteIP);
         data->printedData = 1;
     }
-    shutdown((int) item, 2);
+    shutdown((int) item, SHUT_RDWR);
     return 0;
 }
 
@@ -147,42 +142,99 @@ int get_measurement_data(CURL * handle, FILE * xmlFile){
     char *statString;
     double statDouble;
 
-    curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &statString);
-    fprintf(xmlFile, "<actual_url>%s</actual_url>\n", statString);
-    curl_easy_getinfo(handle, CURLINFO_REDIRECT_URL, &statString);
-    fprintf(xmlFile, "<redirect_url>%s</redirect_url>\n", statString);
-    curl_easy_getinfo(handle, CURLINFO_CONTENT_TYPE, &statString);
-    fprintf(xmlFile, "<content_type>%s</content_type>\n", statString);
-    curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &statLong);
-    fprintf(xmlFile, "<http_code>%d</http_code>\n", (int)statLong);
+    if(curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &statString) == CURLE_OK){
+	fprintf(xmlFile, "<actual_url>%s</actual_url>\n", statString);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_REDIRECT_URL, &statString) == CURLE_OK){
+	fprintf(xmlFile, "<redirect_url>%s</redirect_url>\n", statString);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_CONTENT_TYPE, &statString) == CURLE_OK){
+	fprintf(xmlFile, "<content_type>%s</content_type>\n", statString);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &statLong) == CURLE_OK){
+	fprintf(xmlFile, "<http_code>%ld</http_code>\n", statLong);
+    }
 
-    curl_easy_getinfo(handle, CURLINFO_SPEED_DOWNLOAD, &statDouble);
-    fprintf(xmlFile, "<speed_download>%f</speed_download>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_SPEED_UPLOAD, &statDouble);
-    fprintf(xmlFile, "<speed_upload>%f</speed_upload>\n", statDouble);
+    if(curl_easy_getinfo(handle, CURLINFO_SPEED_DOWNLOAD, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<speed_download>%f</speed_download>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_SPEED_UPLOAD, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<speed_upload>%f</speed_upload>\n", statDouble);
+    }
 
-    curl_easy_getinfo(handle, CURLINFO_TOTAL_TIME, &statDouble);
-    fprintf(xmlFile, "<time_total>%f</time_total>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_NAMELOOKUP_TIME, &statDouble);
-    fprintf(xmlFile, "<time_lookup>%f</time_lookup>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_CONNECT_TIME, &statDouble);
-    fprintf(xmlFile, "<time_connect>%f</time_connect>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_PRETRANSFER_TIME, &statDouble);
-    fprintf(xmlFile, "<time_pretransfer>%f</time_pretransfer>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_STARTTRANSFER_TIME, &statDouble);
-    fprintf(xmlFile, "<time_starttransfer>%f</time_starttransfer>\n", statDouble);
+    if(curl_easy_getinfo(handle, CURLINFO_TOTAL_TIME, &statDouble)  == CURLE_OK){
+	fprintf(xmlFile, "<time_total>%f</time_total>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_NAMELOOKUP_TIME, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<time_lookup>%f</time_lookup>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_CONNECT_TIME, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<time_connect>%f</time_connect>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_PRETRANSFER_TIME, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<time_pretransfer>%f</time_pretransfer>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_STARTTRANSFER_TIME, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<time_starttransfer>%f</time_starttransfer>\n", statDouble);
+    }
 
-    curl_easy_getinfo(handle, CURLINFO_SIZE_UPLOAD, &statDouble);
-    fprintf(xmlFile, "<size_upload>%f</size_upload>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_SIZE_DOWNLOAD, &statDouble);
-    fprintf(xmlFile, "<size_download>%f</size_download>\n", statDouble);
-    curl_easy_getinfo(handle, CURLINFO_REQUEST_SIZE, &statLong);
-    fprintf(xmlFile, "<size_request>%d</size_request>\n", (int)statLong);
-    curl_easy_getinfo(handle, CURLINFO_HEADER_SIZE, &statLong);
-    fprintf(xmlFile, "<size_header>%d</size_header>\n", (int)statLong);
+    if(curl_easy_getinfo(handle, CURLINFO_SIZE_UPLOAD, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<size_upload>%f</size_upload>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_SIZE_DOWNLOAD, &statDouble) == CURLE_OK){
+	fprintf(xmlFile, "<size_download>%f</size_download>\n", statDouble);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_REQUEST_SIZE, &statLong) == CURLE_OK){
+	fprintf(xmlFile, "<size_request>%ld</size_request>\n", statLong);
+    }
+    if(curl_easy_getinfo(handle, CURLINFO_HEADER_SIZE, &statLong) == CURLE_OK){
+	fprintf(xmlFile, "<size_header>%ld</size_header>\n", statLong);
+    }
 
-    curl_easy_getinfo(handle, CURLINFO_NUM_CONNECTS, &statLong);
-    fprintf(xmlFile, "<num_connects>%d</num_connects>\n", (int)statLong);
+    if(curl_easy_getinfo(handle, CURLINFO_NUM_CONNECTS, &statLong) == CURLE_OK){
+	fprintf(xmlFile, "<num_connects>%ld</num_connects>\n", statLong);
+    }
 
     return 0;
+}
+
+/* create_curl_handle: create a handle for curl to perform measurements with
+ * Note: if at any point we encounter an error, we return a NULL pointer,
+ * which the main function should be checking for
+ */
+CURL * create_curl_handle(char * site, void * data, FILE * htmlFile, FILE * headerFile){
+    CURL * handle;
+    handle = curl_easy_init();
+    if(curl_easy_setopt(handle, CURLOPT_URL, site) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 5) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_MAXFILESIZE, MAX_FILE_SIZE) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_USERAGENT,USER_AGENT) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_TIMEOUT,TIMEOUT) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_WRITEDATA, htmlFile) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_WRITEHEADER, headerFile) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_CLOSESOCKETFUNCTION, close_socket_func) != CURLE_OK){
+	return NULL;
+    }
+    if(curl_easy_setopt(handle, CURLOPT_CLOSESOCKETDATA, data) != CURLE_OK){
+	return NULL;
+    }
+
+    return handle;
 }

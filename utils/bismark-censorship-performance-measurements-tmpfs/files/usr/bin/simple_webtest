@@ -64,7 +64,7 @@ setup()
 
     #if the router is in the us, then increase the data cap
     if [ grep -qF $DEVICE_ID $us_router_list ]; then
-	dload_usage_target_bytes=$(expr 30 \* 1024) #30k
+        dload_usage_target_bytes=$(expr 30 \* 1024) #30k
     fi
 }
 
@@ -230,14 +230,14 @@ run_measurements()
         max_index_size=$(awk 'END{print NR}' $input_file)
         echo "Number of urls in list: " $max_index_size
     else
-	if [ "$index" -gt "$max_index_size" ]; then
+        if [ "$index" -gt "$max_index_size" ]; then
             #set index to 0 and create the randomized url list
             index=1
             dload_url_list
             create_random_url_list
             #set the max index size to the length of the list
             max_index_size=$(awk 'END{print NR}' $input_file)
-	fi
+        fi
     fi
     #if data_usage does not exist, then reset it to 0
     if [ "$data_usage" = "" ]; then
@@ -286,8 +286,8 @@ run_measurements()
             echo index="$index" > $index_file
             echo data_usage="$data_usage" >> $index_file
             echo max_index_size="$max_index_size" >> $index_file
-	    #finalize the xml page
-	    echo "</censorship-performance-measurements>" >> $output_file
+            #finalize the xml page
+            echo "</censorship-performance-measurements>" >> $output_file
             upload_data
 
         else
