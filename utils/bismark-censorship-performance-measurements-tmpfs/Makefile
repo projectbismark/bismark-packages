@@ -18,14 +18,15 @@ define Package/bismark-censorship-performance-measurements-tmpfs/description
 endef
 
 define Build/Compile
-$(MAKE_VARS) $(MAKE) -C ./src $(MAKE_FLAGS)
+$(MAKE_VARS) $(MAKE) -C ./src/curl $(MAKE_FLAGS)
+$(MAKE_VARS) $(MAKE) -C ./src/web100 $(MAKE_FLAGS)
 endef
 
 define Package/bismark-censorship-performance-measurements-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/simple_webtest $(1)/usr/bin/censorship-performance-measurements-http
-	$(INSTALL_BIN) ./curl/measure-web-performance $(1)/usr/bin/measure-web-performance
-	$(INSTALL_BIN) ./web100/get-web100-stats $(1)/usr/bin/get-web100-stats
+	$(INSTALL_BIN) ./src/curl/measure-web-performance $(1)/usr/bin/measure-web-performance
+	$(INSTALL_BIN) ./src/web100/get-web100-stats $(1)/usr/bin/get-web100-stats
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements.crontab $(1)/etc/censorship-performance-measurements.crontab
 	$(INSTALL_DIR) $(1)/etc/censorship-performance-measurements

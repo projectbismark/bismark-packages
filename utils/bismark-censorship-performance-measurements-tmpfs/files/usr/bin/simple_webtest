@@ -14,7 +14,7 @@ max_curl_filesize_bytes=$((750 * 1024)) # 750k
 dload_usage_target_bytes=$(expr 10 \* 1024) #10k
 us_router_list="/tmp/etc/censorship-performance-measurements/usRouters.txt"
 measure_web_performance="/tmp/usr/bin/measure-web-performance"
-read_conn_stats="/tmp/usr/bin/read-conn-stats"
+read_conn_stats="/tmp/usr/bin/get-web100-stats"
 alpha=$(awk 'END { print 1 / 6 }' </dev/null) # this is a constant which weights how important the old data usage was
 
 . /etc/bismark/bismark.conf
