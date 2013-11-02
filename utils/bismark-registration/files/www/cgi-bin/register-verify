@@ -1,0 +1,13 @@
+#!/usr/bin/env ash
+
+brlan_ip=$(/usr/sbin/ip addr show dev br-lan | \
+           awk -F '[ /]+' '/^ *inet.*br-lan$/ {print $3}')
+if [ $? -ne 0 ] || [ -z "$brlan_ip" ]; then
+    brlan_ip="192.168.142.1"
+fi
+
+echo "Access-Control-Allow-Origin: https://register.projectbismark.net"
+echo "Cache-Control: no-store"
+echo "Content-type: text/html"
+echo
+echo -n "$brlan_ip"

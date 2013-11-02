@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-health
 PKG_VERSION:=1
-PKG_RELEASE:=3
+PKG_RELEASE:=6
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -32,6 +32,8 @@ endef
 define Package/bismark-health/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/bismark-health $(1)/usr/bin/bismark-health
+	$(INSTALL_DIR) $(1)/etc/crontabs.d
+	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-health $(1)/etc/crontabs.d/bismark-health
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-health $(1)/etc/uci-defaults/bismark-health
 endef
@@ -46,7 +48,7 @@ endef
 
 define Package/bismark-health/prerm
 #!/bin/sh
-crontab -l | grep -v bismark-health | crontab -
+crontab -l | grep -sFv -f /etc/crontabs.d/bismark-health | sort -u | crontab -
 endef
 
 $(eval $(call BuildPackage,bismark-health))

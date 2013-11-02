@@ -6,7 +6,7 @@ require("os")
 
 function index()
 	entry({"oauth", "genkey"}, template("bismark/genkey"), "redirect", 20).dependent=false
-	local token = luci.http.formvalue("token")
+	local token = luci.http.formvalue("token", true)
 	if not (token == nil) then
 		local file = assert(io.open("/etc/bismark/authn", "w"))
 		file:write("https://register.projectbismark.net/check/?bearer_token=" .. token)

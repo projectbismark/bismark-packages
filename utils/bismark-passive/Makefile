@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-passive
-PKG_RELEASE:=20
-PKG_VERSION:=HEAD
+PKG_VERSION:=v21
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_RELEASE).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-passive.git

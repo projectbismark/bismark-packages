@@ -8,8 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
-PKG_VERSION:=0.2
-PKG_RELEASE:=22
+PKG_VERSION:=v26
+PKG_RELEASE:=1
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=git://github.com/projectbismark/bismark-active.git
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_PROTO:=git
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,33 +24,17 @@ define Package/bismark-active-tmpfs
    CATEGORY:=Utilities
    TITLE:=Broadband Internet Service benchMARK - Active measurement tools
    URL:=http://www.networkdashboard.org/
-   MAINTAINER:=Bismark Development List <bismark-devel@lists.bufferbloat.net>
+   MAINTAINER:=Bismark Development List <bismark-devel@projectbismark.net>
    DEPENDS:=+bismark-mgmt +bismark-netexp
 endef
 
 define Package/bismark-active-tmpfs/description
-	The bismark-active-tmpfs package includes tools meant for active network measurements
-endef
-
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)/{scripts,etc,lib}
-	[ -d files ] && ( cd files ; git pull ) || git clone git://github.com/projectbismark/bismark.git files
-	$(CP) files/device/OpenWrt_common/scripts/bismark-{measure-active,measure-wrapper,tr,rtr,ptr,rptr,ping,fping,netperf,dns,ditg,sp,mstats,sysctl} $(PKG_BUILD_DIR)/scripts
-	$(CP) files/device/OpenWrt_common/etc/{bismark-active.conf,crontab-active-tmpfs,sysctl.conf} $(PKG_BUILD_DIR)/etc
-	$(CP) files/device/OpenWrt_common/lib/*.list $(PKG_BUILD_DIR)/lib
+	The bismark-active-tmpfs package runs active network measurements 
 endef
 
 define Build/Compile
-	
 endef
 
-# Specify where and how to install the program. Since we only have one file,
-# the helloworld executable, install it by copying it to the /bin directory on
-# the router. The $(1) variable represents the root directory on the router running
-# OpenWrt. The $(INSTALL_DIR) variable contains a command to prepare the install
-# directory if it does not already exist.  Likewise $(INSTALL_BIN) contains the
-# command to copy the binary file from its current location (in our case the build
-# directory) to the install directory.
 define Package/bismark-active-tmpfs/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/lib/bismark
@@ -58,9 +48,8 @@ define Package/bismark-active-tmpfs/preinst
 #!/bin/sh
 # Bismark active-tmpfs pre-install script: clear crontab
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	if [ -e /tmp/etc/bismark/crontab-active-tmpfs ]; then
-		grep -sFvf /tmp/etc/bismark/crontab-active-tmpfs /etc/crontabs/root | sort -u | crontab -
-	fi
+	crontab -l | grep -sv bismark-measure-wrapper | sort -u | crontab -
+	/etc/init.d/cron restart
 fi
 endef
 
@@ -73,7 +62,14 @@ define Package/bismark-active-tmpfs/postinst
 # Bismark active-tmpfs post-install script
 
 if [ -z "$${IPKG_INSTROOT}" ]; then
-    $${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
+	(crontab -l; echo "*/1  * * * * /tmp/usr/bin/bismark-measure-wrapper  # remove on reboot") | sort -u > /tmp/bismark-crontab
+	if ! cmp -s /etc/crontabs/root /tmp/bismark-crontab; then
+		crontab /tmp/bismark-crontab
+	fi
+	rm /tmp/bismark-crontab
+	/etc/init.d/cron restart
+	bismark-action scriptupdate
+	#$${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
 fi
 endef
 

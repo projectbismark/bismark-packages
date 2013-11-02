@@ -10,8 +10,8 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME_SHORT:=openflow-ucap
 PKG_NAME:=kmod-$(PKG_NAME_SHORT)
-PKG_RELEASE:=3
-PKG_VERSION:=HEAD
+PKG_VERSION:=v3
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME_SHORT)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=git://github.com/projectbismark/openflow-ucap.git

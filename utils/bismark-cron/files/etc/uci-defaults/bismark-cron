@@ -1,0 +1,13 @@
+#!/bin/sh
+
+tries=0
+while ! crontab -l | grep -q -Ff /etc/crontabs.d/bismark-cron; do
+    crontab -l | cat - /etc/crontabs.d/bismark-cron | sort -u | crontab -
+    tries=$((tries + 1))
+    if [ "$tries" -gt 100 ]; then
+        echo "Giving up installing cron job after 100 tries." >&2
+        exit 1
+    fi
+done
+
+/etc/init.d/bismark-cron enable

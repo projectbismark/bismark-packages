@@ -1,0 +1,656 @@
+### censorship test
+### (c) Giuseppe Aceto 2013
+### giuseppe.aceto@unina.it
+
+client=booid ; # Ash-based BISmark script
+clientver=13 ; # now with more debugging info!
+clientnotes="pktest-bismark" ; # WARN: underscore forbidden XXX
+testname=webcontent
+testver=1.15 ; # fixed nslookup parsing
+# defaults
+# NOTE: stuff in persistent_dir will NOT be automatically deleted!
+# NOTE: on error, temp files are NOT deleted
+archive_stdout_stderr=1 ; # if 1 log (almost) everything in the archive
+show_stdout_stderr=1 ; # if archive_stdout_stderr is true, show the output anyway
+persistentdir=/tmp/$client
+configfile=${persistentdir}/ubica.conf
+bismarkconf=/etc/bismark/bismark.conf
+clientcc="00"; # unknown client id, or default CC when shipped
+clientip="127.0.0.1"; # unknown client IP address
+maxtargets=100 ; # only random <maxtargets> will be considered
+# NOTE: mlock for active measurements defaults to 400 secs,
+#	then lock could be expired and
+#       measurement_utils (curl,nc,dig) are killed based on process NAME
+#	(possible collaterals)
+#	TODO: set parallel_rnd_wait_max_secs = min { mlock_max - upload_time , test_default }
+maxlocktries=5 ; # maximum times we'll try to acquire mlock
+waitlock=10 ; # seconds waited after failing lock acquisition
+parallel_rnd_wait_max_secs=40 ; # initial random waiting before actual test
+maximum_experiment_duration_secs=220 ; # NOTE: INCLUDES parallel_rnd_wait_max_secs
+maximum_service_upload_time=$(( 5 * 60 )); # timeout to upload report (seconds)
+maximum_service_dwload_time=40 ; # timeout to download input file (seconds)
+remoteinput=1 ; # 1: downloads inputfile from remote server
+uploadresults=1 ; # 1: uploads results to remote server
+deleteifuploaded=1 ; # 1: delete successfully uploaded results
+
+ts=`date +%s` ; # experiment-start TimeStamp used all over the tests
+
+#settings:
+cleanthisdir=/tmp/$client/tempdir_${ts}
+
+mkdir -p $cleanthisdir; cd $cleanthisdir || exit 1; 
+
+ftp="ftp://143.225.229.169/upload/"
+
+remote_inputfile_path="http://ubica.comics.unina.it/inputfiles/$clientnotes"
+
+merciful=7 ; # seconds to wait for a graceful termination of subtests
+waitpidtime=2 ; # seconds before checking subtest status
+inputchunks=6 ; # number of different input chunks (1 chunk each run)
+
+DEVICE_ID=""
+
+# read bismark config file
+if [ -e $bismarkconf ]; then
+	. $bismarkconf;
+else
+	echo "FATAL: BISmark config file $bismarkconf is missing." >&2
+	echo "ABORT." >&2
+	exit 10
+fi
+
+# read config (ubica)
+if [ -e $configfile ]; then
+	. $configfile ;
+fi
+
+pseudonym=${DEVICE_ID}-${clientnotes}
+
+# initialize or increment inputcounter
+if [ ! "$inputcounter" = "" ]; then
+	inputcounter=$(( ( inputcounter + 1 ) % inputchunks ))
+else
+	# initialize using current time
+	inputcounter=$(( ts % inputchunks ))
+fi
+
+# update config (ubica)
+cp $configfile $configfile.bkp 2> /dev/null
+if [ -e $configfile ] && grep -q "^inputcounter=" $configfile; then
+	sed -e 's/^inputcounter=.*/inputcounter='$inputcounter'/' $configfile.bkp > $configfile
+else
+	echo "inputcounter=$inputcounter" >> $configfile
+fi
+
+
+# reportfile is named <reportformat>_<format-dependent-infos>
+reportformat=3; # changes parsing rules (filenames and output data formats)
+
+# Prefix used for file names (and directories):
+common_prefix=${pseudonym}_${ts}_${client}_${clientver}_${testname}_${testver}
+result_test_arch=${persistentdir}/${reportformat}_${common_prefix}.tar.gz
+
+resultspfx=$cleanthisdir/${common_prefix}
+stdoutlog=${resultspfx}.stdout
+stderrlog=${resultspfx}.stderr
+
+##test specific parameters:
+connect_timeout=15 ; export connect_timeout
+tcpconnect_maxtries=3; export tcpconnect_maxtries
+tcpconnect_maxwait=5; export tcpconnect_maxwait
+# alternative DNS:  DNS: googledns recursive.dns.com opendns level3.net symantec
+dnsservers="8.8.8.8\n8.26.56.26\n208.67.222.222\n209.244.0.3\n198.153.192.40";
+# set dnsservers="" to disable alternative dns resolving;
+export dnsservers
+max_time=$(( maximum_experiment_duration_secs - 10 )); export max_time
+max_curl_filesize=$(( 5 * 1024 * 1024 )) ; # a few megabytes
+
+CURL=`which curl`
+if [ $? -eq 1 ]; then
+	echo "ERROR: 'curl' is needed. Please install it and re-run."
+	echo "ERROR:    e.g. in Ubuntu exec as superuser:"
+	echo "ERROR:    apt-get install curl"
+
+	rm -fr "$cleanthisdir"
+	exit 1
+fi
+
+DIG=`which dig`
+if [ $? -eq 1 ]; then
+	use_nslookup=1
+	#	echo "ERROR: 'dig' is needed. Please install it and re-run."
+	#	echo "ERROR:    e.g. in Ubuntu exec as superuser:"
+	#	echo "ERROR:    apt-get install bind-utils"
+
+	#	rm -fr "$cleanthisdir"
+	#	exit 1
+else
+	use_nslookup=0
+fi
+## override: use nslookup anyway
+use_nslookup=1
+
+NC=`which nc`
+if [ $? -eq 1 ]; then
+	echo "ERROR: 'nc' (netcat) is needed. Please install it and re-run."
+	echo "ERROR:    e.g. in Ubuntu exec as superuser:"
+	echo "ERROR:    apt-get install netcat-openbsd"
+
+	rm -fr "$cleanthisdir"
+	exit 1
+fi
+
+# list of utils that will be killed if active_measurement_lock is expired:
+# XXX possible collateral damage. TODO: hardlink in dedicated dir and call with full path
+active_measurement_utils_list="" ; # no processes will be killed
+
+if [ $archive_stdout_stderr -eq 1 ]; then
+	## start logging:
+	exec 6<&1 ; #save stdin
+	exec 7<&2 ; #save stderr
+	if [ $show_stdout_stderr -eq 1 ]; then
+		printf "%s\tINFO: log will be archived\n" "`date`" >&2
+		pipestdout="$cleanthisdir/pipestdout"
+		pipestderr="$cleanthisdir/pipestderr"
+		mkfifo "$pipestdout"
+		mkfifo "$pipestderr"
+		tee "$stdoutlog" < "$pipestdout" & teestdoutpid=$!
+		tee "$stderrlog" < "$pipestderr" & teestderrpid=$!
+
+		exec >  "$pipestdout"
+		exec 2> "$pipestderr"
+	else
+		exec > $stdoutlog
+		exec 2> $stderrlog
+	fi
+fi
+
+	## get Country Code from external GeoIP service:
+	cc=""
+	jsonhostip=""
+	jsonhostip=`curl --max-time 10 http://api.hostip.info/get_json.php`
+	if [ $? -eq 0 ] && [ ! "$jsonhostip" = "" ] ; then
+		# {"country_name":"LATVIA","country_code":"LV","city":"(Unknown city)","ip":"213.21.228.70"}
+		cc=`echo "$jsonhostip"| cut -d\" -f8`
+		clientip=`echo "$jsonhostip"| cut -d\" -f16`
+	else
+		cc=00
+		clientip="127.0.0.1"
+	fi
+
+	## get input file
+	## TODO: use curl -w to output just code without dumping headers
+	## TODO: maybe refactor avoiding code duplication
+	if [ "$clientcc" = "00" ]; then
+		inputcc=$cc;
+	else
+		inputcc=$clientcc;
+	fi
+	inputfile="${inputcc}_${inputcounter}_inputfile.gz"
+	inputurl="$remote_inputfile_path/$inputfile"
+	rm dwnlresult.header > /dev/null 2>&1
+	$CURL --max-time $maximum_service_dwload_time -o "$inputfile" -D dwnlresult.header --url "$inputurl" >&2 ; dwlresult=$?
+	httpcode=`awk 'FNR == 1 {print $2}' dwnlresult.header`
+	rm dwnlresult.header > /dev/null 2>&1
+	if [ ! $dwlresult -eq 0 ] || [ ! $httpcode -eq 200 ]; then
+		if [ ! "$inputcc" = "00" ]; then # maybe external resolver has returned some strange CC, try general inputfile:
+			echo "WARNING error: $dwlresult HTTPcode: $httpcode : downloading input file $inputfile" >&2
+			echo "WARNING trying to get general (not country-specific) inputfile" >&2
+			rm $inputfile > /dev/null 2>&1
+			inputfile="00_${inputcounter}_inputfile.gz"
+			inputurl="$remote_inputfile_path/$inputfile"
+			rm dwnlresult.header > /dev/null 2>&1
+			$CURL --max-time $maximum_service_dwload_time -o "$inputfile" -D dwnlresult.header --url "$inputurl" ; dwlresult=$?
+			httpcode=`awk 'FNR == 1 {print $2}' dwnlresult.header`
+			rm dwnlresult.header > /dev/null 2>&1
+		fi
+		if [ ! $dwlresult -eq 0 ] || [ ! $httpcode -eq 200 ]; then
+			echo ERROR $dwlresult $httpcode: Unable to download input file $inputfile >&2
+			echo ABORTING test. >&2
+			rm -fr "$cleanthisdir"
+			exit 1;
+		else
+			echo INFO GENERAL inputfile $inputfile downloaded. >&2
+		fi
+	else
+		echo INFO inputfile $inputfile downloaded. >&2
+	fi
+
+#from OONI: https://github.com/TheTorProject/ooni-spec/blob/master/test-specs/ts-003-http-requests.md
+listofuseargents="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
+Mozilla/5.0 (iPhone; U; CPU iPhone OS 3 1 2 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Mobile/7D11
+Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Mozilla/5.0 (Windows; U; Windows NT 6.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
+Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)"
+
+
+## bismark functions:
+if [ -e /usr/lib/bismark/functions.inc.sh ]; then
+	echo "loading BISmark functions" >&2
+	. /usr/lib/bismark/functions.inc.sh
+	echo "BISmark functions loaded" >&2
+else
+	echo "FATAL: mutual exclusion lock functions are missing!" >&2
+	exit 42 ; # -------------------------------------------------------------->>
+
+	# NOTE: if we tolerate some interference with other active measurements,
+	#       just go all green:
+	
+	#acquire_active_measurements_lock() { return 0; }
+	#release_active_measurements_lock() { return 0; }
+	#active_measurements_lock_creation_time() { return 1; }
+	#expire_active_measurements_lock() { return 0; }
+fi
+
+## functions:
+
+# return exit value 0 (true) if the string is IPv4 dotted decimal, 1 otherwise:
+isIP4addr() { echo "$1"|awk -F'.' '{if (NF==4 && $1<256 && $2<256 && $3<256 && $4<256) {exit 0} else {exit 1}}'; }
+
+# given a zipfile and keyword, extract stanza based on keyword delimiters, ignoring comments:
+inputzdata() { zcat $1 |awk '/^##@@## '$2' START$/{p=1;next} /^##@@## '$2' STOP$/{p=0} /^#/{next} p'; }
+
+# given a plaintext filename just ignores comments and strips possible DOS endings:
+inputdata() {
+	ext=`echo "$1" | sed -e 's/.*\.\([^.]*\)$/\1/'`;
+	if [ "$ext" = "gz" ]; then CAT=zcat; else CAT=cat; fi;
+	$CAT "$1" | sed 's/\r$//' | grep -v "^#" | rnd_pick $maxtargets;
+}
+
+# waits on a PID, no matter if it's a child or not. Min sleep is 1 for posix.
+waitpid() { while kill -0 $1 >/dev/null 2>&1; do sleep $waitpidtime; done; }
+
+# TAB
+TAB=`printf "\t"`; export TAB ; # handy for awk , cut
+
+# randomly picks N elements from a list in STDIN,
+# if N is not given, shuffles the list, an optional second parameter
+# is used to SEED the pseudorandom generator (if missing, it is
+# seeded with time(seconds), PID and urandom
+rnd_pick() {
+	if [ $# -eq 0 ]; then pick="NR"; else pick=$1;fi
+	if [ $# -lt 2 ]; then 
+		#rnd_seed=$(( `date +%s` + `cut -d" " -f1 /proc/self/stat` + `cat /dev/urandom|tr -dc "0123456789"|head -c 2` ))
+		rnd_seed=$(( `date +%s` + `cut -d" " -f1 /proc/self/stat` ))
+		else rnd_seed=$2;fi
+		awk 'BEGIN{
+			srand('$rnd_seed')}
+			{l[NR]=$0;}
+			END	{if (FNR==0){exit};
+				for (i=1;(i<='$pick' && i<=NR);i++){
+					n=int(rand()*(NR-i+1))+i;
+					print l[n];l[n]=l[i];
+				}
+			}'
+}
+
+##########################
+### Actual tests:
+tcpconnect(){
+	ipaddress=$1; port=$2
+	T=`printf "\t"`; # sub-experiment output separator
+	SOR="##@@##"; # sub-experiment Start Of Output Record delimiter
+	resultsequence=""
+	atleastoneopen=0 ;
+	maxrep=$tcpconnect_maxtries
+	for rep in `seq 1 $tcpconnect_maxtries`; do
+		## Execute:
+		stdOutAndErr=$($NC -n -zvv -w $connect_timeout $ipaddress $port 2>&1);
+		result=$?;
+		echo "$stdOutAndErr" >&2
+		if [ $result -eq 0 ] ; then
+			resultsequence="$resultsequence O"; # Open
+			atleastoneopen=1;
+			break;
+	# v----------'
+		elif echo "$stdOutAndErr" | grep 'Connection refused' ; then
+			resultsequence="$resultsequence R"; # Reset/Refused
+			if [ $rep -eq $maxrep ]; then break; fi
+	# v----------------------------------'
+			waittorepeat=1
+			echo "`date` waiting $waittorepeat seconds..." >&2
+			sleep $waittorepeat
+		elif echo "$stdOutAndErr" | grep 'Connection timed out' ; then
+			resultsequence="$resultsequence T"; # Timeout
+			if [ $rep -eq $maxrep ]; then break; fi
+	# v----------------------------------'
+			waittorepeat=1 ; # just one second (plus $timeout already gone)
+			echo "`date` waiting $waittorepeat seconds..." >&2
+			sleep $waittorepeat
+		else
+			resultsequence="$resultsequence $result"
+			if [ $rep -eq $maxrep ]; then break; fi
+	# v----------------------------------'
+			waittorepeat=`seq 1 $tcpconnect_maxwait | rnd_pick 1 `
+			echo "`date` waiting $waittorepeat seconds..." >&2
+			sleep $waittorepeat
+		fi;
+	done
+	echo "##@@##${T}tcpconnect_sequence${T}$resultsequence" >&2
+	if [ $atleastoneopen -eq 1 ]; then return 0; else return 1; fi
+}
+
+webcontent(){
+	url="$1"
+	subshpid=`cut -d" " -f1 /proc/self/stat`
+	if [ $parallel_rnd_wait_max_secs -gt 1 ]; then
+		waitabit=`seq 1 $parallel_rnd_wait_max_secs | rnd_pick 1`
+		printf "%s\tsubprocess %d\turl: %s : waiting %d seconds...\n" "`date`" "$subshpid" "$url" "$waitabit" >&2
+		sleep $waitabit
+		printf "%s\tsubprocess %d\turl: %s : finished waiting (%d seconds). START.\n" "`date`" "$subshpid" "$url" "$waitabit" >&2
+	fi
+	T=`printf "\t"`; # sub-experiment output separator
+	SOR="##@@##"; # sub-experiment Start Of Output Record delimiter
+	# sub-experiment metadata in form:
+	# "<StartOfoutputRecord> <T> parameter <T> <parameter-name without tabs> <T> <everything from first comma to EOL is value>"
+	
+	# just the hostname (possibly with :port):
+	# https versus http have different hash (and thus codedurl)
+	hostport=`echo "$url" | sed -e 's/^https\?:\/\///' -e 's/^\([^\/]*\).*/\1/' `
+	path=`echo "$url" | sed -e 's/^https\?:\/\///' -e 's/^[^\/]*\(.*\)/\1/' `
+	host=`echo "$hostport" | awk -F: '{print $1}'`
+	port=`echo "$hostport" | awk -F: '{print $2}'`
+	proto=`echo "$url" | awk '/^.*:\/\// {split($0,a,/:\/\//);print a[1]}'`
+	[ "$proto" = "" ] && proto="http"
+	[ "$port" = "" ] && [ "$proto" = "http" ] && port=80
+	[ "$port" = "" ] && [ "$proto" = "https" ] && port=443
+	# 8 char from md5sum of url should be enough to differentiate
+	md5urlcut=`echo -n "$url"|md5sum|cut -c 1-8`
+	codedurl="${hostport}_${md5urlcut}"
+	savedname="${resultspfx}_${codedurl}"
+	resultslog="$savedname".log
+	if [ $use_nslookup -eq 1 ]; then
+		dnsfile="${resultspfx}_${host}".nslookup
+	else
+		dnsfile="${resultspfx}_${host}".dig
+	fi
+	tstry=`date +%s`
+	echo "##@@##${T}clientcc${T}$clientcc" >> "$resultslog"
+	echo "##@@##${T}clientip${T}$clientip" >> "$resultslog"
+	echo "##@@##${T}clientnotes${T}$clientnotes" >> "$resultslog"
+	echo "##@@##${T}cc${T}$cc" >> "$resultslog"
+	echo "##@@##${T}url${T}$url" >> "$resultslog"
+	echo "##@@##${T}codedurl${T}$codedurl" >> "$resultslog"
+	echo "##@@##${T}start-time${T}$tstry" >> "$resultslog"
+
+	trap '	tsend=`date +%s`
+		echo "##@@##${T}end-time${T}$tsend" >> "$resultslog"
+		echo "##@@##${T}termination${T}terminated" >> "$resultslog"
+		printf "%s\tsubprocess %d\turl: %s : forcibly TERMINATED\n" "`date`" "$subshpid" "$url" >&2
+		exit ;
+	' INT TERM HUP
+
+	# Resolve hostname
+	if ! isIP4addr $host ; then
+		if [ $use_nslookup -eq 1 ]; then
+			nslookup $host > "$dnsfile" 2>&1
+			resultdns=$?
+			if [ $resultdns -eq 0 ]; then
+				# takes only IPv4 addresses
+				dnsfirstip=`awk '/^Name:/{a=1} /^Address/ && a {if (match($3,":")){next};print $3; exit}' "$dnsfile"`
+				if [ "$dnsfirstip" = "" ]; then
+					# for debian-like nslookup
+					dnsfirstip=`awk '/^Name:/{a=1} /^Address/ && a {if (match($2,":")){next};print $2; exit}' "$dnsfile"`
+				fi
+				printf "%s\tsubprocess %d\turl: %s : resolved as '%s'\n" "`date`" "$subshpid" "$url" "$dnsfirstip" >&2
+			else
+				dnsfirstip="";
+				printf "%s\tsubprocess %d\turl: %s : ERROR %d from nslookup.\n" "`date`" "$subshpid" "$url" "$resultdns" >&2
+			fi
+			for dserv in `printf "$dnsservers" | rnd_pick`; do
+				nslookup $host $dserv > "${resultspfx}_${host}_${dserv}".nslookupmore 2>&1
+			done
+		else
+			[ ! -e "$dnsfile" ] && $DIG $host > "$dnsfile"
+			resultdns=$?
+			digstatus="`awk '/^;; ->>HEADER<<-/ {gsub(",$","",$6); print $6}' $dnsfile`"
+			if [ "$digstatus" = "NOERROR" ]; then
+				# takes only IPv4 addresses
+				dnsfirstip="`awk '/^;; ANSWER SECTION/ {ans=1} /^$/ && ans {ans=0} ans && $4 == "A" {print $5; exit}' $dnsfile`"
+				printf "%s\tsubprocess %d\turl: %s : resolved as '%s'\n" "`date`" "$subshpid" "$url" "$dnsfirstip" >&2
+			else
+				dnsfirstip="";
+				printf "%s\tsubprocess %d\turl: %s : error %d and status '%s' returned by DIG\n" "`date`" "$subshpid" "$url" "$resultdns" "$digstatus" >&2
+			fi
+			for dserv in `printf "$dnsservers" | rnd_pick`; do
+				dig @$dserv $host  > "${resultspfx}_${host}_${dserv}".digmore 2>&1
+			done
+		fi
+		hostip="$dnsfirstip";
+	else
+		hostip="$host";
+	fi
+	if [ "$hostip" = "" ]; then
+		result=6 ; # code of curl error "could not resolve address"
+		echo "##@@##${T}stop_phase${T}dns" >> "$resultslog"
+	else
+		echo "##@@##${T}hostip${T}$hostip" >> "$resultslog"
+		echo "##@@##${T}tcpconnect_maxtries${T}$tcpconnect_maxtries" >> "$resultslog"
+		echo "##@@##${T}tcpconnect_maxwait${T}$tcpconnect_maxwait" >> "$resultslog"
+		echo "##@@##${T}connect_timeout${T}$connect_timeout" >> "$resultslog"
+
+		tcpconnect $hostip $port >> "$resultslog" 2>&1
+		result=$?
+		if [ ! $result -eq 0 ]; then
+			echo "##@@##${T}stop_phase${T}tcpconnect" >> "$resultslog"
+		else
+			useragent=`echo "$listofuseargents" | rnd_pick 1`
+			echo "##@@##${T}useragent${T}$useragent" >> "$resultslog"
+			echo "##@@##${T}connect-timeout${T}$connect_timeout" >> "$resultslog"
+			echo "##@@##${T}max-time${T}$max_time" >> "$resultslog"
+			echo "##@@##${T}max_curl_filesize${T}$max_curl_filesize" >> "$resultslog"
+			wholecommand="$CURL -q -o ${savedname}.content -D ${savedname}.headers \
+			     -H \"Accept:\" -H \"Accept-Encoding: identity\" \
+			     -H \"User-Agent: $useragent\" \
+			     -H \"Host: $host\" \
+			     --connect-timeout $connect_timeout \
+			     --max-time $max_time \
+			     --max-filesize $max_curl_filesize \
+			     -L -k \
+			     --url \"${proto}://${hostip}:${port}${path}\" \
+			     -s -w \"\
+##@@##\\tcurl_url_effective\\t%{url_effective}\\n\
+##@@##\\tcurl_http_code\\t%{http_code}\\n\
+##@@##\\tcurl_http_connect\\t%{http_connect}\\n\
+##@@##\\tcurl_time_total\\t%{time_total}\\n\
+##@@##\\tcurl_time_namelookup\\t%{time_namelookup}\\n\
+##@@##\\tcurl_time_connect\\t%{time_connect}\\n\
+##@@##\\tcurl_time_appconnect\\t%{time_appconnect}\\n\
+##@@##\\tcurl_time_pretransfer\\t%{time_pretransfer}\\n\
+##@@##\\tcurl_time_redirect\\t%{time_redirect}\\n\
+##@@##\\tcurl_time_starttransfer\\t%{time_starttransfer}\\n\
+##@@##\\tcurl_size_download\\t%{size_download}\\n\
+##@@##\\tcurl_size_upload\\t%{size_upload}\\n\
+##@@##\\tcurl_size_header\\t%{size_header}\\n\
+##@@##\\tcurl_size_request\\t%{size_request}\\n\
+##@@##\\tcurl_speed_download\\t%{speed_download}\\n\
+##@@##\\tcurl_speed_upload\\t%{speed_upload}\\n\
+##@@##\\tcurl_content_type\\t%{content_type}\\n\
+##@@##\\tcurl_num_connects\\t%{num_connects}\\n\
+##@@##\\tcurl_num_redirects\\t%{num_redirects}\\n\
+##@@##\\tcurl_redirect_url\\t%{redirect_url}\\n\
+##@@##\\tcurl_ssl_verify_result\\t%{ssl_verify_result}\\n\" "
+			#echo "$wholecommand" >> $resultslog
+			## try to fetch the resource
+			eval $wholecommand  >> "$resultslog" 2>&1 ; result=$?
+			echo "##@@##${T}stop_phase${T}curl" >> "$resultslog"
+		fi ; # if no tcpconnection to ip:port, else...
+	fi ; # if no ip to check, else...
+	tsend=`date +%s`
+	echo "##@@##${T}end-time${T}$tsend" >> "$resultslog"
+	echo "##@@##${T}return-value${T}$result" >> "$resultslog"
+	echo "##@@##${T}termination${T}normal" >> "$resultslog"
+	printf "%s\tsubprocess %d\turl: %s : terminated normally (duration: %d secs).\n" "`date`" "$subshpid" "$url" "$(( tsend - tstry ))" >&2
+}; # webcontent()
+
+
+tries=1
+while [ $tries -lt $maxlocktries ]; do
+	date >&2
+	echo "expiring previous active locks ..." >&2
+	expire_active_measurements_lock ; # just in case
+	echo "try to acquire active lock ..." >&2
+	if acquire_active_measurements_lock ; then
+		echo "active lock acquired ..." >&2
+		break
+	else
+		echo "FAILING to acquire active lock ..." >&2
+		echo "waiting $waitlock seconds" >&2
+		tries=$(( tries + 1 ))
+		sleep $waitlock
+	fi
+done
+if [ $tries -eq $maxlocktries ]; then
+	echo "WARNING could not acquire Active lock in $maxlocktries tries ( $(( waitlock * maxlocktries )) s)." >&2
+	echo "ABORTING test." >&2
+	exit 42
+fi
+
+#START SCRIPT
+
+if ! [ "$inputfile" = "" ]; then
+	test_start_ts=`date +%s`; export test_start_ts
+	tmp_parameter_passing_file=$cleanthisdir/${PPID}_$$_`date +%s`.tmp
+	export tmp_parameter_passing_file
+	tot_subPIDs=0 ; export tot_subPIDs
+
+	inputdata $inputfile \
+	|  while IFS= read -r line ; do
+		# input file format:
+		# URL
+		printf "%s: processing\t%s\n" "$testname" "$line" >&2
+		printf "%s" "$line" | awk -F"$TAB" '(NF<1)  {exit 1}' || continue;
+	# ^------------------------------------------------------------------'
+		#targip=`printf "%s" "$line" | cut -d"$TAB" -f1`;
+		url="$line"
+
+		webcontent "$url" 2>&1 & last_forked=$!
+		#sweep_subPIDs="$sweep_subPIDs $!"
+		sweep_subPIDs="$last_forked $sweep_subPIDs" ; # checked LIFO
+		tot_subPIDs=$(( tot_subPIDs + 1 ))
+		cat > $tmp_parameter_passing_file <<-EndOfFile
+			sweep_subPIDs="$sweep_subPIDs"
+			tot_subPIDs=$tot_subPIDs
+		EndOfFile
+		#cat $tmp_parameter_passing_file >&2
+	done ; # while reading inputzdata
+
+	[ -e $tmp_parameter_passing_file ] && . $tmp_parameter_passing_file ; # data from within the piped while
+	test_elapsed_secs=0
+	tot_terminated_subPIDs=0
+	tot_stop=0
+	tot_kill=0
+	
+	previous_subPIDs="$sweep_subPIDs"
+	tot_remaining_subPIDs=$tot_subPIDs
+	while [ $tot_remaining_subPIDs -gt 0 ]; do
+		test_elapsed_secs=$((`date +%s` - test_start_ts ))
+		killtype=0 ; # default: do not force termination
+		if [ $test_elapsed_secs -gt $(( maximum_experiment_duration_secs - merciful )) ]; then
+			killtype=1; # graceful
+		fi
+		if [ $test_elapsed_secs -gt $maximum_experiment_duration_secs ]; then
+			killtype=2 ; # kill -9
+		fi
+		remaining_subPID=""
+		tot_remaining_subPIDs=0
+		for id in $previous_subPIDs; do
+			if  kill -0 $id >/dev/null 2>&1 ; then 
+				remaining_subPID="$remaining_subPID $id"
+				tot_remaining_subPIDs=$(( tot_remaining_subPIDs + 1 ))
+				#echo "$testname: subtest $id still running after $test_elapsed_secs secs..." >&2
+				if [ $killtype -eq 2 ]; then
+					kill -9 $id && tot_kill=$(( tot_kill + 1 )) ;
+					#echo "$testname: subtest $id was KILLED after $test_elapsed_secs secs..." >&2
+				elif [ $killtype -eq 1 ] ; then
+					kill $id && tot_stop=$(( tot_stop + 1 )) ;
+					#echo "$testname: subtest $id was TERMINATED after $test_elapsed_secs secs..." >&2
+				fi
+			else
+				tot_terminated_subPIDs=$(( tot_terminated_subPIDs + 1 ))
+				echo "$testname: subtest $id has finished after $test_elapsed_secs secs..." >&2
+			fi
+		done ; ## all remaining subprocesses
+		echo "$testname: $tot_terminated_subPIDs terminated, still $tot_remaining_subPIDs subtests to finish, " >&2
+		echo "$testname: maximum time before stop: $(( $maximum_experiment_duration_secs - $test_elapsed_secs )) seconds." >&2
+		if [ $killtype -eq 0 ]; then
+			sleep $waitpidtime
+		else
+			sleep $(( merciful + 1 ));
+		fi
+		previous_subPIDs="$remaining_subPID"
+	done
+	echo
+	echo "$testname: $tot_terminated_subPIDs subtests processed, $tot_stop stopped of which $tot_kill forcibly terminated, after total $test_elapsed_secs secs..." >&2
+	rm $tmp_parameter_passing_file
+else
+	webcontent $url 2>&1 | tee ${resultspfx}_${url}.log
+fi
+
+# end of critical section. after this just an ftp upload is performed.
+echo "releasing active lock ..." >&2
+if release_active_measurements_lock; then
+	echo "lock released." >&2
+else
+	echo "ERROR $? releasing lock" >&2
+	# weird. let's pretend it never happened.
+fi
+
+if [ $archive_stdout_stderr -eq 1 ]; then
+	# close report files and restore redirected descriptors:
+	exec 1>&- 1>&6
+	exec 2>&- 2>&7
+fi
+
+# post-archiving logging in persistent dir
+# (only if it's ok to leave bytes on the machine)
+if [ $deleteifuploaded -eq 0 ]; then
+	exec > $persistentdir/${common_prefix}.expost.stdout
+	exec 2> $persistentdir/${common_prefix}.expost.stderr
+fi
+	if [ $archive_stdout_stderr -eq 1 ] && [ $show_stdout_stderr -eq 1 ]; then
+		printf "%s\twaiting for stdout pipe to finish writing...\n" "`date`" >&2
+		wait $teestdoutpid
+		rm "$pipestdout"
+		printf "%s\twaiting for stderr pipe to finish writing...\n" "`date`" >&2
+		wait $teestderrpid
+		rm "$pipestderr"
+		printf "%s\t... both done.\n" "`date`" >&2
+	fi
+
+rm $inputfile
+
+# archive results and WARN about where they are.
+cd $persistentdir
+echo "compressing results in `pwd` ..." >&2
+
+if tar -czf $result_test_arch tempdir_${ts} ; then
+	echo "Removing all temporary files and results in $cleanthisdir ..." >&2
+	rm -fr "$cleanthisdir" && echo "... done." >&2 || echo "ERROR $? removing temp files in $cleanthisdir" >&2
+else
+	echo "ERROR $? in creating the archive of results in $cleanthisdir" >&2 ;
+	# TODO optionally remove everything to avoid piling-up garbage
+	rm -fr "$cleanthisdir" && echo "... done." >&2 || echo "ERROR $? removing temp files in $cleanthisdir" >&2
+	echo "ABORT." >&2 ; exit 111;
+fi
+{ echo ; echo "results in $result_test_arch"; } >&2
+
+	#send results to server
+	{ echo; echo "Uploading of results to the server..." ; } >&2
+if $CURL --user ftpuser:hobbitftp1 \
+		--max-time $maximum_service_upload_time \
+		-T $result_test_arch $ftp >&2 ;
+	then echo "Results SUCCESSFULLY uploaded to the server."  >&2
+	else echo "Upload of results FAILED. "  >&2
+fi
+
+echo "Removing result file $result_test_arch ..." >&2
+if rm -fr "$result_test_arch" >&2
+	then echo "removed." >&2
+	else echo "Error $? removing result file. This may be BAD." >&2
+fi
