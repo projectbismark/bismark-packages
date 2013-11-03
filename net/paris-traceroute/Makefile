@@ -26,7 +26,7 @@ define Package/paris-traceroute
   CATEGORY:=Network
   TITLE:=Paris Traceroute
   URL:=http://www.paris-traceroute.net/
-  DEPENDS:=+libpthread +libstdcpp
+  DEPENDS:=+libpthread +uclibcxx
 endef
 
 define Package/paris-traceroute/description
