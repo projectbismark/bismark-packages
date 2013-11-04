@@ -10,14 +10,14 @@ else
 	if [ "x$1" == "x-d" ]; then
 		. /usr/lib/bismark/functions.inc.sh
 		if [ -z "$REGISTRATION_MAX_SPLAY" ]; then
-			REGISTRATION_MAX_SPLAY=60
+			REGISTRATION_MAX_SPLAY=30
 		fi
 		sleep $(random 0 $REGISTRATION_MAX_SPLAY)
 	fi
 	# No token
 	url=$(awk '$1 == "GatewayName" { print $2 }' /etc/nodogsplash/nodogsplash.conf)
 	if curl -f -m 600 -o /dev/null $url; then
-		/etc/init.d/nodogsplash restart
+		/etc/init.d/nodogsplash start
 	else
 		/etc/init.d/nodogsplash stop
 	fi
