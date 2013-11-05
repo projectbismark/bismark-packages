@@ -177,9 +177,16 @@ measure_site()
     # command line (thought it was additional urls for testing, so the
     # output format is being piped into curl
     remoteIPLocalPort=$($measure_web_performance $1 $output_file ${pageoutput}.html ${pageoutput}.headers)
-    #now get the connection information
-    connectID=$(grep "$remoteIPLocalPort" /proc/web100/*/spec-ascii | awk 'BEGIN {FS ="/";} {print $4}')
-    $read_conn_stats $connectID >> ${pageoutput}.stats
+    # now get the connection information
+    # Note: this retuns a 0 if there is a match, a 1 otherwise
+    # so to avoid using an unset variable, we only read the connection
+    # stats if there was a match
+    if [ "" != "$remoteIPLocalPort" ]; then
+	connectID=$(grep -l "$remoteIPLocalPort" /proc/web100/*/spec-ascii | awk 'BEGIN {FS ="/";} {print $4}')
+	if [ $? ]; then
+	    $read_conn_stats $connectID >> ${pageoutput}.stats
+	fi
+    fi
     echo "<file_name>$2</file_name>" >> $output_file
     echo "</site>" >> $output_file
 }
@@ -231,7 +238,7 @@ run_measurements()
             create_random_url_list
             #set the max index size to the length of the list
             max_index_size=$(awk 'END{print NR}' $input_file)
-        fi
+	fi
     fi
     #if data_usage does not exist, then reset it to 0
     if [ "$data_usage" = "" ]; then
@@ -280,14 +287,14 @@ run_measurements()
             echo index="$index" > $index_file
             echo data_usage="$data_usage" >> $index_file
             echo max_index_size="$max_index_size" >> $index_file
-            #finalize the xml page
-            echo "</censorship-performance-measurements>" >> $output_file
+	    #finalize the xml page
+	    echo "</censorship-performance-measurements>" >> $output_file
             upload_data
 
         else
             #if we don't acquire, then just quit
             expire_active_measurements_lock
-        fi
+	fi
     fi
 
 }

@@ -128,9 +128,12 @@ int close_socket_func(void * clientP, curl_socket_t item){
     if(localPort != 0 && strcmp(remoteIP, "") != 0){
         // deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
         if(data->printedData ==1){
-            printf("or ");
+            printf("\\|");
         }
-        printf("(src port %u and dst host %s) ", localPort, remoteIP);
+	// used for grep of spec-ascii file in /proc/web100/*/spec-ascii
+	// spec-ascii has the format localIP:localPort remoteIP:remotePort
+	// Therefore, this format will allow us to match the correct spec-ascii file
+        printf(":%u\\ %s", localPort, remoteIP);
         data->printedData = 1;
     }
     shutdown((int) item, SHUT_RDWR);
