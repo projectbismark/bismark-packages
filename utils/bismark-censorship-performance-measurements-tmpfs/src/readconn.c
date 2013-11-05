@@ -87,8 +87,8 @@ int main(int argc, char *argv[])
 	    web100_snapshot_free(snap);
 	    group = web100_group_next(group);
 	}
-    web100_detach(agent);
     }
+    web100_detach(agent);
     printf("\n");
     return 0;
 }
