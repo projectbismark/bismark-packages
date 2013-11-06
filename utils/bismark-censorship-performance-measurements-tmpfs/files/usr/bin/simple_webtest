@@ -88,9 +88,6 @@ dload_url_list()
 cleanup()
 {
     echo "Cleaning up"
-    #make sure that we kill tcpdump
-    killID=$(pgrep tcpdump) && kill -SIGINT $killID
-
     #delete any file or directory which has http in the name
     cd $persistent_dir
     [ -n "$persistent_dir" ] && rm -rf ${persistent_dir}/*http*
@@ -172,7 +169,6 @@ measure_site()
     local pageoutput=${output_dir}/${2}
     echo "<site url=$1>" >> $output_file
     echo "<timestamp>$(date +%s)</timestamp>" >> $output_file
-    echo "<tcpdump_file>$2.pcap</tcpdump_file>" >> $output_file
     # Note: curl would not accept my output format directly on the
     # command line (thought it was additional urls for testing, so the
     # output format is being piped into curl
