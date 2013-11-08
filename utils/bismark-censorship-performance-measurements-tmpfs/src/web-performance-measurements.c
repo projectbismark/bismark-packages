@@ -36,7 +36,7 @@ int main(int argc, char * argv[]){
     data.printedData = 0;
     CURL * handle;
     FILE * xmlFile, *htmlFile, *headerFile;
-    char site[100] = "http://\0";
+    char site[100] = "http://";
     int curlReturnValue;
 
     // get command line arguments and print out errors
@@ -124,8 +124,9 @@ int close_socket_func(void * clientP, curl_socket_t item){
             inet_ntop(AF_INET6,(void *) &(addr6->sin6_addr), remoteIP, sizeof(remoteIP));
         }
     }
-    fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
     if(localPort != 0 && strcmp(remoteIP, "") != 0){
+	fprintf(data->xmlFile, "<remote_ip>%s</remote_ip>\n", remoteIP);
+
         // deal with the case that we use multiple tcp connections-> have tcpdump track all of these ports
         if(data->printedData ==1){
             printf("\\|");

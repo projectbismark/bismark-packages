@@ -64,7 +64,7 @@ setup()
     fi
 
     #if the router is in the us, then increase the data cap
-    grep -qF $DEVICE_ID $us_router_list && dload_usage_target_bytes=$(expr 30 \* 1024) #30k
+    grep -qF $DEVICE_ID $us_router_list && dload_usage_target_bytes=$(expr 30 \* 1024) || dload_usage_target_bytes=$(expr 10 \* 1024)
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
@@ -78,7 +78,7 @@ dload_url_list()
     local download_url=${url_dload_address}/${DEVICE_ID}.txt
     echo $download_url
     #silently download the file, limiting the download to 
-    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time 60 || (cleanup; exit 1)
+    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time 60 || (cleanup; echo "Could not download url list" 1>&2; exit 1)
 }
 
 
@@ -290,7 +290,7 @@ run_measurements()
         else
             #if we don't acquire, then just quit
             expire_active_measurements_lock
-	fi
+        fi
     fi
 
 }
