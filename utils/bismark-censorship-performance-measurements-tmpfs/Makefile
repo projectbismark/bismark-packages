@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-censorship-performance-measurements-tmpfs
-PKG_VERSION:=0.7
+PKG_VERSION:=0.8
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -27,6 +27,8 @@ define Package/bismark-censorship-performance-measurements-tmpfs/install
 	$(INSTALL_BIN) ./files/usr/bin/simple_webtest $(1)/usr/bin/censorship-performance-measurements-http
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/measure-web-performance $(1)/usr/bin/measure-web-performance
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/get-web100-stats $(1)/usr/bin/get-web100-stats
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/web10g_request $(1)/usr/bin/web10g_request
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/web10g_receive $(1)/usr/bin/web10g_receive
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements.crontab $(1)/etc/censorship-performance-measurements.crontab
 	$(INSTALL_DIR) $(1)/etc/censorship-performance-measurements

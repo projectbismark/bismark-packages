@@ -5,6 +5,7 @@ CC ?= gcc
 WEB100_CFLAGS = -c -I../web100_userland-1.8/lib -I. -g
 WEB100_LDFLAGS = -L../web100_userland-1.8/lib/.libs -lweb100
 CURL_LDFLAGS += -lcurl -lssl -lcrypto -lz 
+WEB10G_LDFLAGS = -lmnl
 
 all: release
 
@@ -12,7 +13,15 @@ release: CFLAGS += -c -O3 -DNDEBUG
 release: measure-web-performance get-web100-stats 
 
 debug: CFLAGS += -g
-debug: measure-web-performance get-web100-stats 
+debug: measure-web-performance get-web100-stats
+
+web10g_request:  web10g_request.c tcp_estats_resolve.c
+	$(CC) $(CFLAGS) web10g_request.c tcp_estats_resolve.c -o web10g_request.o
+	$(CC) $(LDFLAGS) $(WEB10G_LDFLAGS) web10g_request.o -o web10g_request
+
+web10g_receive: web10g_receive.c tcp_estats_resolve.c tcp_estats_var.c	
+        $(CC) $(CFLAGS) web10g_receive.c tcp_estats_resolve.c tcp_estats_var.c -o web10g_receive.o
+        $(CC) $(LDFLAGS) $(WEB10G_LDFLAGS) web10g_receive.o -o web10g_receive
 
 measure-web-performance: web-performance-measurements.c
 	$(CC) $(CFLAGS) web-performance-measurements.c -o web-performance-measurements.o
@@ -23,4 +32,4 @@ get-web100-stats: readconn.c
 	$(CC) readconn.o $(LDFLAGS) $(WEB100_LDFLAGS) -o get-web100-stats
 	
 clean:
-	rm -f readconn.o web-performance-measurements.o measure-web-performance get-web100-stats
+	rm -f *.o measure-web-performance get-web100-stats web10g_request web10g_receive
