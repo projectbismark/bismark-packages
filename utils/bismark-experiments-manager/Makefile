@@ -18,7 +18,7 @@ define Package/bismark-experiments-manager
 	CATEGORY:=Utilities
 	TITLE:=Track and intstall experiments for the Bismark platform
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-data-transmit +bismark-lua +bismark-mgmt +libuci-lua
+	DEPENDS:=+bismark-cron +bismark-data-transmit +bismark-lua +bismark-mgmt +libuci-lua
 endef
 
 define Package/bismark-experiments-manager/description

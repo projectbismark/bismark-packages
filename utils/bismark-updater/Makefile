@@ -18,7 +18,7 @@ define Package/bismark-updater
 	CATEGORY:=Utilities
 	TITLE:=tmpfs-aware OpenWRT package updater
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-data-transmit +bismark-lua +bismark-mgmt
+	DEPENDS:=+bismark-cron +bismark-data-transmit +bismark-lua +bismark-mgmt
 endef
 
 define Package/bismark-updater/description

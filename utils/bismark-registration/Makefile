@@ -18,7 +18,7 @@ define Package/bismark-registration
 	CATEGORY:=Utilities
 	TITLE:=BISmark registration utility
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-chrome +bismark-lua +nodogsplash +libcurl
+	DEPENDS:=+bismark-chrome +bismark-cron +bismark-lua +nodogsplash +libcurl
 endef
 
 define Package/bismark-registration/description
