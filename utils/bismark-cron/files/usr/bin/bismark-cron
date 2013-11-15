@@ -37,7 +37,7 @@ if diff -q $old_crontab $new_crontab; then
 fi
 
 # Sanity check: make sure bismark-cron will run again.
-if ! grep -q 'bismark-cron' $new_crontab; then
+if ! grep -q '/usr/bin/bismark-cron' $new_crontab; then
     echo 'bismark-cron not found in new crontab!' >&2
     exit 1
 fi
