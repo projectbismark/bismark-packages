@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
-PKG_VERSION:=v26
+PKG_VERSION:=v27
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -42,34 +42,14 @@ define Package/bismark-active-tmpfs/install
 	$(CP) -p $(PKG_BUILD_DIR)/scripts/* $(1)/usr/bin/
 	$(CP) -p $(PKG_BUILD_DIR)/lib/* $(1)/usr/lib/bismark/
 	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/bismark/
-endef
-
-define Package/bismark-active-tmpfs/preinst
-#!/bin/sh
-# Bismark active-tmpfs pre-install script: clear crontab
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	crontab -l | grep -sv bismark-measure-wrapper | sort -u | crontab -
-	/etc/init.d/cron restart
-fi
-endef
-
-define Package/bismark-active-tmpfs/prerm
-$(call Package/bismark-active-tmpfs/preinst)
+	$(INSTALL_DIR) $(1)/etc/cron.d
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/cron.d/bismark-active-tmpfs $(1)/etc/cron.d/bismark-active-tmpfs
 endef
 
 define Package/bismark-active-tmpfs/postinst
 #!/bin/sh
-# Bismark active-tmpfs post-install script
-
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	(crontab -l; echo "*/1  * * * * /tmp/usr/bin/bismark-measure-wrapper  # remove on reboot") | sort -u > /tmp/bismark-crontab
-	if ! cmp -s /etc/crontabs/root /tmp/bismark-crontab; then
-		crontab /tmp/bismark-crontab
-	fi
-	rm /tmp/bismark-crontab
-	/etc/init.d/cron restart
 	bismark-action scriptupdate
-	#$${IPKG_INSTROOT}/usr/bin/bismark-bootstrap
 fi
 endef
 
