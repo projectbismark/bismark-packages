@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-health
 PKG_VERSION:=1
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,7 +18,7 @@ define Package/bismark-health
 	CATEGORY:=Utilities
 	TITLE:=Generate periodic health reports for BISmark routers.
 	URL:=http://www.projectbismark.net
-	DEPENDS:=+bismark-data-transmit
+	DEPENDS:=+bismark-data-transmit +bismark-cron
 endef
 
 define Package/bismark-health/description
@@ -32,8 +32,8 @@ endef
 define Package/bismark-health/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/bismark-health $(1)/usr/bin/bismark-health
-	$(INSTALL_DIR) $(1)/etc/crontabs.d
-	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-health $(1)/etc/crontabs.d/bismark-health
+	$(INSTALL_DIR) $(1)/etc/cron.d
+	$(INSTALL_DATA) ./files/etc/cron.d/bismark-health $(1)/etc/cron.d/bismark-health
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-health $(1)/etc/uci-defaults/bismark-health
 endef
@@ -48,7 +48,6 @@ endef
 
 define Package/bismark-health/prerm
 #!/bin/sh
-crontab -l | grep -sFv -f /etc/crontabs.d/bismark-health | sort -u | crontab -
 endef
 
 $(eval $(call BuildPackage,bismark-health))
