@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-registration
 PKG_VERSION:=1
-PKG_RELEASE:=9
+PKG_RELEASE:=10
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -47,8 +47,8 @@ define Package/bismark-registration/install
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) ./files/www/cgi-bin/register-verify $(1)/www/cgi-bin/register-verify
 	$(INSTALL_BIN) ./files/www/cgi-bin/register-macaddress $(1)/www/cgi-bin/register-macaddress
-	$(INSTALL_DIR) $(1)/etc/crontabs.d
-	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-registration $(1)/etc/crontabs.d/bismark-registration
+	$(INSTALL_DIR) $(1)/etc/cron.d
+	$(INSTALL_DATA) ./files/etc/cron.d/bismark-registration $(1)/etc/cron.d/bismark-registration
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-authn $(1)/etc/uci-defaults/bismark-authn
 endef
@@ -63,7 +63,6 @@ endef
 
 define Package/bismark-registration/prerm
 #!/bin/sh
-crontab -l | grep -sFv -f /etc/crontabs.d/bismark-registration | sort -u | crontab -
 /etc/init.d/bismark-authn-check disable
 endef
 
