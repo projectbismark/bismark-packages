@@ -26,17 +26,6 @@ fi
 # Remove lines belonging to bismark-cron.
 grep -v "# ${suffix}\$" $old_crontab > $new_crontab
 
-# Sanity check: bismark-cron itself should be in the crontab.
-if [ "$(wc -l < ${old_crontab})" -eq '0' ]; then
-    echo 'There must be at least one line in the old crontab.' >&2
-    echo '(For bismark-cron itself.)' >&2
-    exit 1
-elif [ "$(wc -l < ${new_crontab})" -eq '0' ]; then
-    echo 'There must be at least one line in the new crontab.' >&2
-    echo '(For bismark-cron itself.)' >&2
-    exit 1
-fi
-
 # Append lines from crontab directories to the new cron.
 find /etc/cron.d /tmp/etc/cron.d -type f |              # Find all crontabs.
         xargs awk "{ print \$0, \" # ${suffix}\" }" |   # Add comment on each line.
