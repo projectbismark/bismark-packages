@@ -38,8 +38,8 @@ define Package/bismark-experiments-manager/install
 	$(INSTALL_BIN) ./files/usr/bin/setup-and-teardown-experiments $(1)/usr/bin/setup-and-teardown-experiments
 	$(INSTALL_BIN) ./files/usr/bin/merge-experiments $(1)/usr/bin/merge-experiments
 	$(INSTALL_BIN) ./files/usr/bin/bismark-experiments-manager $(1)/usr/bin/bismark-experiments-manager
-	$(INSTALL_DIR) $(1)/etc/crontabs.d
-	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-experiments-manager $(1)/etc/crontabs.d/bismark-experiments-manager
+	$(INSTALL_DIR) $(1)/etc/cron.d
+	$(INSTALL_DATA) ./files/etc/cron.d/bismark-experiments-manager $(1)/etc/cron.d/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/etc/init.d/bismark-experiments-manager $(1)/etc/init.d/bismark-experiments-manager
 	$(INSTALL_DIR) $(1)/etc/config
@@ -58,7 +58,6 @@ endef
 
 define Package/bismark-experiments-manager/prerm
 #!/bin/sh
-crontab -l | grep -sFv -f /etc/crontabs.d/bismark-experiments-manager | sort -u | crontab -
 /etc/init.d/bismark-experiments-manager disable
 endef
 
