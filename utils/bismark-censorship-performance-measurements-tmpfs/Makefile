@@ -6,45 +6,88 @@ PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/bismark-censorship-performance-measurements-tmpfs
-   SECTION:=utils
-   CATEGORY:=Utilities
-   TITLE:=Examine performance differences between countries to attempt to infer censorship
-   DEPENDS:=+bismark-mgmt +bismark-netexp +netcat +web100_userland
-endef
-
-define Package/bismark-censorship-performance-measurements-tmpfs/description
-   Look at the web performance of a few sites in several countries across the globe
-endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./src/* $(PKG_BUILD_DIR)
 endef
 
-define Package/bismark-censorship-performance-measurements-tmpfs/install
+define Build/Compile
+	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" $(MAKE_FLAGS) web100 || true
+	$(MAKE_VARS) $(MAKE) -C "$(PKG_BUILD_DIR)" $(MAKE_FLAGS) web10g || true
+endef
+
+define Package/bismark-censorship-performance-measurements-tmpfs-quirm/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/simple_webtest $(1)/usr/bin/censorship-performance-measurements-http
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/measure-web-performance $(1)/usr/bin/measure-web-performance
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/get-web100-stats $(1)/usr/bin/get-web100-stats
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/web10g_request $(1)/usr/bin/web10g_request
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/web10g_receive $(1)/usr/bin/web10g_receive
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements.crontab $(1)/etc/censorship-performance-measurements.crontab
 	$(INSTALL_DIR) $(1)/etc/censorship-performance-measurements
 	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements/usRouters.txt $(1)/etc/censorship-performance-measurements/usRouters.txt
 endef
 
-define Package/bismark-censorship-performance-measurements-tmpfs/postinst
+define Package/bismark-censorship-performance-measurements-tmpfs-lancre/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./files/usr/bin/simple_webtest $(1)/usr/bin/censorship-performance-measurements-http
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/measure-web-performance $(1)/usr/bin/measure-web-performance
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/get-web10g-stats $(1)/usr/bin/get-web10g-stats
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements.crontab $(1)/etc/censorship-performance-measurements.crontab
+	$(INSTALL_DIR) $(1)/etc/censorship-performance-measurements
+	$(INSTALL_DATA) ./files/etc/censorship-performance-measurements/usRouters.txt $(1)/etc/censorship-performance-measurements/usRouters.txt
+endef
+
+define Package/bismark-censorship-performance-measurements-tmpfs-quirm/postinst
 #!/bin/sh
 crontab -l | cat - /tmp/etc/censorship-performance-measurements.crontab | sort -u | crontab -
 mkdir -p /tmp/censorship-performance-measurements
 endef
 
-define Package/bismark-censorship-performance-measurements-tmpfs/prerm
+define Package/bismark-censorship-performance-measurements-tmpfs-lancre/postinst
+#!/bin/sh
+crontab -l | cat - /tmp/etc/censorship-performance-measurements.crontab | sort -u | crontab -
+mkdir -p /tmp/censorship-performance-measurements
+endef
+
+define Package/bismark-censorship-performance-measurements-tmpfs-quirm/prerm
 #!/bin/sh
 crontab -l | grep -sFv -f /tmp/etc/censorship-performance-measurements.crontab | crontab -
 rm -rf /tmp/censorship-performance-measurements
 endef
 
-$(eval $(call BuildPackage,bismark-censorship-performance-measurements-tmpfs))
+define Package/bismark-censorship-performance-measurements-tmpfs-lancre/prerm
+#!/bin/sh
+crontab -l | grep -sFv -f /tmp/etc/censorship-performance-measurements.crontab | crontab -
+rm -rf /tmp/censorship-performance-measurements
+endef
+
+define Package/bismark-censorship-performance-measurements-tmpfs-quirm
+   SECTION:=utils
+   CATEGORY:=Utilities
+   TITLE:=Examine performance differences between countries to attempt to infer censorship
+   DEPENDS:=web100_userland +bismark-mgmt +bismark-netexp +netcat
+   PROVIDES:=bismark-censorship-performance-measurements-tmpfs
+endef
+
+define Package/bismark-censorship-performance-measurements-tmpfs-quirm/description
+   Look at the web performance of a few sites in several countries across the globe
+endef
+
+$(eval $(call BuildPackage,bismark-censorship-performance-measurements-tmpfs-quirm))
+
+define Package/bismark-censorship-performance-measurements-tmpfs-lancre
+   SECTION:=utils
+   CATEGORY:=Utilities
+   TITLE:=Examine performance differences between countries to attempt to infer censorship
+   DEPENDS:=kmod-tcp-estats-nl +bismark-mgmt +bismark-netexp +netcat +libmnl
+   PROVIDES:=bismark-censorship-performance-measurements-tmpfs
+endef
+
+define Package/bismark-censorship-performance-measurements-tmpfs-lancre/description
+   Look at the web performance of a few sites in several countries across the globe
+endef
+
+$(eval $(call BuildPackage,bismark-censorship-performance-measurements-tmpfs-lancre))
+
