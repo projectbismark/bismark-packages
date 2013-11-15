@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_VERSION:=v12
+PKG_VERSION:=v13
 PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -18,7 +18,7 @@ define Package/bismark-mgmt
 	TITLE:=Broadband Internet Service benchMARK
 	URL:=http://projectbismark.net/
 	MAINTAINER:=Bismark Development List <bismark-devel@projectbismark.net>
-	DEPENDS:=+netcat +curl +ntpclient
+	DEPENDS:=+netcat +curl +ntpclient +bismark-cron
 endef
 
 define Package/bismark-mgmt/description
@@ -33,10 +33,11 @@ define Package/bismark-mgmt/install
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/authorized_keys $(1)/etc/bismark/authorized_keys
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark.conf $(1)/etc/bismark/bismark.conf
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/crontab $(1)/etc/bismark/crontab
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/known_hosts $(1)/etc/bismark/known_hosts
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark_key $(1)/etc/bismark/bismark_key
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark_key.pub $(1)/etc/bismark/bismark_key.pub
+	$(INSTALL_DIR) $(1)/etc/cron.d
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/cron.d/bismark-mgmt $(1)/etc/cron.d/bismark-mgmt
 	$(INSTALL_DIR) $(1)/etc/ssl/certs
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/ssl/certs/gd_int.crt $(1)/etc/ssl/certs/gd_int.crt
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/ssl/certs/gd_root.crt $(1)/etc/ssl/certs/gd_root.crt
@@ -77,7 +78,6 @@ fi
 endef
 
 define Package/bismark-mgmt/prerm
-grep -sFv -f /etc/bismark/crontab /etc/crontabs/root | sort -u | crontab -
 cp /root/.ssh/known_hosts /tmp/known_hosts
 grep -sFv -f /etc/bismark/known_hosts /tmp/known_hosts | sort -u > /root/.ssh/known_hosts
 endef
