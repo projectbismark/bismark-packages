@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-cron
-PKG_VERSION:=4
+PKG_VERSION:=5
 PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -37,15 +37,13 @@ define Package/bismark-cron/install
 	$(INSTALL_DATA) ./files/etc/crontabs.d/bismark-cron $(1)/etc/crontabs.d/bismark-cron
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/etc/init.d/bismark-cron $(1)/etc/init.d/bismark-cron
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/etc/uci-defaults/bismark-cron $(1)/etc/uci-defaults/bismark-cron
 endef
 
 define Package/bismark-cron/postinst
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	/etc/uci-defaults/bismark-cron
-	rm /etc/uci-defaults/bismark-cron
+	/etc/init.d/bismark-cron enable
+	/etc/init.d/bismark-cron boot
 fi
 endef
 
