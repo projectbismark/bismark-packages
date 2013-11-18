@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	    web100_var      *var;
 	    web100_snapshot *snap;
 
-	    printf("Group \"%s\"\n", web100_get_group_name(group));
+	    web100_get_group_name(group);
 
 	    if ((snap = web100_snapshot_alloc(group, conn)) == NULL) {
 		web100_detach(agent);
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 		    exit(EXIT_FAILURE);
 		}
 
-		printf("%-20s %s\n", web100_get_var_name(var),
+		printf("%s=%s\n", web100_get_var_name(var),
 		       web100_value_to_text(web100_get_var_type(var), buf));
 		var = web100_var_next(var);
 	    }
