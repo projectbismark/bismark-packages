@@ -1,2 +1,2 @@
 #!/bin/sh
-/etc/init.d/bismark-experiments-manager enable
+/etc/init.d/bismark-experiments-manager enable || true
