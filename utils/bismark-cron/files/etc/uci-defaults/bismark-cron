@@ -10,4 +10,4 @@ while ! crontab -l | grep -q -Ff /etc/crontabs.d/bismark-cron; do
     fi
 done
 
-/etc/init.d/bismark-cron enable
+/etc/init.d/bismark-cron enable || true
