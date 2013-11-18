@@ -14,7 +14,8 @@ max_curl_filesize_bytes=$((750 * 1024)) # 750k
 dload_usage_target_bytes=$(expr 10 \* 1024) #10k
 us_router_list="/tmp/etc/censorship-performance-measurements/usRouters.txt"
 measure_web_performance="/tmp/usr/bin/measure-web-performance"
-read_conn_stats="/tmp/usr/bin/get-web100-stats"
+get_web10g_stats="/tmp/usr/bin/get-web10g-stats"
+get_web100_stats="/tmp/usr/bin/get-web100-stats"
 alpha=$(awk 'END { print 1 / 6 }' </dev/null) # this is a constant which weights how important the old data usage was
 
 . /etc/bismark/bismark.conf
@@ -34,6 +35,16 @@ setup()
     timestamp=$(date +%s)
     test_start_time=$timestamp
 
+    # in case we had to install any dependencies, link to the library directory on tmp
+    export LD_LIBRARY_PATH=LD_LIBRARY_PATH:/tmp/usr/lib
+    
+    #if we are on lancre, then insert the required tcp module into the kernel
+    local kernelVer=$(uname -r)
+    if [ "$kernelVer" == "3.3.8" ]; then
+	#if needed, insert the kernel module
+	lsmod | grep -q tcp_estats_nl || insmod tcp_estats_nl
+    fi
+
     #find the device ID, aka the mac address
     if [ -e /etc/bismark/ID ]; then
         DEVICE_ID=$(cat /etc/bismark/ID)
@@ -51,7 +62,7 @@ setup()
     output_file_rel_name=http_results_${DEVICE_ID}_${timestamp}.txt
     output_file=${output_dir}/${output_file_rel_name}
     echo "<?xml version="3.0" encoding="UTF-8" standalone="yes"?>" > $output_file
-    echo "<censorship-performance-measurements version='1.0'>"  >> $output_file
+    echo "<censorship-performance-measurements version='1.1'>"  >> $output_file
     echo "<info deviceid=$DEVICE_ID/>" >> $output_file
 
     upload_dir=/tmp/bismark-uploads/censorship-performance/
@@ -65,6 +76,7 @@ setup()
 
     #if the router is in the us, then increase the data cap
     grep -qF $DEVICE_ID $us_router_list && dload_usage_target_bytes=$(expr 30 \* 1024) || dload_usage_target_bytes=$(expr 10 \* 1024)
+
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
@@ -78,7 +90,7 @@ dload_url_list()
     local download_url=${url_dload_address}/${DEVICE_ID}.txt
     echo $download_url
     #silently download the file, limiting the download to 
-    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time 60 || (cleanup; echo "Could not download url list" 1>&2; exit 1)
+    curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time 60 || (cleanup; echo "Error downloading the url list" 1>&2; exit 1)
 }
 
 
@@ -167,6 +179,7 @@ measure_site()
     cd $output_dir
     #create a filename to store the html and headers in- just the name of the website
     local pageoutput=${output_dir}/${2}
+    local tempFile=${output_dir}/${2}.tmp
     echo "<site url=$1>" >> $output_file
     echo "<timestamp>$(date +%s)</timestamp>" >> $output_file
     # Note: curl would not accept my output format directly on the
@@ -178,9 +191,24 @@ measure_site()
     # so to avoid using an unset variable, we only read the connection
     # stats if there was a match
     if [ "" != "$remoteIPLocalPort" ]; then
-	connectID=$(grep -l "$remoteIPLocalPort" /proc/web100/*/spec-ascii | awk 'BEGIN {FS ="/";} {print $4}')
-	if [ $? ]; then
-	    $read_conn_stats $connectID >> ${pageoutput}.stats
+	# Note: since this script supports both quirm and lancre
+	# versions of BISmark, we need to select whether to use web100
+	# or web10g depending on the kernel version
+	local kernelVer=$(uname -r)
+	# this is the lancre version
+	if [ "$kernelVer" == "3.3.8" ]; then
+	    $get_web10g_stats -l -f "$tempFile"
+	    local connectIDs=$(cat $tempFile | grep "$remoteIPLocalPort" | awk '{print $2}')
+	    rm -rf $tempFile
+	    #get stats on the connections
+	    for cid in $connectIDs; do
+		$get_web10g_stats -c $cid -f ${pageoutput}.stats
+	    done
+	else
+	    connectID=$(grep -l "$remoteIPLocalPort" /proc/web100/*/spec-ascii | awk 'BEGIN {FS ="/";} {print $4}')
+	    if [ $? ]; then
+		$get_web100_stats $connectID >> ${pageoutput}.stats
+	    fi
 	fi
     fi
     echo "<file_name>$2</file_name>" >> $output_file
@@ -301,6 +329,12 @@ main()
     setup
     run_measurements
     cleanup
+    #if we are on lancre, then remove the required tcp module from the kernel
+    local kernelVer=$(uname -r)
+    if [ "$kernelVer" == "3.3.8" ]; then
+        (lsmod | grep -q tcp_estats_nl && rmmod tcp_estats_nl) || echo "Kernel module not rmmoded"
+    fi
+
 }
 
 main

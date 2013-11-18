@@ -134,7 +134,7 @@ int close_socket_func(void * clientP, curl_socket_t item){
 	// used for grep of spec-ascii file in /proc/web100/*/spec-ascii
 	// spec-ascii has the format localIP:localPort remoteIP:remotePort
 	// Therefore, this format will allow us to match the correct spec-ascii file
-        printf(":%u\\ %s", localPort, remoteIP);
+        printf("%u\\ %s", localPort, remoteIP);
         data->printedData = 1;
     }
     shutdown((int) item, SHUT_RDWR);

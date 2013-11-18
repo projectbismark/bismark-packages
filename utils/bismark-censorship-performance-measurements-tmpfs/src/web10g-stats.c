@@ -491,13 +491,15 @@ int main(int argc, char *argv[])
 	exit(EXIT_FAILURE);
     }
     
-    ret = mnl_cb_run(sendBuf, ret, seq, portid, NULL, NULL);
+    // this function does not appear to do anything-> it calls a callback function which is set to NULL?
+    /*    ret = mnl_cb_run(sendBuf, ret, seq, portid, NULL, NULL);
     
     if (ret == -1) {
 	perror("mnl_cb_run");
 	exit(EXIT_FAILURE);
     }
-    
+    */
+
     mnl_socket_close(sender);
     
     // setup the data structure to receive data
@@ -506,8 +508,8 @@ int main(int argc, char *argv[])
     
     // receive the data back from the kernel
     while (1) {
-	timeout.tv_sec = 3;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 100;
 	
 	FD_ZERO(&fds);
 	FD_SET(recvFd, &fds);

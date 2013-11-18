@@ -33,4 +33,4 @@ get-web100-stats: readconn.c
 	$(CC) readconn.o $(LDFLAGS) $(WEB100_LDFLAGS) -o get-web100-stats
 	
 clean:
-	rm -f *.o measure-web-performance get-stats 
+	rm -f *.o measure-web-performance get-web100-stats get-web10g-stats
