@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_VERSION:=v11
+PKG_VERSION:=v15
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -18,7 +18,7 @@ define Package/bismark-mgmt
 	TITLE:=Broadband Internet Service benchMARK
 	URL:=http://projectbismark.net/
 	MAINTAINER:=Bismark Development List <bismark-devel@projectbismark.net>
-	DEPENDS:=+netcat +curl +ntpclient
+	DEPENDS:=+netcat +curl +ntpclient +bismark-cron
 endef
 
 define Package/bismark-mgmt/description
@@ -33,10 +33,11 @@ define Package/bismark-mgmt/install
 	$(INSTALL_DIR) $(1)/etc/bismark
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/authorized_keys $(1)/etc/bismark/authorized_keys
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark.conf $(1)/etc/bismark/bismark.conf
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/crontab $(1)/etc/bismark/crontab
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/known_hosts $(1)/etc/bismark/known_hosts
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark_key $(1)/etc/bismark/bismark_key
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/bismark/bismark_key.pub $(1)/etc/bismark/bismark_key.pub
+	$(INSTALL_DIR) $(1)/etc/cron.d
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/cron.d/bismark-mgmt $(1)/etc/cron.d/bismark-mgmt
 	$(INSTALL_DIR) $(1)/etc/ssl/certs
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/ssl/certs/gd_int.crt $(1)/etc/ssl/certs/gd_int.crt
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/ssl/certs/gd_root.crt $(1)/etc/ssl/certs/gd_root.crt
@@ -63,7 +64,7 @@ define Package/bismark-mgmt/install
 	ln -sf gd_int.crt $(1)/etc/ssl/certs/598630ad.0
 	ln -sf projectbismark_root.crt $(1)/etc/ssl/certs/275bb920.0
 	ln -sf projectbismark_int.crt $(1)/etc/ssl/certs/c2ea5431.0
-	sed -i 's/VERSION=0/VERSION='`head -4 $(TOPDIR)/files/etc/issue | tail -1`'/' $(1)/etc/bismark/bismark.conf
+	sed -i 's/VERSION=0/VERSION='`head -n 1 $(TOPDIR)/VERSION`'/' $(1)/etc/bismark/bismark.conf
 endef
 
 define Package/bismark-mgmt/postinst
@@ -77,7 +78,6 @@ fi
 endef
 
 define Package/bismark-mgmt/prerm
-grep -sFv -f /etc/bismark/crontab /etc/crontabs/root | sort -u | crontab -
 cp /root/.ssh/known_hosts /tmp/known_hosts
 grep -sFv -f /etc/bismark/known_hosts /tmp/known_hosts | sort -u > /root/.ssh/known_hosts
 endef

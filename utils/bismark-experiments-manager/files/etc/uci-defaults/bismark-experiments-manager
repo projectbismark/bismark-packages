@@ -1,3 +1,2 @@
 #!/bin/sh
-/etc/init.d/bismark-experiments-manager enable
-crontab -l | cat - /etc/crontabs.d/bismark-experiments-manager | sort -u | crontab -
+/etc/init.d/bismark-experiments-manager enable || true

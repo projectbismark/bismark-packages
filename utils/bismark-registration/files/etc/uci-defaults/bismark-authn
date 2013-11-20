@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Enable init script
-/etc/init.d/bismark-authn-check enable
+/etc/init.d/bismark-authn-check enable || true
 
 # Enable cron job
 crontab -l | cat - /etc/crontabs.d/bismark-registration | sort -u | crontab -
