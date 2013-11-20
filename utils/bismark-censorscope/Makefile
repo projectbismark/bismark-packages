@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-censorscope-tmpfs
-PKG_VERSION:=0.0.1-alpha
+PKG_VERSION:=v0.0.2-alpha
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -11,6 +11,9 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_PROTO:=git
 
 include $(INCLUDE_DIR)/package.mk
+
+MAKE_FLAGS += LUA_CFLAGS=""
+MAKE_FLAGS += LUA_LIBS="-lm -lcrypt -llua"
 
 define Package/bismark-censorscope-tmpfs
 	SECTION:=util
