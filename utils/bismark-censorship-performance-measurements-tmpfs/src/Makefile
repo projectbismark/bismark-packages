@@ -29,7 +29,7 @@ measure-web-performance: web-performance-measurements.c
 	$(CC) $(LDFLAGS) $(CURL_LDFLAGS) web-performance-measurements.o -o measure-web-performance
 
 get-web100-stats: readconn.c
-	$(CC) $(CFLAGS) readconn.c -o readconn.o
+	$(CC) $(CFLAGS) $(WEB100_CFLAGS) readconn.c -o readconn.o
 	$(CC) readconn.o $(LDFLAGS) $(WEB100_LDFLAGS) -o get-web100-stats
 	
 clean:
