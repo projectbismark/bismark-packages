@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-censorscope-tmpfs
-PKG_VERSION:=v0.0.4-alpha
+PKG_VERSION:=v0.0.5-alpha
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -14,10 +14,12 @@ include $(INCLUDE_DIR)/package.mk
 
 MAKE_FLAGS += LUA_CFLAGS=""
 MAKE_FLAGS += LUA_LIBS="-lm -lcrypt -llua"
-MAKE_FLAGS += DEFAULT_SANDBOX_DIR="/tmp/var/censorscope/sandbox"
+MAKE_FLAGS += DEFAULT_SANDBOX_DIR="/var/censorscope/sandbox"
 MAKE_FLAGS += DEFAULT_LUASRC_DIR="/tmp/usr/lib/lua/censorscope"
+MAKE_FLAGS += DEFAULT_RESULTS_DIR="/var/censorscope/results"
 MAKE_FLAGS += DEFAULT_MAX_MEMORY=1048576
 MAKE_FLAGS += DEFAULT_MAX_INSTRUCTIONS=1048576
+MAKE_FLAGS += DEFAULT_UPLOAD_TRANSPORT="bismark"
 
 define Package/bismark-censorscope-tmpfs
 	SECTION:=util
@@ -41,8 +43,8 @@ define Package/bismark-censorscope-tmpfs/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luasrc/utils.lua $(1)/usr/lib/lua/censorscope/utils.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/censorscope/transports
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luasrc/transports/rsync.lua $(1)/usr/lib/lua/censorscope/transports/rsync.lua
-	$(INSTALL_DIR) $(1)/var/censorscope/sandbox
-	$(INSTALL_DIR) $(1)/var/censorscope/results
+	$(INSTALL_DIR) $(1)/censorscope/sandbox
+	$(INSTALL_DIR) $(1)/censorscope/results
 endef
 
 $(eval $(call BuildPackage,bismark-censorscope-tmpfs))
