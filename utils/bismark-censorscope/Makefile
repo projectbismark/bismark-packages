@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-censorscope-tmpfs
-PKG_VERSION:=v0.0.5-alpha
+PKG_VERSION:=v0.0.6-alpha
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -43,6 +43,7 @@ define Package/bismark-censorscope-tmpfs/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luasrc/utils.lua $(1)/usr/lib/lua/censorscope/utils.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/censorscope/transports
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luasrc/transports/rsync.lua $(1)/usr/lib/lua/censorscope/transports/rsync.lua
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luasrc/transports/bismark.lua $(1)/usr/lib/lua/censorscope/transports/bismark.lua
 	$(INSTALL_DIR) $(1)/censorscope/sandbox
 	$(INSTALL_DIR) $(1)/censorscope/results
 endef
