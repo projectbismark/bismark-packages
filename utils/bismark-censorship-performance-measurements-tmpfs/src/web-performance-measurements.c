@@ -38,6 +38,7 @@ int main(int argc, char * argv[]){
     FILE * xmlFile, *htmlFile, *headerFile;
     char site[100] = "http://";
     int curlReturnValue;
+    struct curl_slist * headers = NULL;
 
     // get command line arguments and print out errors
     if(argc != 5){
@@ -63,7 +64,15 @@ int main(int argc, char * argv[]){
     // initialize
     curl_global_init(CURL_GLOBAL_DEFAULT);
     handle = create_curl_handle(site, (void *) &data, htmlFile, headerFile);
+    headers = curl_slist_append(headers, "X-Bismark;");
     // if the handle is not properly initialized, then exit with error
+    if(curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers) != CURLE_OK){
+        fclose(xmlFile);
+        fclose(htmlFile);
+        fclose(headerFile);
+        return 1;
+    }
+
     if(handle == NULL){
         fclose(xmlFile);
         fclose(htmlFile);
@@ -79,6 +88,7 @@ int main(int argc, char * argv[]){
     get_measurement_data(handle, xmlFile);
 
     // cleanup
+    curl_slist_free_all(headers);
     curl_easy_cleanup(handle);
     curl_global_cleanup();
     fclose(xmlFile);
@@ -221,9 +231,9 @@ CURL * create_curl_handle(char * site, void * data, FILE * htmlFile, FILE * head
     if(curl_easy_setopt(handle, CURLOPT_MAXFILESIZE, MAX_FILE_SIZE) != CURLE_OK){
         return NULL;
     }
-    if(curl_easy_setopt(handle, CURLOPT_USERAGENT,USER_AGENT) != CURLE_OK){
-        return NULL;
-    }
+        if(curl_easy_setopt(handle, CURLOPT_USERAGENT,USER_AGENT) != CURLE_OK){
+            return NULL;
+        }
     if(curl_easy_setopt(handle, CURLOPT_TIMEOUT,TIMEOUT) != CURLE_OK){
         return NULL;
     }

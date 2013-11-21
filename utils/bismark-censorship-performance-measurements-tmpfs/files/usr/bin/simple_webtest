@@ -8,7 +8,8 @@
 
 #configuration parameters
 persistent_dir="/tmp/censorship-performance-measurements"
-url_dload_address=ben.noise.gatech.edu/external/censorship-performance/simple-http
+url_dload_address=http://downloads.projectbismark.net/~bjones99/url_lists/
+config_dload_address=http://downloads.projectbismark.net/~bjones99/config/
 max_experiment_time_secs=120 #experiment must be done in 120 seconds
 max_curl_filesize_bytes=$((750 * 1024)) # 750k
 dload_usage_target_bytes=$(expr 10 \* 1024) #10k
@@ -66,6 +67,7 @@ setup()
     echo "<info deviceid=$DEVICE_ID/>" >> $output_file
 
     upload_dir=/tmp/bismark-uploads/censorship-performance/
+#    upload_dir=/tmp/censorship-performance-measurements/output/
     input_file=${persistent_dir}/cur_url_list
 
     #create a file for the variable index if it does not exist
@@ -74,9 +76,26 @@ setup()
         touch $index_file
     fi
 
-    #if the router is in the us, then increase the data cap
-    grep -qF $DEVICE_ID $us_router_list && dload_usage_target_bytes=$(expr 30 \* 1024) || dload_usage_target_bytes=$(expr 10 \* 1024)
+    # get the download cap based on the config file
+    dload_config_file
+}
 
+#dload_config_file: sets variable dload_usage_target_bytes based on the options specified
+# if the config file. If the config file exists, download and parse it. Otherwise, set
+# dload_usage_target_bytes to 10k
+# Imports: persistentdir, config_dload_address
+# Exports: dload_usage_target_bytes
+# Files: will create a temporary file to store the config file in, then delete it
+dload_config_file()
+{
+    local temp_file=$(mktemp)
+    local download_url=${config_dload_address}/${DEVICE_ID}.txt
+    # if we fail to download the file (network issues) or we get a 404
+    # (no config file available, then set the data cap to 10k
+    curl -f -s $download_url -f -o $temp_file || (rm $temp_file; echo "No config file available" >2)
+    if [ -e $temp_file ]; then
+	dload_usage_target_bytes=$(cat $temp_file | awk '{if($1 == "usage_target") print $2}')
+    fi
 }
 
 #dload_url_list: sets url_file and download_url, then writes the new urls to url_file
