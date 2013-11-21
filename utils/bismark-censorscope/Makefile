@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-censorscope-tmpfs
-PKG_VERSION:=v0.0.6-alpha
+PKG_VERSION:=v0.0.7-alpha
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -20,6 +20,7 @@ MAKE_FLAGS += DEFAULT_RESULTS_DIR="/var/censorscope/results"
 MAKE_FLAGS += DEFAULT_MAX_MEMORY=1048576
 MAKE_FLAGS += DEFAULT_MAX_INSTRUCTIONS=1048576
 MAKE_FLAGS += DEFAULT_UPLOAD_TRANSPORT="bismark"
+MAKE_FLAGS += DEFAULT_DOWNLOAD_TRANSPORT="bismark"
 
 define Package/bismark-censorscope-tmpfs
 	SECTION:=util
