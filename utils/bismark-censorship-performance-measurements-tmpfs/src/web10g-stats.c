@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
     int cid;
     // For requesting a sub-collection of metrics by mask
     uint64_t masks[MAX_TABLE] = { DEFAULT_PERF_MASK, DEFAULT_PATH_MASK,
-				  DEFAULT_STACK_MASK, DEFAULT_APP_MASK, DEFAULT_TUNE_MASK };
+                                  DEFAULT_STACK_MASK, DEFAULT_APP_MASK, DEFAULT_TUNE_MASK };
     int if_mask[] = { [0 ... MAX_TABLE-1] = 0 };
     uint64_t tmpmask;
     int opt, j, option;
@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
     }
     // Note: we need non-blocking io, so set the file descriptor not to block
     recvFd = receiver->fd;
-    fcntl(recvFd, F_SETFL, O_NONBLOCK); 
+    fcntl(recvFd, F_SETFL, O_NONBLOCK);
 
     ret = mnl_socket_bind(receiver, 0, MNL_SOCKET_AUTOPID);
     if (ret == -1) {
@@ -374,63 +374,63 @@ int main(int argc, char *argv[])
 
     // start of requestor code
     if (argc < 2) {
-	usage();
-	exit(EXIT_FAILURE);
+        usage();
+        exit(EXIT_FAILURE);
     }
-        
+
     while ((opt = getopt(argc, argv, "lm:f:c:")) != -1) {
-	switch (opt) {
-	case 'l':
-	    cmd = TCPE_CMD_LIST_CONNS;
-	    break;
-	case 'f':
-	    outputFile = optarg;
-	    break;
-	case 'c':
-	    cid = strtol(optarg, NULL, 10);
-	    if(cid == 0){
-		perror("Invalid CID");
-		exit(EXIT_FAILURE);
-	    }
-	    cmd = TCPE_CMD_READ_CONN;
-	    break;
-	case 'm':
-	    strmask = strdup(optarg);
+        switch (opt) {
+        case 'l':
+            cmd = TCPE_CMD_LIST_CONNS;
+            break;
+        case 'f':
+            outputFile = optarg;
+            break;
+        case 'c':
+            cid = strtol(optarg, NULL, 10);
+            if(cid == 0){
+                perror("Invalid CID");
+                exit(EXIT_FAILURE);
+            }
+            cmd = TCPE_CMD_READ_CONN;
+            break;
+        case 'm':
+            strmask = strdup(optarg);
 
-	    for (j = 0; j < 5; j++) {
-		char *strtmp;
-		strtmp = strsep(&strmask, &delim);
-		if (strtmp && strlen(strtmp)) {
-		    char *str;
-		    str = (str = strchr(strtmp, 'x')) ? str+1 : strtmp;
-		    if (sscanf(str, "%"PRIx64, &tmpmask) == 1) {
-			masks[j] = tmpmask & masks[j];
-			if_mask[j] = 1;
-		    }
-		}
-	    }
-	    cmd = TCPE_CMD_READ_CONN;
-	    option = opt;
+            for (j = 0; j < 5; j++) {
+                char *strtmp;
+                strtmp = strsep(&strmask, &delim);
+                if (strtmp && strlen(strtmp)) {
+                    char *str;
+                    str = (str = strchr(strtmp, 'x')) ? str+1 : strtmp;
+                    if (sscanf(str, "%"PRIx64, &tmpmask) == 1) {
+                        masks[j] = tmpmask & masks[j];
+                        if_mask[j] = 1;
+                    }
+                }
+            }
+            cmd = TCPE_CMD_READ_CONN;
+            option = opt;
 
-	    break;
-	default:
-	    exit(EXIT_FAILURE);
-	    break;
-	}
+            break;
+        default:
+            exit(EXIT_FAILURE);
+            break;
+        }
     }
     if ((option == 'm') && (optind+1 > argc)) {
-	printf("Too few non-option args\n");
-	exit(EXIT_FAILURE);
+        printf("Too few non-option args\n");
+        exit(EXIT_FAILURE);
     }
 
     if (cmd == 50){
-	perror("Invalid options");
-	exit(EXIT_FAILURE);
+        perror("Invalid options");
+        exit(EXIT_FAILURE);
     }
 
     if (resolve_web10g_nladdr("tcp_estats", &fam_id, &grp_id)) {
-	perror("resolve_web10g_nladdr");
-	exit(EXIT_FAILURE);
+        perror("resolve_web10g_nladdr");
+        exit(EXIT_FAILURE);
     }
 
     nlh = mnl_nlmsg_put_header(sendBuf);
@@ -443,18 +443,18 @@ int main(int argc, char *argv[])
 
     if (genl->cmd == TCPE_CMD_READ_CONN) {
 
-	attrp = mnl_attr_nest_start_check(nlh, getpagesize(), NLE_ATTR_4TUPLE);
-	if (!attrp) {
-	    printf("attr_nest_start failure\n");
-	    exit(EXIT_FAILURE);
-	}
+        attrp = mnl_attr_nest_start_check(nlh, getpagesize(), NLE_ATTR_4TUPLE);
+        if (!attrp) {
+            printf("attr_nest_start failure\n");
+            exit(EXIT_FAILURE);
+        }
 
-	mnl_attr_put_u32(nlh, NEA_CID, cid);
+        mnl_attr_put_u32(nlh, NEA_CID, cid);
 
-	mnl_attr_nest_end(nlh, attrp);
+        mnl_attr_nest_end(nlh, attrp);
 
-	attrp = mnl_attr_nest_start_check(nlh, getpagesize(), NLE_ATTR_MASK);
-	if (!attrp) {
+        attrp = mnl_attr_nest_start_check(nlh, getpagesize(), NLE_ATTR_MASK);
+        if (!attrp) {
                         printf("attr_nest_start failure\n");
                         exit(EXIT_FAILURE);
                 }
@@ -469,74 +469,74 @@ int main(int argc, char *argv[])
 
     sender = mnl_socket_open(NETLINK_GENERIC);
     if (sender == NULL) {
-	perror("mnl_socket_open");
-	exit(EXIT_FAILURE);
+        perror("mnl_socket_open");
+        exit(EXIT_FAILURE);
     }
     ret = mnl_socket_bind(sender, 0, MNL_SOCKET_AUTOPID);
     if (ret == -1) {
-	perror("mnl_socket_bind");
-	exit(EXIT_FAILURE);
+        perror("mnl_socket_bind");
+        exit(EXIT_FAILURE);
     }
     portid = mnl_socket_get_portid(sender);
 
     ret = mnl_socket_sendto(sender, nlh, nlh->nlmsg_len);
     if (ret == -1) {
-	perror("mnl_socket_send");
-	exit(EXIT_FAILURE);
+        perror("mnl_socket_send");
+        exit(EXIT_FAILURE);
     }
 
     ret = mnl_socket_recvfrom(sender, sendBuf, sizeof(sendBuf));
     while (ret == -1) {
-	perror("mnl_socket_recvfrom");
-	exit(EXIT_FAILURE);
+        perror("mnl_socket_recvfrom");
+        exit(EXIT_FAILURE);
     }
-    
+
     // this function does not appear to do anything-> it calls a callback function which is set to NULL?
     /*    ret = mnl_cb_run(sendBuf, ret, seq, portid, NULL, NULL);
-    
+
     if (ret == -1) {
-	perror("mnl_cb_run");
-	exit(EXIT_FAILURE);
+        perror("mnl_cb_run");
+        exit(EXIT_FAILURE);
     }
     */
 
     mnl_socket_close(sender);
-    
+
     // setup the data structure to receive data
     fd_set fds;
     struct timeval timeout;
-    
+
     // receive the data back from the kernel
     while (1) {
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 100;
-	
-	FD_ZERO(&fds);
-	FD_SET(recvFd, &fds);
-	ret = select(sizeof(fds)*8, &fds, NULL, NULL, &timeout);
-	// exit on error
-	if(ret == -1){
-	    perror("select error");
-	    exit(EXIT_FAILURE);
-	}
-	// If the timeout expired and we don't have anything, then use
-	// the data and break out of the loop
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100;
+
+        FD_ZERO(&fds);
+        FD_SET(recvFd, &fds);
+        ret = select(sizeof(fds)*8, &fds, NULL, NULL, &timeout);
+        // exit on error
+        if(ret == -1){
+            perror("select error");
+            exit(EXIT_FAILURE);
+        }
+        // If the timeout expired and we don't have anything, then use
+        // the data and break out of the loop
         else if(ret == 0){
-	    break;
-	}
-	// otherwise, read the data, then continue reading
-	else{
-	    ret = mnl_socket_recvfrom(receiver, recvBuf, sizeof(recvBuf));
-	    if (ret == -1) {
-		perror("mnl_socket_recvfrom");
-		exit(EXIT_FAILURE);
-	    }
-	    ret = mnl_cb_run(recvBuf, ret, 0, 0, data_cb, NULL);
-	    if (ret == -1) {
-		perror("mnl_cb_run");
-		exit(EXIT_FAILURE);
-	    }
-	}
+            break;
+        }
+        // otherwise, read the data, then continue reading
+        else{
+            ret = mnl_socket_recvfrom(receiver, recvBuf, sizeof(recvBuf));
+            if (ret == -1) {
+                perror("mnl_socket_recvfrom");
+                exit(EXIT_FAILURE);
+            }
+            ret = mnl_cb_run(recvBuf, ret, 0, 0, data_cb, NULL);
+            if (ret == -1) {
+                perror("mnl_cb_run");
+                exit(EXIT_FAILURE);
+            }
+        }
     }
     mnl_socket_close(receiver);
     return 0;

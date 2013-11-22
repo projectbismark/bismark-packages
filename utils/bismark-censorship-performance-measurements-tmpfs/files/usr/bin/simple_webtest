@@ -8,8 +8,8 @@
 
 #configuration parameters
 persistent_dir="/tmp/censorship-performance-measurements"
-url_dload_address=http://downloads.projectbismark.net/~bjones99/url_lists/
-config_dload_address=http://downloads.projectbismark.net/~bjones99/config/
+url_dload_address=http://downloads.projectbismark.net/~bjones99/url_lists
+config_dload_address=http://downloads.projectbismark.net/~bjones99/config
 max_experiment_time_secs=120 #experiment must be done in 120 seconds
 max_curl_filesize_bytes=$((750 * 1024)) # 750k
 dload_usage_target_bytes=$(expr 10 \* 1024) #10k
@@ -38,12 +38,12 @@ setup()
 
     # in case we had to install any dependencies, link to the library directory on tmp
     export LD_LIBRARY_PATH=LD_LIBRARY_PATH:/tmp/usr/lib
-    
+
     #if we are on lancre, then insert the required tcp module into the kernel
     local kernelVer=$(uname -r)
     if [ "$kernelVer" == "3.3.8" ]; then
-	#if needed, insert the kernel module
-	lsmod | grep -q tcp_estats_nl || insmod tcp_estats_nl
+        #if needed, insert the kernel module
+        lsmod | grep -q tcp_estats_nl || insmod tcp_estats_nl
     fi
 
     #find the device ID, aka the mac address
@@ -94,7 +94,7 @@ dload_config_file()
     # (no config file available, then set the data cap to 10k
     curl -f -s $download_url -f -o $temp_file || (rm $temp_file; echo "No config file available" >2)
     if [ -e $temp_file ]; then
-	dload_usage_target_bytes=$(cat $temp_file | awk '{if($1 == "usage_target") print $2}')
+        dload_usage_target_bytes=$(cat $temp_file | awk '{if($1 == "usage_target") print $2}')
     fi
 }
 
@@ -108,7 +108,7 @@ dload_url_list()
     url_file=${persistent_dir}/urllist.txt
     local download_url=${url_dload_address}/${DEVICE_ID}.txt
     echo $download_url
-    #silently download the file, limiting the download to 
+    #silently download the file, limiting the download to
     curl $download_url -f -s -o $url_file --max-filesize $(((10*1024))) --max-time 60 || (cleanup; echo "Error downloading the url list" 1>&2; exit 1)
 }
 
@@ -210,25 +210,25 @@ measure_site()
     # so to avoid using an unset variable, we only read the connection
     # stats if there was a match
     if [ "" != "$remoteIPLocalPort" ]; then
-	# Note: since this script supports both quirm and lancre
-	# versions of BISmark, we need to select whether to use web100
-	# or web10g depending on the kernel version
-	local kernelVer=$(uname -r)
-	# this is the lancre version
-	if [ "$kernelVer" == "3.3.8" ]; then
-	    $get_web10g_stats -l -f "$tempFile"
-	    local connectIDs=$(cat $tempFile | grep "$remoteIPLocalPort" | awk '{print $2}')
-	    rm -rf $tempFile
-	    #get stats on the connections
-	    for cid in $connectIDs; do
-		$get_web10g_stats -c $cid -f ${pageoutput}.stats
-	    done
-	else
-	    connectID=$(grep -l "$remoteIPLocalPort" /proc/web100/*/spec-ascii | awk 'BEGIN {FS ="/";} {print $4}')
-	    if [ $? ]; then
-		$get_web100_stats $connectID >> ${pageoutput}.stats
-	    fi
-	fi
+        # Note: since this script supports both quirm and lancre
+        # versions of BISmark, we need to select whether to use web100
+        # or web10g depending on the kernel version
+        local kernelVer=$(uname -r)
+        # this is the lancre version
+        if [ "$kernelVer" == "3.3.8" ]; then
+            $get_web10g_stats -l -f "$tempFile"
+            local connectIDs=$(cat $tempFile | grep "$remoteIPLocalPort" | awk '{print $2}')
+            rm -rf $tempFile
+            #get stats on the connections
+            for cid in $connectIDs; do
+                $get_web10g_stats -c $cid -f ${pageoutput}.stats
+            done
+        else
+            connectID=$(grep -l "$remoteIPLocalPort" /proc/web100/*/spec-ascii | awk 'BEGIN {FS ="/";} {print $4}')
+            if [ $? ]; then
+                $get_web100_stats $connectID >> ${pageoutput}.stats
+            fi
+        fi
     fi
     echo "<file_name>$2</file_name>" >> $output_file
     echo "</site>" >> $output_file
@@ -274,14 +274,14 @@ run_measurements()
         max_index_size=$(awk 'END{print NR}' $input_file)
         echo "Number of urls in list: " $max_index_size
     else
-	if [ "$index" -gt "$max_index_size" ]; then
+        if [ "$index" -gt "$max_index_size" ]; then
             #set index to 0 and create the randomized url list
             index=1
             dload_url_list
             create_random_url_list
             #set the max index size to the length of the list
             max_index_size=$(awk 'END{print NR}' $input_file)
-	fi
+        fi
     fi
     #if data_usage does not exist, then reset it to 0
     if [ "$data_usage" = "" ]; then
@@ -330,8 +330,8 @@ run_measurements()
             echo index="$index" > $index_file
             echo data_usage="$data_usage" >> $index_file
             echo max_index_size="$max_index_size" >> $index_file
-	    #finalize the xml page
-	    echo "</censorship-performance-measurements>" >> $output_file
+            #finalize the xml page
+            echo "</censorship-performance-measurements>" >> $output_file
             upload_data
 
         else

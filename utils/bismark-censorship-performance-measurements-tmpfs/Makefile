@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-censorship-performance-measurements-tmpfs
-PKG_VERSION:=0.8
+PKG_VERSION:=0.9
 PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
