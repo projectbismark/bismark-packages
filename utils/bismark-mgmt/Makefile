@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-mgmt
-PKG_VERSION:=v15
+PKG_VERSION:=v16
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -65,6 +65,15 @@ define Package/bismark-mgmt/install
 	ln -sf projectbismark_root.crt $(1)/etc/ssl/certs/275bb920.0
 	ln -sf projectbismark_int.crt $(1)/etc/ssl/certs/c2ea5431.0
 	sed -i 's/VERSION=0/VERSION='`head -n 1 $(TOPDIR)/VERSION`'/' $(1)/etc/bismark/bismark.conf
+endef
+
+define Package/bismark-mgmt/preinst
+#!/bin/sh
+# Bismark management pre-install script
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	if [ -e /etc/bismark/crontab ]; then
+		grep -sFvf /etc/bismark/crontab /etc/crontabs/root | sort -u | crontab -
+	fi
 endef
 
 define Package/bismark-mgmt/postinst
