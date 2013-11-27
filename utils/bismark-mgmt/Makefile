@@ -74,6 +74,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	if [ -e /etc/bismark/crontab ]; then
 		grep -sFvf /etc/bismark/crontab /etc/crontabs/root | sort -u | crontab -
 	fi
+fi
 endef
 
 define Package/bismark-mgmt/postinst
