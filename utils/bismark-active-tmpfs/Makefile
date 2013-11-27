@@ -51,9 +51,9 @@ define Package/bismark-active-tmpfs/preinst
 if [ -z "$${IPKG_INSTROOT}" ]; then
 	if [ -e /tmp/etc/bismark/crontab-active-tmpfs ]; then
 		grep -sFvf /tmp/etc/bismark/crontab-active-tmpfs /etc/crontabs/root | sort -u | crontab -
+	else
+		grep -sv bismark-measure-wrapper /etc/crontabs/root | sort -u | crontab -
 	fi
-	grep -sv bismark-measure-wrapper /etc/crontabs/root | sort -u | crontab -
-	grep -sv scriptupdate /etc/crontabs/root | sort -u | crontab -
 fi
 endef
 
