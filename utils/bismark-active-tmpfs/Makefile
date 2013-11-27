@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bismark-active-tmpfs
-PKG_VERSION:=v27
+PKG_VERSION:=v28
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -25,7 +25,7 @@ define Package/bismark-active-tmpfs
    TITLE:=Broadband Internet Service benchMARK - Active measurement tools
    URL:=http://www.networkdashboard.org/
    MAINTAINER:=Bismark Development List <bismark-devel@projectbismark.net>
-   DEPENDS:=+bismark-mgmt +bismark-netexp
+   DEPENDS:=+bismark-mgmt +bismark-netexp +bismark-cron
 endef
 
 define Package/bismark-active-tmpfs/description
@@ -44,6 +44,17 @@ define Package/bismark-active-tmpfs/install
 	$(CP) -p $(PKG_BUILD_DIR)/etc/* $(1)/etc/bismark/
 	$(INSTALL_DIR) $(1)/etc/cron.d
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/cron.d/bismark-active-tmpfs $(1)/etc/cron.d/bismark-active-tmpfs
+endef
+
+define Package/bismark-active-tmpfs/preinst
+#!/bin/sh
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	if [ -e /tmp/etc/bismark/crontab-active-tmpfs ]; then
+		grep -sFvf /tmp/etc/bismark/crontab-active-tmpfs /etc/crontabs/root | sort -u | crontab -
+	fi
+	grep -sv bismark-measure-wrapper /etc/crontabs/root | sort -u | crontab -
+	grep -sv scriptupdate /etc/crontabs/root | sort -u | crontab -
+fi
 endef
 
 define Package/bismark-active-tmpfs/postinst
