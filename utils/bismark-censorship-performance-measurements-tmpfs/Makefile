@@ -42,7 +42,7 @@ endef
 define Package/bismark-censorship-performance-measurements-web100-tmpfs/postinst
 #!/bin/sh
 mkdir -p /tmp/censorship-performance-measurements
-crontab -l | grep -v bismark-censorship-performance | crontab -
+crontab -l | grep -v censorship-performance | crontab -
 endef
 
 define Package/bismark-censorship-performance-measurements-web100-tmpfs/prerm
@@ -76,7 +76,7 @@ endef
 define Package/bismark-censorship-performance-measurements-web10g-tmpfs/postinst
 #!/bin/sh
 mkdir -p /tmp/censorship-performance-measurements
-crontab -l | grep -v bismark-censorship-performance | crontab -
+crontab -l | grep -v censorship-performance | crontab -
 endef
 
 define Package/bismark-censorship-performance-measurements-web10g-tmpfs/prerm
