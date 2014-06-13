@@ -1,4 +1,4 @@
-#!/bin/sh /etc/rc.common
+#!/bin/sh 
 
 START=97
 PIDFILE=/var/run/bismark-data-transmit.pid
@@ -41,3 +41,26 @@ restart() {
     stop
     start
 }
+
+
+case "$1" in
+  start|"")
+        start
+        ;;
+  restart|reload|force-reload)
+        echo "Error: argument '$1' not supported" >&2
+	restart
+        exit 3
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        #do_status
+        exit $?
+        ;;
+  *)   
+        echo "Usage: bismark-data-transmit [start|stop|restart]" >&2
+        exit 3
+        ;;
+esac
