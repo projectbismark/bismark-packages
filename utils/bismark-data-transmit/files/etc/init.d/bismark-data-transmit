@@ -24,7 +24,7 @@ start() {
         echo "pidfile $PIDFILE already exists; bismark-data-transmit already running?"
         exit 1
     fi
-    start-stop-daemon -S \
+    /sbin/start-stop-daemon -S \
         -x /usr/bin/bismark-data-transmit \
         -p $PIDFILE \
         -m -b -- $DATA_TRANSMIT_ARGUMENTS
