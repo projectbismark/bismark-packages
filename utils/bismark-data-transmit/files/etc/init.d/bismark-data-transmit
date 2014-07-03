@@ -54,7 +54,8 @@ restart() {
 
 
 case "$1" in
-  start|"")
+#  start|"")
+  start)
         start
         ;;
   restart|reload|force-reload)
